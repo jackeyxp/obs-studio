@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="F:\obs-studio\deps\jansson\src\dump.c">
+      <Filter>Library Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\jansson\src\error.c">
+      <Filter>Library Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\jansson\src\hashtable.c">
+      <Filter>Library Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\jansson\src\hashtable_seed.c">
+      <Filter>Library Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\jansson\src\load.c">
+      <Filter>Library Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\jansson\src\memory.c">
+      <Filter>Library Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\jansson\src\pack_unpack.c">
+      <Filter>Library Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\jansson\src\strbuffer.c">
+      <Filter>Library Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\jansson\src\strconv.c">
+      <Filter>Library Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\jansson\src\utf.c">
+      <Filter>Library Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\jansson\src\value.c">
+      <Filter>Library Sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="F:\obs-studio\deps\jansson\src\hashtable.h">
+      <Filter>Library Private Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\deps\jansson\src\jansson_private.h">
+      <Filter>Library Private Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\deps\jansson\src\strbuffer.h">
+      <Filter>Library Private Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\deps\jansson\src\utf.h">
+      <Filter>Library Private Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\vsbuild\deps\jansson\private_include\jansson_private_config.h">
+      <Filter>Library Private Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\vsbuild\deps\jansson\include\jansson_config.h">
+      <Filter>Library Public Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\deps\jansson\src\jansson.h">
+      <Filter>Library Public Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\obs-studio\deps\jansson\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Library Private Headers">
+      <UniqueIdentifier>{067363B5-D1ED-3ECB-8C3D-6C108AED173B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library Public Headers">
+      <UniqueIdentifier>{D060DD4C-7DAA-3405-ABCB-36E1D2085F43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library Sources">
+      <UniqueIdentifier>{0EBE5704-F760-3C73-AC6F-A5835CCB6D98}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

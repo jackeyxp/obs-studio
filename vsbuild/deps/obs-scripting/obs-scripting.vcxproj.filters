@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="F:\obs-studio\deps\obs-scripting\obs-scripting.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\obs-scripting\obs-scripting-logging.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\obs-scripting\cstrcache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\obs-scripting\obs-scripting-python.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\obs-scripting\obs-scripting-python-frontend.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\obs-scripting\obs-scripting-python-import.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\obs-scripting\obs-scripting-lua.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\obs-scripting\obs-scripting-lua-source.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\obs-studio\deps\obs-scripting\obs-scripting-lua-frontend.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="F:\obs-studio\vsbuild\deps\obs-scripting\obs-scripting-config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\deps\obs-scripting\obs-scripting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\deps\obs-scripting\obs-scripting-callback.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\deps\obs-scripting\cstrcache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\deps\obs-scripting\obs-scripting-python.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\deps\obs-scripting\obs-scripting-python-import.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\deps\obs-scripting\obs-scripting-lua.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\vsbuild\deps\obs-scripting\swig\swigpyrun.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\obs-studio\vsbuild\deps\obs-scripting\swig\swigluarun.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\obs-studio\vsbuild\CMakeFiles\8791da6c3fb75139f673913cbcfe2a3a\swigpyrun.h.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\obs-studio\vsbuild\CMakeFiles\8791da6c3fb75139f673913cbcfe2a3a\swigluarun.h.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\obs-studio\deps\obs-scripting\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{E05FB997-8715-3FF0-9733-F20474AD3D53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{968E2936-33D8-30CF-B275-F7AF31F145D0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{BAE9B2A1-A973-37CF-877F-11FEA875FA98}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
