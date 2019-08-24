@@ -925,7 +925,7 @@ static bool IntersectLine(float x1, float x2, float x3, float x4, float y1,
 	return (a != b) && (c != d);
 }
 
-static bool IntersectBox(matrix4 transform, float x1, float x2, float y1,
+static bool IntersectBox(matrix4 & transform, float x1, float x2, float y1,
 			 float y2)
 {
 	float x3, x4, y3, y4;

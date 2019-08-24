@@ -1,5 +1,13 @@
 *.db
 *.opendb
+*_autogen
 CMakeFiles
 blake2.dir
 file-updater.dir
+obsluaLUA_wrap.c
+obspython.py
+obspythonPYTHON_wrap.c
+ui_*.h
+qrc_obs.cpp
+DeckLinkAPI*
+swig

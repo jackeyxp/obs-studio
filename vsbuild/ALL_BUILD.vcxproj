@@ -179,14 +179,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{A482CB83-C85D-34A6-AE59-1561B61E640D}</Project>
       <Name>decklink-ouput-ui</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\enc-amf\enc-amf.vcxproj">
-      <Project>{9CC570FA-E463-3F76-83A3-D26D514C15D3}</Project>
-      <Name>enc-amf</Name>
-    </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\enc-amf\amf-test\enc-amf-test.vcxproj">
-      <Project>{BA23E966-4BA5-3548-B876-6E1EBCA24AAB}</Project>
-      <Name>enc-amf-test</Name>
-    </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\deps\file-updater\file-updater.vcxproj">
       <Project>{9D80AEA0-3AD1-3251-B800-08628337EE90}</Project>
       <Name>file-updater</Name>
@@ -282,10 +274,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ProjectReference Include="F:\obs-studio\vsbuild\plugins\obs-transitions\obs-transitions.vcxproj">
       <Project>{DB082D4B-5F1D-3837-99C7-0DDDCA7517D2}</Project>
       <Name>obs-transitions</Name>
-    </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\obs-vst\obs-vst.vcxproj">
-      <Project>{A8E26A31-F8BF-3163-88F6-C8BA43C3BADE}</Project>
-      <Name>obs-vst</Name>
     </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\plugins\obs-x264\obs-x264.vcxproj">
       <Project>{93E5B02B-4F55-3EF0-8324-59D266AE3319}</Project>

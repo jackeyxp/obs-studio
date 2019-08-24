@@ -14,10 +14,8 @@ using namespace std;
 #define OPT_DEVICE_ID "device_id"
 #define OPT_USE_DEVICE_TIMING "use_device_timing"
 
-static void GetWASAPIDefaults(obs_data_t *settings);
-
-#define OBS_KSAUDIO_SPEAKER_4POINT1 \
-	(KSAUDIO_SPEAKER_SURROUND | SPEAKER_LOW_FREQUENCY)
+#define KSAUDIO_SPEAKER_2POINT1 (KSAUDIO_SPEAKER_STEREO | SPEAKER_LOW_FREQUENCY)
+#define OBS_KSAUDIO_SPEAKER_4POINT1 (KSAUDIO_SPEAKER_SURROUND | SPEAKER_LOW_FREQUENCY)
 
 class WASAPISource {
 	ComPtr<IMMDevice> device;
