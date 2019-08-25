@@ -62,7 +62,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\plugins\obs-browser;F:\obs-studio\plugins\obs-browser;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\plugins\obs-browser\deps;F:\CEF\cef_binary_76.0.3809.87_windows32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -72,7 +72,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\plugins\obs-browser;F:\obs-studio\plugins\obs-browser;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\plugins\obs-browser\deps;F:\CEF\cef_binary_76.0.3809.87_windows32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -82,7 +82,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\plugins\obs-browser;F:\obs-studio\plugins\obs-browser;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\plugins\obs-browser\deps;F:\CEF\cef_binary_76.0.3809.87_windows32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -92,7 +92,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\plugins\obs-browser;F:\obs-studio\plugins\obs-browser;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\plugins\obs-browser\deps;F:\CEF\cef_binary_76.0.3809.87_windows32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -101,10 +101,10 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="F:\obs-studio\plugins\enc-amf\CMakeLists.txt">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building Custom Rule F:/obs-studio/plugins/enc-amf/CMakeLists.txt</Message>
+    <CustomBuild Include="F:\obs-studio\plugins\obs-browser\CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building Custom Rule F:/obs-studio/plugins/obs-browser/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">setlocal
-E:\cmake-3.11.1-win32-x86\bin\cmake.exe -HF:/obs-studio -BF:/obs-studio/vsbuild --check-stamp-file F:/obs-studio/vsbuild/plugins/enc-amf/CMakeFiles/generate.stamp
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -HF:/obs-studio -BF:/obs-studio/vsbuild --check-stamp-file F:/obs-studio/vsbuild/plugins/obs-browser/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -112,12 +112,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">F:/obs-studio/plugins/enc-amf/CMakeLists.txt;F:\obs-studio\plugins\enc-amf\CMakeLists.txt;F:\obs-studio\plugins\enc-amf\cmake\util.cmake;F:\obs-studio\plugins\enc-amf\ci\installer.in.iss;F:\obs-studio\plugins\enc-amf\include\version.hpp.in;F:\obs-studio\plugins\enc-amf\cmake\version.rc.in;F:\obs-studio\plugins\enc-amf\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">F:\obs-studio\vsbuild\plugins\enc-amf\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">F:/obs-studio/plugins/obs-browser/CMakeLists.txt;F:\obs-studio\plugins\obs-browser\CMakeLists.txt;F:\obs-studio\plugins\obs-browser\FindCEF.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageMessage.cmake;F:\obs-studio\plugins\obs-browser\browser-config.h.in;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\cmake\Qt5Widgets\Qt5WidgetsConfigVersion.cmake;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\cmake\Qt5Widgets\Qt5WidgetsConfig.cmake;F:\obs-studio\plugins\obs-browser\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">F:\obs-studio\vsbuild\plugins\obs-browser\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building Custom Rule F:/obs-studio/plugins/enc-amf/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building Custom Rule F:/obs-studio/plugins/obs-browser/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">setlocal
-E:\cmake-3.11.1-win32-x86\bin\cmake.exe -HF:/obs-studio -BF:/obs-studio/vsbuild --check-stamp-file F:/obs-studio/vsbuild/plugins/enc-amf/CMakeFiles/generate.stamp
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -HF:/obs-studio -BF:/obs-studio/vsbuild --check-stamp-file F:/obs-studio/vsbuild/plugins/obs-browser/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -125,12 +125,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:/obs-studio/plugins/enc-amf/CMakeLists.txt;F:\obs-studio\plugins\enc-amf\CMakeLists.txt;F:\obs-studio\plugins\enc-amf\cmake\util.cmake;F:\obs-studio\plugins\enc-amf\ci\installer.in.iss;F:\obs-studio\plugins\enc-amf\include\version.hpp.in;F:\obs-studio\plugins\enc-amf\cmake\version.rc.in;F:\obs-studio\plugins\enc-amf\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:\obs-studio\vsbuild\plugins\enc-amf\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:/obs-studio/plugins/obs-browser/CMakeLists.txt;F:\obs-studio\plugins\obs-browser\CMakeLists.txt;F:\obs-studio\plugins\obs-browser\FindCEF.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageMessage.cmake;F:\obs-studio\plugins\obs-browser\browser-config.h.in;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\cmake\Qt5Widgets\Qt5WidgetsConfigVersion.cmake;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\cmake\Qt5Widgets\Qt5WidgetsConfig.cmake;F:\obs-studio\plugins\obs-browser\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:\obs-studio\vsbuild\plugins\obs-browser\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">Building Custom Rule F:/obs-studio/plugins/enc-amf/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">Building Custom Rule F:/obs-studio/plugins/obs-browser/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">setlocal
-E:\cmake-3.11.1-win32-x86\bin\cmake.exe -HF:/obs-studio -BF:/obs-studio/vsbuild --check-stamp-file F:/obs-studio/vsbuild/plugins/enc-amf/CMakeFiles/generate.stamp
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -HF:/obs-studio -BF:/obs-studio/vsbuild --check-stamp-file F:/obs-studio/vsbuild/plugins/obs-browser/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -138,12 +138,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">F:/obs-studio/plugins/enc-amf/CMakeLists.txt;F:\obs-studio\plugins\enc-amf\CMakeLists.txt;F:\obs-studio\plugins\enc-amf\cmake\util.cmake;F:\obs-studio\plugins\enc-amf\ci\installer.in.iss;F:\obs-studio\plugins\enc-amf\include\version.hpp.in;F:\obs-studio\plugins\enc-amf\cmake\version.rc.in;F:\obs-studio\plugins\enc-amf\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">F:\obs-studio\vsbuild\plugins\enc-amf\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">F:/obs-studio/plugins/obs-browser/CMakeLists.txt;F:\obs-studio\plugins\obs-browser\CMakeLists.txt;F:\obs-studio\plugins\obs-browser\FindCEF.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageMessage.cmake;F:\obs-studio\plugins\obs-browser\browser-config.h.in;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\cmake\Qt5Widgets\Qt5WidgetsConfigVersion.cmake;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\cmake\Qt5Widgets\Qt5WidgetsConfig.cmake;F:\obs-studio\plugins\obs-browser\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">F:\obs-studio\vsbuild\plugins\obs-browser\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Building Custom Rule F:/obs-studio/plugins/enc-amf/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Building Custom Rule F:/obs-studio/plugins/obs-browser/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">setlocal
-E:\cmake-3.11.1-win32-x86\bin\cmake.exe -HF:/obs-studio -BF:/obs-studio/vsbuild --check-stamp-file F:/obs-studio/vsbuild/plugins/enc-amf/CMakeFiles/generate.stamp
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -HF:/obs-studio -BF:/obs-studio/vsbuild --check-stamp-file F:/obs-studio/vsbuild/plugins/obs-browser/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -151,8 +151,8 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">F:/obs-studio/plugins/enc-amf/CMakeLists.txt;F:\obs-studio\plugins\enc-amf\CMakeLists.txt;F:\obs-studio\plugins\enc-amf\cmake\util.cmake;F:\obs-studio\plugins\enc-amf\ci\installer.in.iss;F:\obs-studio\plugins\enc-amf\include\version.hpp.in;F:\obs-studio\plugins\enc-amf\cmake\version.rc.in;F:\obs-studio\plugins\enc-amf\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">F:\obs-studio\vsbuild\plugins\enc-amf\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">F:/obs-studio/plugins/obs-browser/CMakeLists.txt;F:\obs-studio\plugins\obs-browser\CMakeLists.txt;F:\obs-studio\plugins\obs-browser\FindCEF.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageMessage.cmake;F:\obs-studio\plugins\obs-browser\browser-config.h.in;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\cmake\Qt5Widgets\Qt5WidgetsConfigVersion.cmake;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\cmake\Qt5Widgets\Qt5WidgetsConfig.cmake;F:\obs-studio\plugins\obs-browser\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">F:\obs-studio\vsbuild\plugins\obs-browser\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
@@ -162,6 +162,14 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ProjectReference Include="F:\obs-studio\vsbuild\ZERO_CHECK.vcxproj">
       <Project>{BD847538-23D6-38C4-A66F-9DB068F41F59}</Project>
       <Name>ZERO_CHECK</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\obs-browser\obs-browser.vcxproj">
+      <Project>{13A352DB-60D2-3F78-84F0-D783C50420F4}</Project>
+      <Name>obs-browser</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\obs-browser\obs-browser-page.vcxproj">
+      <Project>{0EB6B8F9-A832-3FDA-99D9-CC14C56CCDBA}</Project>
+      <Name>obs-browser-page</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

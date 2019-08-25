@@ -23,8 +23,11 @@ BLAKE2_INCLUDE_DIR:PATH=F:/obs-studio/deps/blake2/src
 //Interal global cmake variable
 BROWSER_AVAILABLE_INTERNAL:BOOL=OFF
 
+//Enables Qt web browser panel support
+BROWSER_PANEL_SUPPORT_ENABLED:BOOL=OFF
+
 //Build AMD Encoder module
-BUILD_AMD_ENCODER:BOOL=ON
+BUILD_AMD_ENCODER:BOOL=OFF
 
 //Build browser plugin
 BUILD_BROWSER:BOOL=OFF
@@ -327,6 +330,9 @@ ENABLE_UI:BOOL=ON
 //Enables the now deprecated win-mf plugin
 ENABLE_WINMF:BOOL=OFF
 
+//Enable shared texture support for the browser plugin (Win32)
+EXPERIMENTAL_SHARED_TEXTURE_SUPPORT_ENABLED:BOOL=ON
+
 //Path to a file.
 FFMPEG_avcodec_INCLUDE_DIR:PATH=F:/obs-deps/win32/include
 
@@ -556,6 +562,10 @@ SWIG_VERSION:STRING=3.0.12
 //Build with standard unix filesystem structure
 UNIX_STRUCTURE:BOOL=OFF
 
+//Runs CEF on the main UI thread alongside Qt instead of in its
+// own thread
+USE_QT_LOOP:BOOL=OFF
+
 //Use /dev/urandom to seed the hash function.
 USE_URANDOM:BOOL=ON
 
@@ -765,6 +775,9 @@ media-playback_SOURCE_DIR:STATIC=F:/obs-studio/deps/media-playback
 
 //Value Computed by CMake
 obs-browser_BINARY_DIR:STATIC=F:/obs-studio/vsbuild/plugins/obs-browser
+
+//Dependencies for the target
+obs-browser_LIB_DEPENDS:STATIC=general;libobs;general;obs-frontend-api;general;F:/CEF/cef_binary_76.0.3809.87_windows32/Release/libcef.lib;optimized;F:/CEF/cef_binary_76.0.3809.87_windows32/vsbuild/libcef_dll_wrapper/Release/libcef_dll_wrapper.lib;debug;F:/CEF/cef_binary_76.0.3809.87_windows32/vsbuild/libcef_dll_wrapper/Debug/libcef_dll_wrapper.lib;general;Qt5::Widgets;general;d3d11;general;dxgi;
 
 //Value Computed by CMake
 obs-browser_SOURCE_DIR:STATIC=F:/obs-studio/plugins/obs-browser
@@ -1004,6 +1017,10 @@ win-wasapi_SOURCE_DIR:STATIC=F:/obs-studio/plugins/win-wasapi
 
 //ADVANCED property for variable: BUILD_TESTS
 BUILD_TESTS-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CEF_INCLUDE_DIR
+CEF_INCLUDE_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CEF_LIBRARY
+CEF_LIBRARY-ADVANCED:INTERNAL=1
 //This is the directory where this CMakeCache.txt was created
 CMAKE_CACHEFILE_DIR:INTERNAL=f:/obs-studio/vsbuild
 //Major version of cmake used to create the current loaded cache
@@ -1114,7 +1131,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO
 CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=53
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=52
 //Platform information initialized
 CMAKE_PLATFORM_INFO_INITIALIZED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_RC_COMPILER
