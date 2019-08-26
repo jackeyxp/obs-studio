@@ -171,6 +171,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{960E058A-F8B9-3412-A176-16F754782671}</Project>
       <Name>blake2</Name>
     </ProjectReference>
+    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\coreaudio-encoder\coreaudio-encoder.vcxproj">
+      <Project>{E94E08A9-336D-3FAE-95CA-2B64C918370F}</Project>
+      <Name>coreaudio-encoder</Name>
+    </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\UI\frontend-plugins\decklink-output-ui\decklink-ouput-ui.vcxproj">
       <Project>{A482CB83-C85D-34A6-AE59-1561B61E640D}</Project>
       <Name>decklink-ouput-ui</Name>
@@ -271,6 +275,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{DB082D4B-5F1D-3837-99C7-0DDDCA7517D2}</Project>
       <Name>obs-transitions</Name>
     </ProjectReference>
+    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\obs-vst\obs-vst.vcxproj">
+      <Project>{A8E26A31-F8BF-3163-88F6-C8BA43C3BADE}</Project>
+      <Name>obs-vst</Name>
+    </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\plugins\obs-x264\obs-x264.vcxproj">
       <Project>{93E5B02B-4F55-3EF0-8324-59D266AE3319}</Project>
       <Name>obs-x264</Name>
@@ -290,6 +298,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ProjectReference Include="F:\obs-studio\vsbuild\plugins\text-freetype2\text-freetype2.vcxproj">
       <Project>{9D7EE4E2-DEFC-3D76-A3FF-04831ADA74A9}</Project>
       <Name>text-freetype2</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\obs-studio\vsbuild\UI\win-update\updater\updater.vcxproj">
+      <Project>{C3A67489-83A9-32A1-A9A4-A1C48B7C62E2}</Project>
+      <Name>updater</Name>
     </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\deps\w32-pthreads\w32-pthreads.vcxproj">
       <Project>{89C66847-426C-33C8-89FA-3FFDC8E23830}</Project>

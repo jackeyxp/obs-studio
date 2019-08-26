@@ -550,6 +550,8 @@ SPEEXDSP_LIB:FILEPATH=F:/obs-deps/win32/bin/speexdsp.lib
 //Statically link mbedTLS into binary
 STATIC_MBEDTLS:BOOL=OFF
 
+STATIC_ZLIB_PATH:STRING=F:/obs-deps/win32/bin/zlib.lib
+
 //Path to a file.
 SWIG_DIR:PATH=F:/obs-deps/win32/swig/Lib
 
@@ -937,6 +939,12 @@ text-freetype2_LIB_DEPENDS:STATIC=general;libobs;general;F:/obs-deps/win32/bin/f
 
 //Value Computed by CMake
 text-freetype2_SOURCE_DIR:STATIC=F:/obs-studio/plugins/text-freetype2
+
+//Value Computed by CMake
+updater_BINARY_DIR:STATIC=F:/obs-studio/vsbuild/UI/win-update/updater
+
+//Value Computed by CMake
+updater_SOURCE_DIR:STATIC=F:/obs-studio/UI/win-update/updater
 
 //Value Computed by CMake
 vlc-video_BINARY_DIR:STATIC=F:/obs-studio/vsbuild/plugins/vlc-video

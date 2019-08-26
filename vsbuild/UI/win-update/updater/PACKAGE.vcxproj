@@ -62,7 +62,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
-      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -88,7 +88,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
-      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -114,7 +114,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">
     <Midl>
-      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -140,7 +140,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">
     <Midl>
-      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -225,7 +225,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{BD847538-23D6-38C4-A66F-9DB068F41F59}</Project>
       <Name>ZERO_CHECK</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\win-wasapi\ALL_BUILD.vcxproj">
+    <ProjectReference Include="F:\obs-studio\vsbuild\UI\win-update\updater\ALL_BUILD.vcxproj">
       <Project>{C527CCA5-99DE-374A-A0AE-8958BED6D11B}</Project>
       <Name>ALL_BUILD</Name>
     </ProjectReference>

@@ -179,6 +179,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{6521DB39-5638-3268-9A5F-7C06C32D357C}</Project>
       <Name>obs-frontend-api</Name>
     </ProjectReference>
+    <ProjectReference Include="F:\obs-studio\vsbuild\UI\win-update\updater\updater.vcxproj">
+      <Project>{C3A67489-83A9-32A1-A9A4-A1C48B7C62E2}</Project>
+      <Name>updater</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

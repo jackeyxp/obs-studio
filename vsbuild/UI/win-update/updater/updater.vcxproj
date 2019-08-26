@@ -1,0 +1,435 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|Win32">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|Win32">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C3A67489-83A9-32A1-A9A4-A1C48B7C62E2}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>Win32</Platform>
+    <ProjectName>updater</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">F:\obs-studio\vsbuild\UI\win-update\updater\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">updater.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">updater</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:\obs-studio\vsbuild\UI\win-update\updater\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">updater.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">updater</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">F:\obs-studio\vsbuild\UI\win-update\updater\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">updater.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">updater</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">F:\obs-studio\vsbuild\UI\win-update\updater\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">updater.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">updater</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">true</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\include_Debug;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4127;4201;4456;4457;4458;4459;4595</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;NOMINMAX;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;DEBUG=1;_DEBUG=1;UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;NOMINMAX;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\include_Debug;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\include_Debug;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PreBuildEvent>
+      <Message>Automatic MOC for target updater</Message>
+      <Command>setlocal
+cd F:\obs-studio\vsbuild\UI\win-update\updater
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E cmake_autogen F:/obs-studio/vsbuild/UI/win-update/updater/CMakeFiles/updater_autogen.dir/AutogenInfo.cmake Debug
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>..\..\..\deps\jansson\lib\Debug\jansson_d.lib;F:\obs-deps\win32\bin\zlib.lib;..\..\..\deps\lzma\Debug\lzma.lib;..\..\..\deps\blake2\Debug\blake2.lib;psapi.lib;comctl32.lib;shell32.lib;winhttp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <ImportLibrary>F:/obs-studio/vsbuild/UI/win-update/updater/Debug/updater.lib</ImportLibrary>
+      <LargeAddressAware>true</LargeAddressAware>
+      <ProgramDataBaseFile>F:/obs-studio/vsbuild/UI/win-update/updater/Debug/updater.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+    <Manifest>
+      <AdditionalManifestFiles>F:\obs-studio\UI\win-update\updater\updater.manifest;</AdditionalManifestFiles>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\include_Release;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Release/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DisableSpecificWarnings>4127;4201;4456;4457;4458;4459;4595</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;NOMINMAX;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;NOMINMAX;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\include_Release;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\include_Release;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PreBuildEvent>
+      <Message>Automatic MOC for target updater</Message>
+      <Command>setlocal
+cd F:\obs-studio\vsbuild\UI\win-update\updater
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E cmake_autogen F:/obs-studio/vsbuild/UI/win-update/updater/CMakeFiles/updater_autogen.dir/AutogenInfo.cmake Release
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>..\..\..\deps\jansson\lib\Release\jansson.lib;F:\obs-deps\win32\bin\zlib.lib;..\..\..\deps\lzma\Release\lzma.lib;..\..\..\deps\blake2\Release\blake2.lib;psapi.lib;comctl32.lib;shell32.lib;winhttp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
+      <GenerateDebugInformation>No</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <ImportLibrary>F:/obs-studio/vsbuild/UI/win-update/updater/Release/updater.lib</ImportLibrary>
+      <LargeAddressAware>true</LargeAddressAware>
+      <ProgramDataBaseFile>F:/obs-studio/vsbuild/UI/win-update/updater/Release/updater.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+    <Manifest>
+      <AdditionalManifestFiles>F:\obs-studio\UI\win-update\updater\updater.manifest;</AdditionalManifestFiles>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\include_MinSizeRel;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>MinSizeRel/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DisableSpecificWarnings>4127;4201;4456;4457;4458;4459;4595</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;NOMINMAX;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;NOMINMAX;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\include_MinSizeRel;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\include_MinSizeRel;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PreBuildEvent>
+      <Message>Automatic MOC for target updater</Message>
+      <Command>setlocal
+cd F:\obs-studio\vsbuild\UI\win-update\updater
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E cmake_autogen F:/obs-studio/vsbuild/UI/win-update/updater/CMakeFiles/updater_autogen.dir/AutogenInfo.cmake MinSizeRel
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>..\..\..\deps\jansson\lib\MinSizeRel\jansson.lib;F:\obs-deps\win32\bin\zlib.lib;..\..\..\deps\lzma\MinSizeRel\lzma.lib;..\..\..\deps\blake2\MinSizeRel\blake2.lib;psapi.lib;comctl32.lib;shell32.lib;winhttp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
+      <GenerateDebugInformation>No</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <ImportLibrary>F:/obs-studio/vsbuild/UI/win-update/updater/MinSizeRel/updater.lib</ImportLibrary>
+      <LargeAddressAware>true</LargeAddressAware>
+      <ProgramDataBaseFile>F:/obs-studio/vsbuild/UI/win-update/updater/MinSizeRel/updater.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+    <Manifest>
+      <AdditionalManifestFiles>F:\obs-studio\UI\win-update\updater\updater.manifest;</AdditionalManifestFiles>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\include_RelWithDebInfo;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4127;4201;4456;4457;4458;4459;4595</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;NOMINMAX;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;NOMINMAX;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\include_RelWithDebInfo;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\obs-studio\vsbuild\UI\win-update\updater;F:\obs-studio\UI\win-update\updater;F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\include_RelWithDebInfo;F:\obs-deps\win32\include;F:\obs-studio\vsbuild\UI;F:\obs-studio\UI\obs-frontend-api;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\lzma;F:\obs-studio\deps\lzma\liblzma\api;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PreBuildEvent>
+      <Message>Automatic MOC for target updater</Message>
+      <Command>setlocal
+cd F:\obs-studio\vsbuild\UI\win-update\updater
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E cmake_autogen F:/obs-studio/vsbuild/UI/win-update/updater/CMakeFiles/updater_autogen.dir/AutogenInfo.cmake RelWithDebInfo
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>..\..\..\deps\jansson\lib\RelWithDebInfo\jansson.lib;F:\obs-deps\win32\bin\zlib.lib;..\..\..\deps\lzma\RelWithDebInfo\lzma.lib;..\..\..\deps\blake2\RelWithDebInfo\blake2.lib;psapi.lib;comctl32.lib;shell32.lib;winhttp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <ImportLibrary>F:/obs-studio/vsbuild/UI/win-update/updater/RelWithDebInfo/updater.lib</ImportLibrary>
+      <LargeAddressAware>true</LargeAddressAware>
+      <ProgramDataBaseFile>F:/obs-studio/vsbuild/UI/win-update/updater/RelWithDebInfo/updater.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+    <Manifest>
+      <AdditionalManifestFiles>F:\obs-studio\UI\win-update\updater\updater.manifest;</AdditionalManifestFiles>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\obs-studio\UI\win-update\updater\CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building Custom Rule F:/obs-studio/UI/win-update/updater/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -HF:/obs-studio -BF:/obs-studio/vsbuild --check-stamp-file F:/obs-studio/vsbuild/UI/win-update/updater/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">F:/obs-studio/UI/win-update/updater/CMakeLists.txt;F:\obs-studio\UI\win-update\updater\CMakeLists.txt;F:\obs-studio\cmake\Modules\FindZLIB.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPkgConfig.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageMessage.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageMessage.cmake;F:\obs-studio\UI\win-update\updater\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">F:\obs-studio\vsbuild\UI\win-update\updater\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building Custom Rule F:/obs-studio/UI/win-update/updater/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -HF:/obs-studio -BF:/obs-studio/vsbuild --check-stamp-file F:/obs-studio/vsbuild/UI/win-update/updater/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:/obs-studio/UI/win-update/updater/CMakeLists.txt;F:\obs-studio\UI\win-update\updater\CMakeLists.txt;F:\obs-studio\cmake\Modules\FindZLIB.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPkgConfig.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageMessage.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageMessage.cmake;F:\obs-studio\UI\win-update\updater\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:\obs-studio\vsbuild\UI\win-update\updater\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">Building Custom Rule F:/obs-studio/UI/win-update/updater/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -HF:/obs-studio -BF:/obs-studio/vsbuild --check-stamp-file F:/obs-studio/vsbuild/UI/win-update/updater/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">F:/obs-studio/UI/win-update/updater/CMakeLists.txt;F:\obs-studio\UI\win-update\updater\CMakeLists.txt;F:\obs-studio\cmake\Modules\FindZLIB.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPkgConfig.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageMessage.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageMessage.cmake;F:\obs-studio\UI\win-update\updater\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">F:\obs-studio\vsbuild\UI\win-update\updater\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Building Custom Rule F:/obs-studio/UI/win-update/updater/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -HF:/obs-studio -BF:/obs-studio/vsbuild --check-stamp-file F:/obs-studio/vsbuild/UI/win-update/updater/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">F:/obs-studio/UI/win-update/updater/CMakeLists.txt;F:\obs-studio\UI\win-update\updater\CMakeLists.txt;F:\obs-studio\cmake\Modules\FindZLIB.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPkgConfig.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageMessage.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageHandleStandardArgs.cmake;E:\cmake-3.11.1-win32-x86\share\cmake-3.11\Modules\FindPackageMessage.cmake;F:\obs-studio\UI\win-update\updater\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">F:\obs-studio\vsbuild\UI\win-update\updater\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="F:\obs-studio\UI\win-update\win-update-helpers.hpp" />
+    <ClInclude Include="F:\obs-studio\UI\win-update\updater\resource.h" />
+    <ClInclude Include="F:\obs-studio\UI\win-update\updater\updater.hpp" />
+    <ClCompile Include="F:\obs-studio\UI\win-update\win-update-helpers.cpp" />
+    <ClCompile Include="F:\obs-studio\UI\win-update\updater\updater.cpp" />
+    <ClCompile Include="F:\obs-studio\UI\win-update\updater\patch.cpp" />
+    <ClCompile Include="F:\obs-studio\UI\win-update\updater\http.cpp" />
+    <ClCompile Include="F:\obs-studio\UI\win-update\updater\hash.cpp" />
+    <ResourceCompile Include="F:\obs-studio\UI\win-update\updater\updater.rc" />
+    <ClCompile Include="F:\obs-studio\vsbuild\UI\win-update\updater\updater_autogen\mocs_compilation.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="F:\obs-studio\vsbuild\ZERO_CHECK.vcxproj">
+      <Project>{BD847538-23D6-38C4-A66F-9DB068F41F59}</Project>
+      <Name>ZERO_CHECK</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\obs-studio\vsbuild\deps\blake2\blake2.vcxproj">
+      <Project>{960E058A-F8B9-3412-A176-16F754782671}</Project>
+      <Name>blake2</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\obs-studio\vsbuild\deps\jansson\jansson.vcxproj">
+      <Project>{7940F5F8-C71C-3426-ABA1-58BFE5C29BEC}</Project>
+      <Name>jansson</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\obs-studio\vsbuild\deps\lzma\lzma.vcxproj">
+      <Project>{C38C2FBF-8D44-3F96-B253-0DD3C7DBA4FC}</Project>
+      <Name>lzma</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
