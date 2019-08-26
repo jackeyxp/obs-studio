@@ -273,6 +273,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win-wasapi", "plugins\win-w
 		{5FC4961E-C047-3FD4-B46D-FF6953040773} = {5FC4961E-C047-3FD4-B46D-FF6953040773}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Smart", "..\Smart\Smart.vcxproj", "{B12702AD-ABFB-343A-A199-8E24837244A3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -577,6 +579,14 @@ Global
 		{039B9945-0E74-3512-A2B5-DDACC01461F3}.Release|Win32.Build.0 = Release|Win32
 		{039B9945-0E74-3512-A2B5-DDACC01461F3}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
 		{039B9945-0E74-3512-A2B5-DDACC01461F3}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.Debug|Win32.Build.0 = Debug|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.MinSizeRel|Win32.ActiveCfg = Release|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.MinSizeRel|Win32.Build.0 = Release|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.Release|Win32.ActiveCfg = Release|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.Release|Win32.Build.0 = Release|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.RelWithDebInfo|Win32.ActiveCfg = Release|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.RelWithDebInfo|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
