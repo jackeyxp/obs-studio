@@ -163,21 +163,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{BD847538-23D6-38C4-A66F-9DB068F41F59}</Project>
       <Name>ZERO_CHECK</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\deps\obs-scripting\obspython\_obspython.vcxproj">
-      <Project>{145F4922-D4E4-32D5-89A5-E5DE9F4080BF}</Project>
-      <Name>_obspython</Name>
-    </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\deps\blake2\blake2.vcxproj">
       <Project>{960E058A-F8B9-3412-A176-16F754782671}</Project>
       <Name>blake2</Name>
-    </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\coreaudio-encoder\coreaudio-encoder.vcxproj">
-      <Project>{E94E08A9-336D-3FAE-95CA-2B64C918370F}</Project>
-      <Name>coreaudio-encoder</Name>
-    </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\UI\frontend-plugins\decklink-output-ui\decklink-ouput-ui.vcxproj">
-      <Project>{A482CB83-C85D-34A6-AE59-1561B61E640D}</Project>
-      <Name>decklink-ouput-ui</Name>
     </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\deps\file-updater\file-updater.vcxproj">
       <Project>{9D80AEA0-3AD1-3251-B800-08628337EE90}</Project>
@@ -275,29 +263,13 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{DB082D4B-5F1D-3837-99C7-0DDDCA7517D2}</Project>
       <Name>obs-transitions</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\obs-vst\obs-vst.vcxproj">
-      <Project>{A8E26A31-F8BF-3163-88F6-C8BA43C3BADE}</Project>
-      <Name>obs-vst</Name>
-    </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\plugins\obs-x264\obs-x264.vcxproj">
       <Project>{93E5B02B-4F55-3EF0-8324-59D266AE3319}</Project>
       <Name>obs-x264</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\deps\obs-scripting\obslua\obslua.vcxproj">
-      <Project>{EDEAF90E-FF20-3902-AFFC-A21288FDAFF7}</Project>
-      <Name>obslua</Name>
-    </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\plugins\rtmp-services\rtmp-services.vcxproj">
       <Project>{C0C8EE57-A4C8-3F6F-A4E4-A666FCFDE5B5}</Project>
       <Name>rtmp-services</Name>
-    </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\test\test-input\test-input.vcxproj">
-      <Project>{6B1B91B4-A515-369B-BBF0-23B80825FD05}</Project>
-      <Name>test-input</Name>
-    </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\text-freetype2\text-freetype2.vcxproj">
-      <Project>{9D7EE4E2-DEFC-3D76-A3FF-04831ADA74A9}</Project>
-      <Name>text-freetype2</Name>
     </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\UI\win-update\updater\updater.vcxproj">
       <Project>{C3A67489-83A9-32A1-A9A4-A1C48B7C62E2}</Project>
@@ -310,10 +282,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ProjectReference Include="F:\obs-studio\vsbuild\plugins\win-capture\win-capture.vcxproj">
       <Project>{26A9652D-C239-368F-A7A8-68190D8FCA32}</Project>
       <Name>win-capture</Name>
-    </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\decklink\win\win-decklink.vcxproj">
-      <Project>{12E73555-DBD4-3DFB-BBBC-0DA8517C89C4}</Project>
-      <Name>win-decklink</Name>
     </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\plugins\win-dshow\win-dshow.vcxproj">
       <Project>{01161F85-4E91-3FB1-9B48-936EC32DBA91}</Project>
