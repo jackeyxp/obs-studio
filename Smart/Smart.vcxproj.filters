@@ -497,9 +497,6 @@
     <ClInclude Include="qt-wrappers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui-config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="display-helpers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -521,5 +518,22 @@
     <ClInclude Include="..\deps\libff\libff\ff-util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui-config.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vsbuild\config\obsconfig.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libobs\obs-config.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Smart.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

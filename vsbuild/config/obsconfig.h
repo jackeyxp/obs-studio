@@ -9,7 +9,7 @@
 #define OFF 0
 #endif
 
-#define OBS_VERSION "23.2.2-rc1"
+//#define OBS_VERSION "23.2.2-rc1"
 #define OBS_DATA_PATH "../../data"
 #define OBS_INSTALL_PREFIX ""
 #define OBS_PLUGIN_DESTINATION "obs-plugins/32bit"
@@ -31,11 +31,11 @@
  *
  * If the release candidate version number is 0.0.0 and the RC number is 0,
  * that means it's not a release candidate build. */
-#define OBS_RELEASE_CANDIDATE_MAJOR 23
+/*#define OBS_RELEASE_CANDIDATE_MAJOR 23
 #define OBS_RELEASE_CANDIDATE_MINOR 2
 #define OBS_RELEASE_CANDIDATE_PATCH 2
 #define OBS_RELEASE_CANDIDATE_VER \
 	MAKE_SEMANTIC_VERSION(OBS_RELEASE_CANDIDATE_MAJOR, \
 	                      OBS_RELEASE_CANDIDATE_MINOR, \
 	                      OBS_RELEASE_CANDIDATE_PATCH)
-#define OBS_RELEASE_CANDIDATE 1
+#define OBS_RELEASE_CANDIDATE 1*/
