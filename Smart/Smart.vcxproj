@@ -11,7 +11,405 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\deps\json11\json11.cpp" />
+    <ClCompile Include="..\deps\libff\libff\ff-util.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
+    </ClCompile>
+    <ClCompile Include="adv-audio-control.cpp" />
+    <ClCompile Include="api-interface.cpp" />
+    <ClCompile Include="audio-encoders.cpp" />
+    <ClCompile Include="auth-base.cpp" />
+    <ClCompile Include="combobox-ignorewheel.cpp" />
+    <ClCompile Include="crash-report.cpp" />
+    <ClCompile Include="double-slider.cpp" />
+    <ClCompile Include="focus-list.cpp" />
+    <ClCompile Include="horizontal-scroll-area.cpp" />
+    <ClCompile Include="hotkey-edit.cpp" />
+    <ClCompile Include="item-widget-helpers.cpp" />
+    <ClCompile Include="menu-button.cpp" />
     <ClCompile Include="obs-app.cpp" />
+    <ClCompile Include="platform-windows.cpp" />
+    <ClCompile Include="properties-view.cpp" />
+    <ClCompile Include="qt-display.cpp" />
+    <ClCompile Include="qt-wrappers.cpp" />
+    <ClCompile Include="record-button.cpp" />
+    <ClCompile Include="remote-text.cpp" />
+    <ClCompile Include="slider-absoluteset-style.cpp" />
+    <ClCompile Include="slider-ignorewheel.cpp" />
+    <ClCompile Include="source-label.cpp" />
+    <ClCompile Include="source-tree.cpp" />
+    <ClCompile Include="spinbox-ignorewheel.cpp" />
+    <ClCompile Include="vertical-scroll-area.cpp" />
+    <ClCompile Include="visibility-item-widget.cpp" />
+    <ClCompile Include="volume-control.cpp" />
+    <ClCompile Include="win-update\update-window.cpp" />
+    <ClCompile Include="win-update\win-update-helpers.cpp" />
+    <ClCompile Include="win-update\win-update.cpp" />
+    <ClCompile Include="window-basic-about.cpp" />
+    <ClCompile Include="window-basic-adv-audio.cpp" />
+    <ClCompile Include="window-basic-auto-config-test.cpp" />
+    <ClCompile Include="window-basic-auto-config.cpp" />
+    <ClCompile Include="window-basic-filters.cpp" />
+    <ClCompile Include="window-basic-interaction.cpp" />
+    <ClCompile Include="window-basic-main-browser.cpp" />
+    <ClCompile Include="window-basic-main-dropfiles.cpp" />
+    <ClCompile Include="window-basic-main-outputs.cpp" />
+    <ClCompile Include="window-basic-main-profiles.cpp" />
+    <ClCompile Include="window-basic-main-scene-collections.cpp" />
+    <ClCompile Include="window-basic-main-transitions.cpp" />
+    <ClCompile Include="window-basic-main.cpp" />
+    <ClCompile Include="window-basic-preview.cpp" />
+    <ClCompile Include="window-basic-properties.cpp" />
+    <ClCompile Include="window-basic-settings-stream.cpp" />
+    <ClCompile Include="window-basic-settings.cpp" />
+    <ClCompile Include="window-basic-source-select.cpp" />
+    <ClCompile Include="window-basic-stats.cpp" />
+    <ClCompile Include="window-basic-status-bar.cpp" />
+    <ClCompile Include="window-basic-transform.cpp" />
+    <ClCompile Include="window-dock.cpp" />
+    <ClCompile Include="window-log-reply.cpp" />
+    <ClCompile Include="window-namedialog.cpp" />
+    <ClCompile Include="window-projector.cpp" />
+    <ClCompile Include="window-remux.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="obs-app.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="forms\AutoConfigFinishPage.ui" />
+    <QtUic Include="forms\AutoConfigStartPage.ui" />
+    <QtUic Include="forms\AutoConfigStreamPage.ui" />
+    <QtUic Include="forms\AutoConfigTestPage.ui" />
+    <QtUic Include="forms\AutoConfigVideoPage.ui" />
+    <QtUic Include="forms\ColorSelect.ui" />
+    <QtUic Include="forms\NameDialog.ui" />
+    <QtUic Include="forms\OBSAbout.ui" />
+    <QtUic Include="forms\OBSBasic.ui" />
+    <QtUic Include="forms\OBSBasicFilters.ui" />
+    <QtUic Include="forms\OBSBasicInteraction.ui" />
+    <QtUic Include="forms\OBSBasicSettings.ui" />
+    <QtUic Include="forms\OBSBasicSourceSelect.ui" />
+    <QtUic Include="forms\OBSBasicTransform.ui" />
+    <QtUic Include="forms\OBSLogReply.ui" />
+    <QtUic Include="forms\OBSRemux.ui" />
+    <QtUic Include="forms\OBSUpdate.ui" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="forms\obs.qrc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="forms\images\down.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\expand.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\invisible.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\locked.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\media-pause.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\minus.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\mute.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\no_sources.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\plus.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\refresh.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\revert.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\settings\advanced.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\settings\audio.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\settings\general.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\settings\hotkeys.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\settings\output.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\settings\stream.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\settings\video.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\trash.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\unlocked.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\up.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="forms\images\visible.svg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="forms\images\obs.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="forms\images\tray_active.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="auth-base.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="clickable-label.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="crash-report.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="focus-list.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="horizontal-scroll-area.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\deps\json11\json11.hpp" />
+    <ClInclude Include="..\deps\libff\libff\ff-util.h" />
+    <ClInclude Include="audio-encoders.hpp" />
+    <QtMoc Include="menu-button.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\win-update -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -IF:\obs-studio\vsbuild\deps\jansson\include -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <ClInclude Include="slider-absoluteset-style.hpp" />
+    <ClInclude Include="win-update\win-update-helpers.hpp" />
+    <QtMoc Include="win-update\win-update.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="win-update\update-window.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="mute-checkbox.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="volume-control.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-remux.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-log-reply.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="hotkey-edit.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <ClInclude Include="window-basic-main-outputs.hpp" />
+    <QtMoc Include="window-basic-source-select.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-basic-auto-config.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="balance-slider.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-namedialog.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="adv-audio-control.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="expand-checkbox.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="locked-checkbox.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="visibility-item-widget.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="visibility-checkbox.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="combobox-ignorewheel.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <ClInclude Include="display-helpers.hpp" />
+    <QtMoc Include="spinbox-ignorewheel.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="slider-ignorewheel.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="double-slider.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <ClInclude Include="platform.hpp" />
+    <ClInclude Include="qt-wrappers.hpp" />
+    <ClInclude Include="ui-config.h" />
+    <QtMoc Include="window-projector.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-main.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-dock.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-basic-transform.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-basic-status-bar.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-basic-stats.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-basic-settings.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-basic-properties.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-basic-preview.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-basic-main.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-basic-interaction.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-basic-filters.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-basic-adv-audio.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="window-basic-about.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="vertical-scroll-area.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="source-tree.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="source-label.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="remote-text.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="record-button.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="qt-display.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="properties-view.moc.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="properties-view.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B12702AD-ABFB-343A-A199-8E24837244A3}</ProjectGuid>
@@ -60,7 +458,7 @@
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtNetwork;$(QTDIR)\mkspecs\win32-msvc2015;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;win-update;obs-frontend-api;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);F:\obs-deps\win32\include;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\vsbuild\config;F:\obs-studio\deps\w32-pthreads;F:\obs-studio\vsbuild\deps\jansson\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtNetwork;$(QTDIR)\mkspecs\win32-msvc2015;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
@@ -73,12 +471,14 @@
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <AdditionalLibraryDirectories>$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Networkd.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Widgetsd.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Guid.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Cored.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\qtmaind.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Svgd.lib;F:\obs-deps\win32\bin\avcodec.lib;F:\obs-deps\win32\bin\avutil.lib;F:\obs-deps\win32\bin\avformat.lib;F:\obs-studio\vsbuild\deps\blake2\Debug\blake2.lib;F:\obs-studio\vsbuild\deps\jansson\lib\Debug\jansson_d.lib;F:\obs-studio\vsbuild\deps\w32-pthreads\Debug\w32-pthreads.lib;F:\obs-studio\vsbuild\libobs\Debug\obs.lib;crypt32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Networkd.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Widgetsd.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Guid.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Cored.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\qtmaind.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Svgd.lib;F:\obs-deps\win32\bin\avcodec.lib;F:\obs-deps\win32\bin\avutil.lib;F:\obs-deps\win32\bin\avformat.lib;F:\obs-deps\win32\bin\libcurl.lib;F:\obs-studio\vsbuild\libobs\Debug\obs.lib;F:\obs-studio\vsbuild\deps\blake2\Debug\blake2.lib;F:\obs-studio\vsbuild\deps\jansson\lib\Debug\jansson_d.lib;F:\obs-studio\vsbuild\deps\w32-pthreads\Debug\w32-pthreads.lib;F:\obs-studio\vsbuild\UI\obs-frontend-api\Debug\obs-frontend-api.lib;crypt32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <QtMoc>
-      <Define>WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL="libobs-opengl.dll";DL_D3D9="";DL_D3D11="libobs-d3d11.dll";UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;HAVE_OBSCONFIG_H;QT_WIDGETS_LIB;QT_GUI_LIB;QT_CORE_LIB;QT_SVG_LIB;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</Define>
-      <IncludePath>.;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtNetwork;$(QTDIR)\mkspecs\win32-msvc2015;%(AdditionalIncludeDirectories)</IncludePath>
+      <Define>WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath>.;win-update;obs-frontend-api;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);F:\obs-deps\win32\include;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\deps\blake2\src;F:\obs-studio\vsbuild\config;F:\obs-studio\deps\w32-pthreads;F:\obs-studio\vsbuild\deps\jansson\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtNetwork;$(QTDIR)\mkspecs\win32-msvc2015;%(AdditionalIncludeDirectories)</IncludePath>
+      <OutputFile>.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</OutputFile>
+      <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
     </QtMoc>
     <PostBuildEvent>
       <Command>setlocal
@@ -100,6 +500,14 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
+    <QtUic>
+      <ExecutionDescription>Uic'ing %(Identity)...</ExecutionDescription>
+      <OutputFile>.\GeneratedFiles\ui_%(Filename).h</OutputFile>
+    </QtUic>
+    <QtRcc>
+      <ExecutionDescription>Rcc'ing %(Identity)...</ExecutionDescription>
+      <OutputFile>.\GeneratedFiles\qrc_%(Filename).cpp</OutputFile>
+    </QtRcc>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -120,7 +528,17 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <QtMoc>
       <Define>UNICODE;WIN32;WIN64;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;%(PreprocessorDefinitions)</Define>
       <IncludePath>.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;%(AdditionalIncludeDirectories)</IncludePath>
+      <OutputFile>.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</OutputFile>
+      <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
     </QtMoc>
+    <QtUic>
+      <ExecutionDescription>Uic'ing %(Identity)...</ExecutionDescription>
+      <OutputFile>.\GeneratedFiles\ui_%(Filename).h</OutputFile>
+    </QtUic>
+    <QtRcc>
+      <ExecutionDescription>Rcc'ing %(Identity)...</ExecutionDescription>
+      <OutputFile>.\GeneratedFiles\qrc_%(Filename).cpp</OutputFile>
+    </QtRcc>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
