@@ -24,7 +24,7 @@
 
 class QWidget;
 
-/* Gets the path of obs-studio specific data files (such as locale) */
+/* Gets the path of obs-smart specific data files (such as locale) */
 bool GetDataFilePath(const char *data, std::string &path);
 
 /* Updates the working directory for OSX application bundles */

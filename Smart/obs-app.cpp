@@ -460,34 +460,34 @@ static bool MakeUserDirs()
 {
 	char path[512];
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/basic") <= 0)
+	if (GetConfigPath(path, sizeof(path), "obs-smart/basic") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/logs") <= 0)
+	if (GetConfigPath(path, sizeof(path), "obs-smart/logs") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/profiler_data") <= 0)
+	if (GetConfigPath(path, sizeof(path), "obs-smart/profiler_data") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
 
 #ifdef _WIN32
-	if (GetConfigPath(path, sizeof(path), "obs-studio/crashes") <= 0)
+	if (GetConfigPath(path, sizeof(path), "obs-smart/crashes") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/updates") <= 0)
+	if (GetConfigPath(path, sizeof(path), "obs-smart/updates") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
 #endif
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/plugin_config") <= 0)
+	if (GetConfigPath(path, sizeof(path), "obs-smart/plugin_config") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
@@ -499,12 +499,12 @@ static bool MakeUserProfileDirs()
 {
 	char path[512];
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/basic/profiles") <= 0)
+	if (GetConfigPath(path, sizeof(path), "obs-smart/basic/profiles") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/basic/scenes") <= 0)
+	if (GetConfigPath(path, sizeof(path), "obs-smart/basic/scenes") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
@@ -518,7 +518,7 @@ static string GetProfileDirFromName(const char *name)
 	os_glob_t *glob;
 	char path[512];
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/basic/profiles") <= 0)
+	if (GetConfigPath(path, sizeof(path), "obs-smart/basic/profiles") <= 0)
 		return outputPath;
 
 	strcat(path, "/*");
@@ -564,7 +564,7 @@ static string GetSceneCollectionFileFromName(const char *name)
 	os_glob_t *glob;
 	char path[512];
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/basic/scenes") <= 0)
+	if (GetConfigPath(path, sizeof(path), "obs-smart/basic/scenes") <= 0)
 		return outputPath;
 
 	strcat(path, "/*.json");
@@ -648,7 +648,7 @@ bool OBSApp::InitGlobalConfig()
 	char path[512];
 	bool changed = false;
 
-	int len = GetConfigPath(path, sizeof(path), "obs-studio/global.ini");
+	int len = GetConfigPath(path, sizeof(path), "obs-smart/global.ini");
 	if (len <= 0) {
 		return false;
 	}
@@ -1016,7 +1016,7 @@ bool OBSApp::SetTheme(std::string name, std::string path)
 	if (path == "") {
 		char userDir[512];
 		name = "themes/" + name + ".qss";
-		string temp = "obs-studio/" + name;
+		string temp = "obs-smart/" + name;
 		int ret = GetConfigPath(userDir, sizeof(userDir), temp.c_str());
 
 		if (ret > 0 && QFile::exists(userDir)) {
@@ -1095,13 +1095,13 @@ static void move_basic_to_profiles(void)
 	os_glob_t *glob;
 
 	/* if not first time use */
-	if (GetConfigPath(path, 512, "obs-studio/basic") <= 0)
+	if (GetConfigPath(path, 512, "obs-smart/basic") <= 0)
 		return;
 	if (!os_file_exists(path))
 		return;
 
 	/* if the profiles directory doesn't already exist */
-	if (GetConfigPath(new_path, 512, "obs-studio/basic/profiles") <= 0)
+	if (GetConfigPath(new_path, 512, "obs-smart/basic/profiles") <= 0)
 		return;
 	if (os_file_exists(new_path))
 		return;
@@ -1148,12 +1148,12 @@ static void move_basic_to_scene_collections(void)
 	char path[512];
 	char new_path[512];
 
-	if (GetConfigPath(path, 512, "obs-studio/basic") <= 0)
+	if (GetConfigPath(path, 512, "obs-smart/basic") <= 0)
 		return;
 	if (!os_file_exists(path))
 		return;
 
-	if (GetConfigPath(new_path, 512, "obs-studio/basic/scenes") <= 0)
+	if (GetConfigPath(new_path, 512, "obs-smart/basic/scenes") <= 0)
 		return;
 	if (os_file_exists(new_path))
 		return;
@@ -1240,7 +1240,7 @@ static bool StartupOBS(const char *locale, profiler_name_store_t *store)
 {
 	char path[512];
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/plugin_config") <= 0)
+	if (GetConfigPath(path, sizeof(path), "obs-smart/plugin_config") <= 0)
 		return false;
 
 	return obs_startup(locale, path, store);

@@ -131,7 +131,7 @@ static void gl_enable_debug() {}
 static bool gl_init_extensions(struct gs_device *device)
 {
 	if (!GLAD_GL_VERSION_2_1) {
-		blog(LOG_ERROR, "obs-studio requires OpenGL version 2.1 or "
+		blog(LOG_ERROR, "obs-smart requires OpenGL version 2.1 or "
 				"higher.");
 		return false;
 	}

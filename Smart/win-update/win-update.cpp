@@ -346,7 +346,7 @@ try {
 	vector<string> extraHeaders;
 
 	BPtr<char> updateFilePath =
-		GetConfigPathPtr("obs-studio\\updates\\updater.exe");
+		GetConfigPathPtr("obs-smart\\updates\\updater.exe");
 
 	if (CalculateFileHash(updateFilePath, updateFileHash)) {
 		char hashString[BLAKE2_HASH_STR_LENGTH];
@@ -544,7 +544,7 @@ try {
 	} finishedTrigger;
 
 	BPtr<char> manifestPath =
-		GetConfigPathPtr("obs-studio\\updates\\manifest.json");
+		GetConfigPathPtr("obs-smart\\updates\\manifest.json");
 
 	auto ActiveOrGameCaptureLocked = [this]() {
 		if (obs_video_active()) {
@@ -709,7 +709,7 @@ try {
 	 * execute updater                     */
 
 	BPtr<char> updateFilePath =
-		GetConfigPathPtr("obs-studio\\updates\\updater.exe");
+		GetConfigPathPtr("obs-smart\\updates\\updater.exe");
 	BPtr<wchar_t> wUpdateFilePath;
 
 	size_t size = os_utf8_to_wcs_ptr(updateFilePath, 0, &wUpdateFilePath);
@@ -768,7 +768,7 @@ try {
 	bool success;
 
 	BPtr<char> whatsnewPath =
-		GetConfigPathPtr("obs-studio\\updates\\whatsnew.json");
+		GetConfigPathPtr("obs-smart\\updates\\whatsnew.json");
 
 	/* ----------------------------------- *
 	 * create signature provider           */
