@@ -267,10 +267,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{93E5B02B-4F55-3EF0-8324-59D266AE3319}</Project>
       <Name>obs-x264</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\plugins\rtmp-services\rtmp-services.vcxproj">
-      <Project>{C0C8EE57-A4C8-3F6F-A4E4-A666FCFDE5B5}</Project>
-      <Name>rtmp-services</Name>
-    </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\UI\win-update\updater\updater.vcxproj">
       <Project>{C3A67489-83A9-32A1-A9A4-A1C48B7C62E2}</Project>
       <Name>updater</Name>
