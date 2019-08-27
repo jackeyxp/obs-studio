@@ -128,7 +128,8 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>					</Message>
+      <Message>
+      </Message>
       <Command>setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/UI/Debug/obs32.exe F:/obs-studio/vsbuild/rundir/Debug/bin/32bit/obs32.exe
 if %errorlevel% neq 0 goto :cmEnd
@@ -165,24 +166,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
-setlocal
-E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E make_directory F:/obs-studio/vsbuild/rundir/Debug/data/obs-studio/authors
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/UI/../AUTHORS F:/obs-studio/vsbuild/rundir/Debug/data/obs-studio/authors
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
+</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Svgd.lib;obs-frontend-api\Debug\obs-frontend-api.lib;F:\obs-deps\win32\bin\avcodec.lib;F:\obs-deps\win32\bin\avutil.lib;F:\obs-deps\win32\bin\avformat.lib;F:\obs-deps\win32\bin\libcurl.lib;crypt32.lib;..\deps\blake2\Debug\blake2.lib;..\deps\jansson\lib\Debug\jansson_d.lib;..\deps\w32-pthreads\Debug\w32-pthreads.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Widgetsd.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Guid.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Cored.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\qtmaind.lib;..\libobs\Debug\obs.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
@@ -248,7 +232,8 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>					</Message>
+      <Message>
+      </Message>
       <Command>setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/UI/Release/obs32.exe F:/obs-studio/vsbuild/rundir/Release/bin/32bit/obs32.exe
 if %errorlevel% neq 0 goto :cmEnd
@@ -285,24 +270,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
-setlocal
-E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E make_directory F:/obs-studio/vsbuild/rundir/Release/data/obs-studio/authors
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/UI/../AUTHORS F:/obs-studio/vsbuild/rundir/Release/data/obs-studio/authors
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
+</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Svg.lib;obs-frontend-api\Release\obs-frontend-api.lib;F:\obs-deps\win32\bin\avcodec.lib;F:\obs-deps\win32\bin\avutil.lib;F:\obs-deps\win32\bin\avformat.lib;F:\obs-deps\win32\bin\libcurl.lib;crypt32.lib;..\deps\blake2\Release\blake2.lib;..\deps\jansson\lib\Release\jansson.lib;..\deps\w32-pthreads\Release\w32-pthreads.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Widgets.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Gui.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Core.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\qtmain.lib;..\libobs\Release\obs.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
@@ -368,7 +336,8 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>					</Message>
+      <Message>
+      </Message>
       <Command>setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/UI/MinSizeRel/obs32.exe F:/obs-studio/vsbuild/rundir/MinSizeRel/bin/32bit/obs32.exe
 if %errorlevel% neq 0 goto :cmEnd
@@ -487,7 +456,8 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>					</Message>
+      <Message>
+      </Message>
       <Command>setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/UI/RelWithDebInfo/obs32.exe F:/obs-studio/vsbuild/rundir/RelWithDebInfo/bin/32bit/obs32.exe
 if %errorlevel% neq 0 goto :cmEnd
