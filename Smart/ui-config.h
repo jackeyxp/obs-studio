@@ -28,4 +28,4 @@
 #define RESTREAM_CLIENTID ""
 #define RESTREAM_HASH     0x0
 
-#define DEFAULT_THEME "Dark"
+#define DEFAULT_THEME "Default"

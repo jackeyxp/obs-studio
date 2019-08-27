@@ -137,6 +137,7 @@ public:
 
 	const char *InputAudioSource() const;
 	const char *OutputAudioSource() const;
+	const char *InteractRtpSource() const;
 
 	const char *GetRenderModule() const;
 

@@ -320,6 +320,12 @@ static void do_log(int log_level, const char *msg, va_list args, void *param)
 
 #ifdef _WIN32
 	if (IsDebuggerPresent()) {
+		// 调试信息新增时间戳...
+		string strTemp = str;
+		char szBuf[32] = { 0 };
+		sprintf(szBuf, "[%I64d ms]", os_gettime_ns() / 1000000);
+		sprintf(str, "%s %s", szBuf, strTemp.c_str());
+		// 进行宽字符格式转换...
 		int wNum = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
 		if (wNum > 1) {
 			static wstring wide_buf;
@@ -356,92 +362,56 @@ static void do_log(int log_level, const char *msg, va_list args, void *param)
 
 bool OBSApp::InitGlobalConfigDefaults()
 {
-	config_set_default_string(globalConfig, "General", "Language",
-				  DEFAULT_LANG);
+	config_set_default_string(globalConfig, "General", "Language", DEFAULT_LANG);
 	config_set_default_uint(globalConfig, "General", "MaxLogs", 10);
 	config_set_default_int(globalConfig, "General", "InfoIncrement", -1);
-	config_set_default_string(globalConfig, "General", "ProcessPriority",
-				  "Normal");
-	config_set_default_bool(globalConfig, "General", "EnableAutoUpdates",
-				true);
+	config_set_default_string(globalConfig, "General", "ProcessPriority", "Normal");
+	config_set_default_bool(globalConfig, "General", "EnableAutoUpdates", true);
 
 #if _WIN32
-	config_set_default_string(globalConfig, "Video", "Renderer",
-				  "Direct3D 11");
+	config_set_default_string(globalConfig, "Video", "Renderer", "Direct3D 11");
 #else
 	config_set_default_string(globalConfig, "Video", "Renderer", "OpenGL");
 #endif
 
-	config_set_default_bool(globalConfig, "BasicWindow", "PreviewEnabled",
-				true);
-	config_set_default_bool(globalConfig, "BasicWindow",
-				"PreviewProgramMode", false);
-	config_set_default_bool(globalConfig, "BasicWindow",
-				"SceneDuplicationMode", true);
-	config_set_default_bool(globalConfig, "BasicWindow", "SwapScenesMode",
-				true);
-	config_set_default_bool(globalConfig, "BasicWindow", "SnappingEnabled",
-				true);
-	config_set_default_bool(globalConfig, "BasicWindow", "ScreenSnapping",
-				true);
-	config_set_default_bool(globalConfig, "BasicWindow", "SourceSnapping",
-				true);
-	config_set_default_bool(globalConfig, "BasicWindow", "CenterSnapping",
-				false);
-	config_set_default_double(globalConfig, "BasicWindow", "SnapDistance",
-				  10.0);
-	config_set_default_bool(globalConfig, "BasicWindow",
-				"RecordWhenStreaming", false);
-	config_set_default_bool(globalConfig, "BasicWindow",
-				"KeepRecordingWhenStreamStops", false);
-	config_set_default_bool(globalConfig, "BasicWindow", "SysTrayEnabled",
-				true);
-	config_set_default_bool(globalConfig, "BasicWindow",
-				"SysTrayWhenStarted", false);
-	config_set_default_bool(globalConfig, "BasicWindow", "SaveProjectors",
-				false);
-	config_set_default_bool(globalConfig, "BasicWindow", "ShowTransitions",
-				true);
-	config_set_default_bool(globalConfig, "BasicWindow",
-				"ShowListboxToolbars", true);
-	config_set_default_bool(globalConfig, "BasicWindow", "ShowStatusBar",
-				true);
-	config_set_default_bool(globalConfig, "BasicWindow", "StudioModeLabels",
-				true);
+	config_set_default_bool(globalConfig, "BasicWindow", "PreviewEnabled", true);
+	config_set_default_bool(globalConfig, "BasicWindow", "PreviewProgramMode", false);
+	config_set_default_bool(globalConfig, "BasicWindow", "SceneDuplicationMode", true);
+	config_set_default_bool(globalConfig, "BasicWindow", "SwapScenesMode", true);
+	config_set_default_bool(globalConfig, "BasicWindow", "SnappingEnabled", true);
+	config_set_default_bool(globalConfig, "BasicWindow", "ScreenSnapping", true);
+	config_set_default_bool(globalConfig, "BasicWindow", "SourceSnapping", true);
+	config_set_default_bool(globalConfig, "BasicWindow", "CenterSnapping", false);
+	config_set_default_double(globalConfig, "BasicWindow", "SnapDistance", 10.0);
+	config_set_default_bool(globalConfig, "BasicWindow", "RecordWhenStreaming", false);
+	config_set_default_bool(globalConfig, "BasicWindow", "KeepRecordingWhenStreamStops", false);
+	config_set_default_bool(globalConfig, "BasicWindow", "SysTrayEnabled", true);
+	config_set_default_bool(globalConfig, "BasicWindow", "SysTrayWhenStarted", false);
+	config_set_default_bool(globalConfig, "BasicWindow", "SaveProjectors", false);
+	config_set_default_bool(globalConfig, "BasicWindow", "ShowTransitions", true);
+	config_set_default_bool(globalConfig, "BasicWindow", "ShowListboxToolbars", true);
+	config_set_default_bool(globalConfig, "BasicWindow", "ShowStatusBar", true);
+	config_set_default_bool(globalConfig, "BasicWindow", "StudioModeLabels", true);
 
 	if (!config_get_bool(globalConfig, "General", "Pre21Defaults")) {
-		config_set_default_string(globalConfig, "General",
-					  "CurrentTheme", DEFAULT_THEME);
+		config_set_default_string(globalConfig, "General", "CurrentTheme", DEFAULT_THEME);
 	}
 
-	config_set_default_string(globalConfig, "General", "HotkeyFocusType",
-				  "NeverDisableHotkeys");
-
-	config_set_default_bool(globalConfig, "BasicWindow",
-				"VerticalVolControl", false);
-
-	config_set_default_bool(globalConfig, "BasicWindow",
-				"MultiviewMouseSwitch", true);
-
-	config_set_default_bool(globalConfig, "BasicWindow",
-				"MultiviewDrawNames", true);
-
-	config_set_default_bool(globalConfig, "BasicWindow",
-				"MultiviewDrawAreas", true);
+	config_set_default_string(globalConfig, "General", "HotkeyFocusType", "NeverDisableHotkeys");
+	config_set_default_bool(globalConfig, "BasicWindow", "VerticalVolControl", false);
+	config_set_default_bool(globalConfig, "BasicWindow", "MultiviewMouseSwitch", true);
+	config_set_default_bool(globalConfig, "BasicWindow", "MultiviewDrawNames", true);
+	config_set_default_bool(globalConfig, "BasicWindow", "MultiviewDrawAreas", true);
 
 #ifdef _WIN32
 	uint32_t winver = GetWindowsVersion();
-
-	config_set_default_bool(globalConfig, "Audio", "DisableAudioDucking",
-				true);
-	config_set_default_bool(globalConfig, "General", "BrowserHWAccel",
-				winver > 0x601);
+	config_set_default_bool(globalConfig, "Audio", "DisableAudioDucking", true);
+	config_set_default_bool(globalConfig, "General", "BrowserHWAccel", winver > 0x601);
 #endif
 
 #ifdef __APPLE__
 	config_set_default_bool(globalConfig, "Video", "DisableOSXVSync", true);
-	config_set_default_bool(globalConfig, "Video", "ResetOSXVSyncOnExit",
-				true);
+	config_set_default_bool(globalConfig, "Video", "ResetOSXVSyncOnExit", true);
 #endif
 	return true;
 }
@@ -489,6 +459,31 @@ static bool MakeUserDirs()
 
 	if (GetConfigPath(path, sizeof(path), "obs-smart/plugin_config") <= 0)
 		return false;
+	if (!do_mkdir(path))
+		return false;
+
+	if (GetConfigPath(path, sizeof(path), "obs-smart/ppt") <= 0)
+		return false;
+	if (!do_mkdir(path))
+		return false;
+	
+	if (GetConfigPath(path, sizeof(path), "obs-smart/screen") <= 0)
+		return false;
+	// 注意：os_rmdir只能删除空目录...
+	// 先删除学生屏幕分享图片目录下的所有文件...
+	os_glob_t *glob = NULL;
+	char screenPath[512] = { 0 };
+	sprintf(screenPath, "%s/*", path);
+	if (os_glob(screenPath, 0, &glob) == 0) {
+		for (size_t i = 0; i < glob->gl_pathc; i++) {
+			const char *filePath = glob->gl_pathv[i].path;
+			if (glob->gl_pathv[i].directory)
+				continue;
+			os_unlink(filePath);
+		}
+		os_globfree(glob);
+	}
+	// 再重建学生屏幕分享图片目录...
 	if (!do_mkdir(path))
 		return false;
 
@@ -660,77 +655,55 @@ bool OBSApp::InitGlobalConfig()
 	}
 
 	if (!opt_starting_collection.empty()) {
-		string path = GetSceneCollectionFileFromName(
-			opt_starting_collection.c_str());
+		string path = GetSceneCollectionFileFromName(opt_starting_collection.c_str());
 		if (!path.empty()) {
-			config_set_string(globalConfig, "Basic",
-					  "SceneCollection",
-					  opt_starting_collection.c_str());
-			config_set_string(globalConfig, "Basic",
-					  "SceneCollectionFile", path.c_str());
+			config_set_string(globalConfig, "Basic", "SceneCollection", opt_starting_collection.c_str());
+			config_set_string(globalConfig, "Basic", "SceneCollectionFile", path.c_str());
 			changed = true;
 		}
 	}
 
 	if (!opt_starting_profile.empty()) {
-		string path =
-			GetProfileDirFromName(opt_starting_profile.c_str());
+		string path = GetProfileDirFromName(opt_starting_profile.c_str());
 		if (!path.empty()) {
-			config_set_string(globalConfig, "Basic", "Profile",
-					  opt_starting_profile.c_str());
-			config_set_string(globalConfig, "Basic", "ProfileDir",
-					  path.c_str());
+			config_set_string(globalConfig, "Basic", "Profile", opt_starting_profile.c_str());
+			config_set_string(globalConfig, "Basic", "ProfileDir", path.c_str());
 			changed = true;
 		}
 	}
 
-	uint32_t lastVersion =
-		config_get_int(globalConfig, "General", "LastVersion");
+	uint32_t lastVersion = config_get_int(globalConfig, "General", "LastVersion");
 
 	if (!config_has_user_value(globalConfig, "General", "Pre19Defaults")) {
-		bool useOldDefaults = lastVersion &&
-				      lastVersion <
-					      MAKE_SEMANTIC_VERSION(19, 0, 0);
-
-		config_set_bool(globalConfig, "General", "Pre19Defaults",
-				useOldDefaults);
+		//bool useOldDefaults = lastVersion && lastVersion < MAKE_SEMANTIC_VERSION(19, 0, 0);
+		// 不要使用老版本的默认设置，直接设定为false状态...
+		config_set_bool(globalConfig, "General", "Pre19Defaults", false);
 		changed = true;
 	}
 
 	if (!config_has_user_value(globalConfig, "General", "Pre21Defaults")) {
-		bool useOldDefaults = lastVersion &&
-				      lastVersion <
-					      MAKE_SEMANTIC_VERSION(21, 0, 0);
-
-		config_set_bool(globalConfig, "General", "Pre21Defaults",
-				useOldDefaults);
+		//bool useOldDefaults = lastVersion && lastVersion < MAKE_SEMANTIC_VERSION(21, 0, 0);
+		// 不要使用老版本的默认设置，直接设定为false状态...
+		config_set_bool(globalConfig, "General", "Pre21Defaults", false);
 		changed = true;
 	}
 
 	if (!config_has_user_value(globalConfig, "General", "Pre23Defaults")) {
-		bool useOldDefaults = lastVersion &&
-				      lastVersion <
-					      MAKE_SEMANTIC_VERSION(23, 0, 0);
-
-		config_set_bool(globalConfig, "General", "Pre23Defaults",
-				useOldDefaults);
+		//bool useOldDefaults = lastVersion && lastVersion < MAKE_SEMANTIC_VERSION(23, 0, 0);
+		// 不要使用老版本的默认设置，直接设定为false状态...
+		config_set_bool(globalConfig, "General", "Pre23Defaults", false);
 		changed = true;
 	}
 
-	if (config_has_user_value(globalConfig, "BasicWindow",
-				  "MultiviewLayout")) {
-		const char *layout = config_get_string(
-			globalConfig, "BasicWindow", "MultiviewLayout");
+	if (config_has_user_value(globalConfig, "BasicWindow", "MultiviewLayout")) {
+		const char *layout = config_get_string(globalConfig, "BasicWindow", "MultiviewLayout");
 		changed |= UpdatePre22MultiviewLayout(layout);
 	}
 
 	if (lastVersion && lastVersion < MAKE_SEMANTIC_VERSION(24, 0, 0)) {
-		bool disableHotkeysInFocus = config_get_bool(
-			globalConfig, "General", "DisableHotkeysInFocus");
+		bool disableHotkeysInFocus = config_get_bool(globalConfig, "General", "DisableHotkeysInFocus");
 		if (disableHotkeysInFocus)
-			config_set_string(globalConfig, "General",
-					  "HotkeyFocusType",
-					  "DisableHotkeysInFocus");
+			config_set_string(globalConfig, "General", "HotkeyFocusType", "DisableHotkeysInFocus");
 		changed = true;
 	}
 
@@ -1049,7 +1022,7 @@ bool OBSApp::InitTheme()
 		if (!themeName)
 			themeName = DEFAULT_THEME;
 		if (!themeName)
-			themeName = "Dark";
+			themeName = "Default";
 	}
 
 	if (strcmp(themeName, "Default") == 0)
@@ -1184,27 +1157,19 @@ void OBSApp::AppInit()
 	if (!InitTheme())
 		throw "Failed to load theme";
 
-	config_set_default_string(globalConfig, "Basic", "Profile",
-				  Str("Untitled"));
-	config_set_default_string(globalConfig, "Basic", "ProfileDir",
-				  Str("Untitled"));
-	config_set_default_string(globalConfig, "Basic", "SceneCollection",
-				  Str("Untitled"));
-	config_set_default_string(globalConfig, "Basic", "SceneCollectionFile",
-				  Str("Untitled"));
+	config_set_default_string(globalConfig, "Basic", "Profile", Str("Untitled"));
+	config_set_default_string(globalConfig, "Basic", "ProfileDir", Str("Untitled"));
+	config_set_default_string(globalConfig, "Basic", "SceneCollection", Str("Untitled"));
+	config_set_default_string(globalConfig, "Basic", "SceneCollectionFile", Str("Untitled"));
 
 	if (!config_has_user_value(globalConfig, "Basic", "Profile")) {
-		config_set_string(globalConfig, "Basic", "Profile",
-				  Str("Untitled"));
-		config_set_string(globalConfig, "Basic", "ProfileDir",
-				  Str("Untitled"));
+		config_set_string(globalConfig, "Basic", "Profile", Str("Untitled"));
+		config_set_string(globalConfig, "Basic", "ProfileDir", Str("Untitled"));
 	}
 
 	if (!config_has_user_value(globalConfig, "Basic", "SceneCollection")) {
-		config_set_string(globalConfig, "Basic", "SceneCollection",
-				  Str("Untitled"));
-		config_set_string(globalConfig, "Basic", "SceneCollectionFile",
-				  Str("Untitled"));
+		config_set_string(globalConfig, "Basic", "SceneCollection", Str("Untitled"));
+		config_set_string(globalConfig, "Basic", "SceneCollectionFile", Str("Untitled"));
 	}
 
 #ifdef _WIN32
@@ -1305,11 +1270,9 @@ bool OBSApp::OBSInit()
 	obs_apply_private_data(settings);
 	obs_data_release(settings);
 
-	blog(LOG_INFO, "Current Date/Time: %s",
-	     CurrentDateTimeString().c_str());
+	blog(LOG_INFO, "Current Date/Time: %s", CurrentDateTimeString().c_str());
 
-	blog(LOG_INFO, "Browser Hardware Acceleration: %s",
-	     browserHWAccel ? "true" : "false");
+	blog(LOG_INFO, "Browser Hardware Acceleration: %s", browserHWAccel ? "true" : "false");
 #endif
 
 	blog(LOG_INFO, "Portable mode: %s", portable_mode ? "true" : "false");
@@ -1377,6 +1340,11 @@ bool OBSApp::IsPortableMode()
 #define INPUT_AUDIO_SOURCE "pulse_input_capture"
 #define OUTPUT_AUDIO_SOURCE "pulse_output_capture"
 #endif
+#define INTERACT_RTP_SOURCE   "rtp_source"
+const char *OBSApp::InteractRtpSource() const
+{
+	return INTERACT_RTP_SOURCE;
+}
 
 const char *OBSApp::InputAudioSource() const
 {
@@ -1855,7 +1823,7 @@ static void main_crash_handler(const char *format, va_list args, void *param)
 	file << text;
 	file.close();
 
-	int ret = MessageBoxA(NULL, CRASH_MESSAGE, "OBS has crashed!",
+	int ret = MessageBoxA(NULL, CRASH_MESSAGE, "Smart has crashed!",
 		MB_YESNO | MB_ICONERROR | MB_TASKMODAL);
 
 	if (ret == IDYES) {
