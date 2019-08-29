@@ -222,15 +222,15 @@ OBSBasic::OBSBasic(QWidget *parent)
 
 	startingDockLayout = saveState();
 
-	// 创建统计停靠窗口...
-	statsDock = new OBSDock();
+	// 屏蔽统计停靠窗口...
+	/*statsDock = new OBSDock();
 	statsDock->setObjectName(QStringLiteral("statsDock"));
 	statsDock->setFeatures(QDockWidget::AllDockWidgetFeatures);
 	statsDock->setWindowTitle(QTStr("Basic.Stats"));
 	addDockWidget(Qt::BottomDockWidgetArea, statsDock);
 	statsDock->setVisible(false);
 	statsDock->setFloating(true);
-	statsDock->resize(700, 200);
+	statsDock->resize(700, 200);*/
 
 	copyActionsDynamicProperties();
 
@@ -338,9 +338,8 @@ OBSBasic::OBSBasic(QWidget *parent)
 	assignDockToggle(ui->scenesDock, ui->toggleScenes);
 	assignDockToggle(ui->sourcesDock, ui->toggleSources);
 	assignDockToggle(ui->mixerDock, ui->toggleMixer);
-	assignDockToggle(ui->transitionsDock, ui->toggleTransitions);
 	assignDockToggle(ui->controlsDock, ui->toggleControls);
-	assignDockToggle(statsDock, ui->toggleStats);
+	assignDockToggle(ui->transitionsDock, ui->toggleTransitions);
 
 	//hide all docking panes
 	ui->toggleScenes->setChecked(false);
@@ -348,7 +347,6 @@ OBSBasic::OBSBasic(QWidget *parent)
 	ui->toggleMixer->setChecked(false);
 	ui->toggleTransitions->setChecked(false);
 	ui->toggleControls->setChecked(false);
-	ui->toggleStats->setChecked(false);
 
 	QPoint curPos;
 
@@ -372,11 +370,12 @@ OBSBasic::OBSBasic(QWidget *parent)
 		curPos = QPoint(adjSize.width(), adjSize.height());
 	}
 
-	QPoint curSize(width(), height());
+	// 屏蔽统计停靠窗口...
+	/*QPoint curSize(width(), height());
 	QPoint statsDockSize(statsDock->width(), statsDock->height());
 	QPoint statsDockPos = curSize / 2 - statsDockSize / 2;
 	QPoint newPos = curPos + statsDockPos;
-	statsDock->move(newPos);
+	statsDock->move(newPos);*/
 
 	ui->previewLabel->setProperty("themeID", "previewProgramLabels");
 
@@ -849,6 +848,9 @@ void OBSBasic::LogScenes()
 
 void OBSBasic::Load(const char *file)
 {
+	// 记录正在调用加载函数过程...
+	ProfileScope("OBSBasic::Load");
+
 	disableSaving++;
 
 	obs_data_t *data = obs_data_create_from_json_file_safe(file, "bak");
@@ -1738,8 +1740,8 @@ void OBSBasic::OBSInit()
 	ResetOutputs();
 	CreateHotkeys();
 
-	if (!InitService())
-		throw "Failed to initialize service";
+	//if (!InitService())
+	//	throw "Failed to initialize service";
 
 	InitPrimitives();
 
@@ -1772,8 +1774,6 @@ void OBSBasic::OBSInit()
 	// 注意：这里弹出的确认框容易被Load()过程关闭...
 	// 注意：放到完全加载之后调用 => OnFirstLoad()...
 
-	// 记录正在调用加载函数过程...
-	ProfileScope("OBSBasic::Load");
 	// 加载系统各种配置参数...
 	disableSaving--;
 	this->Load(savePath);
@@ -1829,9 +1829,9 @@ void OBSBasic::OBSInit()
 	show();
 #endif
 
-	/* setup stats dock */
-	OBSBasicStats *statsDlg = new OBSBasicStats(statsDock, false);
-	statsDock->setWidget(statsDlg);
+	// 屏蔽统计停靠窗口 => 会造成 SystemTray 加载非常缓慢...
+	//OBSBasicStats *statsDlg = new OBSBasicStats(statsDock, false);
+	//statsDock->setWidget(statsDlg);
 
 	/* ----------------------------- */
 	/* add custom browser docks      */
@@ -1847,8 +1847,7 @@ void OBSBasic::OBSInit()
 	}
 #endif
 
-	const char *dockStateStr = config_get_string(
-		App()->GlobalConfig(), "BasicWindow", "DockState");
+	const char *dockStateStr = config_get_string(App()->GlobalConfig(), "BasicWindow", "DockState");
 	if (!dockStateStr) {
 		on_resetUI_triggered();
 	} else {
@@ -1908,7 +1907,7 @@ void OBSBasic::OBSInit()
 	obs_enable_source_type("game_capture", false);
 	obs_enable_source_type("wasapi_output_capture", false);
 
-	SystemTray(true);
+	this->SystemTray(true);
 
 	if (windowState().testFlag(Qt::WindowFullScreen))
 		fullscreenInterface = true;
@@ -1980,6 +1979,8 @@ void OBSBasic::OBSInit()
 
 void OBSBasic::OnFirstLoad()
 {
+	ProfileScope("OBSBasic::OnFirstLoad");
+
 	if (api) {
 		api->on_event(OBS_FRONTEND_EVENT_FINISHED_LOADING);
 	}
@@ -5804,6 +5805,11 @@ bool OBSBasic::NoSourcesConfirmation()
 	return true;
 }
 
+void OBSBasic::on_statsButton_clicked()
+{
+	on_stats_triggered();
+}
+
 void OBSBasic::on_streamButton_clicked()
 {
 	if (outputHandler->StreamingActive()) {
@@ -6828,8 +6834,9 @@ void OBSBasic::on_resetUI_triggered()
 	ui->mixerDock->setVisible(true);
 	ui->transitionsDock->setVisible(true);
 	ui->controlsDock->setVisible(true);
-	statsDock->setVisible(false);
-	statsDock->setFloating(true);
+	
+	//statsDock->setVisible(false);
+	//statsDock->setFloating(true);
 
 	resizeDocks(docks, {cy, cy, cy, cy, cy}, Qt::Vertical);
 	resizeDocks(docks, sizes, Qt::Horizontal);
@@ -6850,7 +6857,7 @@ void OBSBasic::on_lockUI_toggled(bool lock)
 	ui->mixerDock->setFeatures(mainFeatures);
 	ui->transitionsDock->setFeatures(mainFeatures);
 	ui->controlsDock->setFeatures(mainFeatures);
-	statsDock->setFeatures(features);
+	//statsDock->setFeatures(features);
 
 	for (int i = extraDocks.size() - 1; i >= 0; i--) {
 		if (!extraDocks[i]) {
@@ -7089,6 +7096,8 @@ void OBSBasic::SysTrayNotify(const QString &text,
 
 void OBSBasic::SystemTray(bool firstStarted)
 {
+	ProfileScope("OBSBasic::SystemTray");
+
 	if (!QSystemTrayIcon::isSystemTrayAvailable())
 		return;
 	if (!trayIcon && !firstStarted)

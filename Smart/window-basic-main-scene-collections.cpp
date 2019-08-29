@@ -25,6 +25,7 @@
 #include "window-basic-main.hpp"
 #include "window-namedialog.hpp"
 #include "qt-wrappers.hpp"
+#include <util/profiler.hpp>
 
 using namespace std;
 
@@ -196,6 +197,8 @@ bool OBSBasic::AddSceneCollection(bool create_new, const QString &qname)
 
 void OBSBasic::RefreshSceneCollections()
 {
+	ProfileScope("OBSBasic::RefreshSceneCollections");
+
 	QList<QAction *> menuActions = ui->sceneCollectionMenu->actions();
 	int count = 0;
 

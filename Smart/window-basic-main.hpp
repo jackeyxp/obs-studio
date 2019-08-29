@@ -154,7 +154,6 @@ private:
 	QPointer<OBSBasicTransform> transformWindow;
 	QPointer<OBSBasicAdvAudio> advAudioWindow;
 	QPointer<OBSBasicFilters> filters;
-	QPointer<QDockWidget> statsDock;
 
 	QPointer<QTimer> cpuUsageTimer;
 	QPointer<QTimer> diskFullTimer;
@@ -713,6 +712,7 @@ private slots:
 	void on_actionScaleCanvas_triggered();
 	void on_actionScaleOutput_triggered();
 
+	void on_statsButton_clicked();
 	void on_streamButton_clicked();
 	void on_recordButton_clicked();
 	void on_settingsButton_clicked();
