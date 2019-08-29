@@ -1001,9 +1001,9 @@ bool OBSApp::SetTheme(std::string name, std::string path)
 	}
 
 	QString mpath = QString("file:///") + path.c_str();
-	setPalette(defaultPalette);
-	setStyleSheet(mpath);
-	ParseExtraThemeData(path.c_str());
+	this->setPalette(defaultPalette);
+	this->setStyleSheet(mpath);
+	this->ParseExtraThemeData(path.c_str());
 
 	emit StyleChanged();
 	return true;
@@ -1013,28 +1013,26 @@ bool OBSApp::InitTheme()
 {
 	defaultPalette = palette();
 
-	const char *themeName =
-		config_get_string(globalConfig, "General", "CurrentTheme");
+	const char *themeName = config_get_string(globalConfig, "General", "CurrentTheme");
 
 	if (!themeName) {
 		/* Use deprecated "Theme" value if available */
 		themeName = config_get_string(globalConfig, "General", "Theme");
-		if (!themeName)
-			themeName = DEFAULT_THEME;
-		if (!themeName)
-			themeName = "Default";
+		if (!themeName) themeName = DEFAULT_THEME;
+		if (!themeName) themeName = "Default";
 	}
 
+	// System.qss 会重新修改菜单对应的图标...
 	if (strcmp(themeName, "Default") == 0)
 		themeName = "System";
 
-	return SetTheme(themeName);
+	return this->SetTheme(themeName);
 }
 
 OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
 	: QApplication(argc, argv), profilerNameStore(store)
 {
-	sleepInhibitor = os_inhibit_sleep_create("OBS Video/audio");
+	sleepInhibitor = os_inhibit_sleep_create("Smart Video/audio");
 
 	setWindowIcon(QIcon::fromTheme("obs", QIcon(":/res/images/obs.png")));
 }

@@ -843,6 +843,8 @@ public slots:
 	bool RecordingActive();
 	bool ReplayBufferActive();
 
+private:
+	int  doD3DSetup();
 public:
 	explicit OBSBasic(QWidget *parent = 0);
 	virtual ~OBSBasic();

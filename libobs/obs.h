@@ -866,6 +866,9 @@ EXPORT uint32_t obs_source_get_output_flags(const obs_source_t *source);
 /** Returns capability flags of a source type */
 EXPORT uint32_t obs_get_source_output_flags(const char *id);
 
+/** hidden/undocumented export to allow source type redefinition for scripts */
+EXPORT void obs_enable_source_type(const char *name, bool enable);
+
 /** Gets the default settings for a source type */
 EXPORT obs_data_t *obs_get_source_defaults(const char *id);
 

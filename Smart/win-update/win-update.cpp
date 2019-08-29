@@ -754,6 +754,30 @@ try {
 	blog(LOG_WARNING, "%s: %s", __FUNCTION__, text.c_str());
 }
 
+void AutoUpdateThread::doLaunchDXWebSetup()
+{
+	/*do {
+		// 获取执行程序的完整路径...
+		BPtr<wchar_t> wSetupFilePath;
+		BPtr<char> dxSetupFilePath = GetConfigPathPtr(APP_DXSETUP_PATH);
+		if (0 >= os_utf8_to_wcs_ptr(dxSetupFilePath, 0, &wSetupFilePath)) {
+			blog(LOG_INFO, "Could not convert dxSetupFilePath to wide.");
+			break;
+		}
+		// 启动外部进程，组合各种参数...
+		SHELLEXECUTEINFO execInfo = {};
+		execInfo.cbSize = sizeof(execInfo);
+		execInfo.lpFile = wSetupFilePath;
+		execInfo.nShow = SW_SHOWNORMAL;
+		if (!ShellExecuteEx(&execInfo)) {
+			blog(LOG_INFO, "Can't launch dxwebsetup '%s': %d", dxSetupFilePath.Get(), GetLastError());
+			break;
+		}
+	} while (false);
+	// 任何情况都要退出...
+	doCloseMainWindow();*/
+}
+
 /* ------------------------------------------------------------------------ */
 
 void WhatsNewInfoThread::run()
