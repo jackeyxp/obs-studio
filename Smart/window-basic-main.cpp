@@ -2413,9 +2413,6 @@ OBSBasic::~OBSBasic()
 	if (advAudioWindow)
 		delete advAudioWindow;
 
-	if (about)
-		delete about;
-
 	obs_display_remove_draw_callback(ui->preview->GetDisplay(),
 					 OBSBasic::RenderMain, this);
 	//obs_remove_raw_video_callback(receive_raw_video, this);
@@ -6757,7 +6754,7 @@ void OBSBasic::UpdateTitleBar()
 	const char *sceneCollection = config_get_string(
 		App()->GlobalConfig(), "Basic", "SceneCollection");
 
-	name << "OBS ";
+	name << "Smart ";
 	if (previewProgramMode)
 		name << "Studio ";
 
@@ -6767,8 +6764,14 @@ void OBSBasic::UpdateTitleBar()
 
 	name << " - " << Str("TitleBar.Profile") << ": " << profile;
 	name << " - " << Str("TitleBar.Scenes") << ": " << sceneCollection;
+	
+	//setWindowTitle(QT_UTF8(name.str().c_str()));
 
-	setWindowTitle(QT_UTF8(name.str().c_str()));
+	// 对窗口标题进行修改 => 使用字典模式...
+	//string & strRoomID = App()->GetRoomIDStr();
+	//QString strTitle = QString("%1%2").arg(QTStr("Main.Window.TitleContent")).arg(QString::fromUtf8(strRoomID.c_str()));
+	QString strTitle = QTStr("Main.Window.TitleContent");
+	this->setWindowTitle(strTitle);
 }
 
 int OBSBasic::GetProfilePath(char *path, size_t size, const char *file) const
@@ -7463,13 +7466,11 @@ void OBSBasic::on_stats_triggered()
 
 void OBSBasic::on_actionShowAbout_triggered()
 {
-	if (about)
+	/*if (about)
 		about->close();
-
 	about = new OBSAbout(this);
 	about->show();
-
-	about->setAttribute(Qt::WA_DeleteOnClose, true);
+	about->setAttribute(Qt::WA_DeleteOnClose, true);*/
 }
 
 void OBSBasic::ResizeOutputSizeOfSource()
@@ -7580,14 +7581,6 @@ bool SceneRenameDelegate::eventFilter(QObject *editor, QEvent *event)
 	}
 
 	return QStyledItemDelegate::eventFilter(editor, event);
-}
-
-void OBSBasic::UpdatePatronJson(const QString &text, const QString &error)
-{
-	if (!error.isEmpty())
-		return;
-
-	patronJson = QT_TO_UTF8(text);
 }
 
 void OBSBasic::PauseRecording()

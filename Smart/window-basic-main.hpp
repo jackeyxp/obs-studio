@@ -19,6 +19,8 @@
 
 #include <QBuffer>
 #include <QAction>
+#include <QMouseEvent>
+#include <QResizeEvent>
 #include <QWidgetAction>
 #include <QSystemTrayIcon>
 #include <QStyledItemDelegate>
@@ -32,7 +34,6 @@
 #include "window-basic-adv-audio.hpp"
 #include "window-basic-filters.hpp"
 #include "window-projector.hpp"
-#include "window-basic-about.hpp"
 #include "auth-base.hpp"
 
 #include <obs-frontend-internal.hpp>
@@ -169,7 +170,6 @@ private:
 	QPointer<OBSBasicAdvAudio> advAudioWindow;
 	QPointer<OBSBasicFilters> filters;
 	QPointer<QDockWidget> statsDock;
-	QPointer<OBSAbout> about;
 
 	QPointer<QTimer> cpuUsageTimer;
 	QPointer<QTimer> diskFullTimer;
@@ -237,9 +237,6 @@ private:
 	QPointer<QWidget> programWidget;
 	QPointer<QVBoxLayout> programLayout;
 	QPointer<QLabel> programLabel;
-
-	QScopedPointer<QThread> patronJsonThread;
-	std::string patronJson;
 
 	void UpdateMultiviewProjectorMenu();
 
@@ -483,8 +480,6 @@ public slots:
 
 	bool AddSceneCollection(bool create_new,
 				const QString &name = QString());
-
-	void UpdatePatronJson(const QString &text, const QString &error);
 
 	void PauseRecording();
 	void UnpauseRecording();

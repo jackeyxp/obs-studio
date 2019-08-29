@@ -74,9 +74,6 @@
     <ClCompile Include="vertical-scroll-area.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="window-basic-about.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="window-basic-adv-audio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -137,9 +134,6 @@
     <ClCompile Include="window-namedialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="window-basic-auto-config.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="window-basic-source-select.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -150,12 +144,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hotkey-edit.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="window-log-reply.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="window-remux.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="volume-control.cpp">
@@ -174,9 +162,6 @@
       <Filter>Update Files</Filter>
     </ClCompile>
     <ClCompile Include="..\deps\json11\json11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="window-basic-auto-config-test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="item-widget-helpers.cpp">
@@ -248,9 +233,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="vertical-scroll-area.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="window-basic-about.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="window-basic-adv-audio.hpp">
@@ -325,19 +307,10 @@
     <QtMoc Include="balance-slider.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="window-basic-auto-config.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="window-basic-source-select.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="hotkey-edit.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="window-log-reply.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="window-remux.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="volume-control.hpp">
