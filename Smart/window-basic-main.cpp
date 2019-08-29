@@ -4506,42 +4506,38 @@ void OBSBasic::CreateSourcePopupMenu(int idx, bool preview)
 	delete scaleFilteringMenu;
 	delete deinterlaceMenu;
 
-	if (preview) {
-		QAction *action = popup.addAction(
-			QTStr("Basic.Main.PreviewConextMenu.Enable"), this,
-			SLOT(TogglePreview()));
+	// 针对预览窗口的右键菜单...
+	if (preview != NULL) {
+		// 屏蔽 开启预览 菜单开关 => 永远开启预览...
+		/*QAction *action = popup.addAction(
+			QTStr("Basic.Main.PreviewConextMenu.Enable"),
+			this, SLOT(TogglePreview()));
 		action->setCheckable(true);
-		action->setChecked(
-			obs_display_enabled(ui->preview->GetDisplay()));
-		if (IsPreviewProgramMode())
-			action->setEnabled(false);
+		action->setChecked(obs_display_enabled(ui->preview->GetDisplay()));
+		if (IsPreviewProgramMode()) action->setEnabled(false);*/
 
-		popup.addAction(ui->actionLockPreview);
-		popup.addMenu(ui->scalingMenu);
+		// 屏蔽 锁定预览和预览缩放 菜单选项...
+		//popup.addAction(ui->actionLockPreview);
+		//popup.addMenu(ui->scalingMenu);
 
-		previewProjectorSource = new QMenu(QTStr("PreviewProjector"));
-		AddProjectorMenuMonitors(previewProjectorSource, this,
-					 SLOT(OpenPreviewProjector()));
-
+		// 屏蔽 预览投影菜单，避免与数据源混淆 => 2019.05.20 by jackey...
+		/*previewProjectorSource = new QMenu(QTStr("PreviewProjector"));
+		AddProjectorMenuMonitors(previewProjectorSource, this, SLOT(OpenPreviewProjector()));
 		popup.addMenu(previewProjectorSource);
-
-		QAction *previewWindow =
-			popup.addAction(QTStr("PreviewWindow"), this,
-					SLOT(OpenPreviewWindow()));
-
+		QAction *previewWindow = popup.addAction(QTStr("PreviewWindow"), this, SLOT(OpenPreviewWindow()));
 		popup.addAction(previewWindow);
-
-		popup.addSeparator();
+		popup.addSeparator();*/
 	}
 
-	QPointer<QMenu> addSourceMenu = CreateAddSourcePopupMenu();
-	if (addSourceMenu)
-		popup.addMenu(addSourceMenu);
+	QPointer<QMenu> addSourceMenu = BuildAddSourcePopupMenu();
+	if (addSourceMenu) popup.addMenu(addSourceMenu);
 
-	ui->actionCopyFilters->setEnabled(false);
-	ui->actionCopySource->setEnabled(false);
+	// 屏蔽复制粘贴数据源功能...
+	//ui->actionCopyFilters->setEnabled(false);
+	//ui->actionCopySource->setEnabled(false);
 
-	if (ui->sources->MultipleBaseSelected()) {
+	// 直接去掉分组数据源功能...
+	/*if (ui->sources->MultipleBaseSelected()) {
 		popup.addSeparator();
 		popup.addAction(QTStr("Basic.Main.GroupItems"), ui->sources,
 				SLOT(GroupSelectedItems()));
@@ -4550,100 +4546,89 @@ void OBSBasic::CreateSourcePopupMenu(int idx, bool preview)
 		popup.addSeparator();
 		popup.addAction(QTStr("Basic.Main.Ungroup"), ui->sources,
 				SLOT(UngroupSelectedGroups()));
-	}
+	}*/
 
-	popup.addSeparator();
-	popup.addAction(ui->actionCopySource);
-	popup.addAction(ui->actionPasteRef);
-	popup.addAction(ui->actionPasteDup);
-	popup.addSeparator();
-
-	popup.addSeparator();
-	popup.addAction(ui->actionCopyFilters);
-	popup.addAction(ui->actionPasteFilters);
-	popup.addSeparator();
+	// 屏蔽复制粘贴数据源功能...
+	//popup.addSeparator();
+	//popup.addAction(ui->actionCopySource);
+	//popup.addAction(ui->actionPasteRef);
+	//popup.addAction(ui->actionPasteDup);
+	//popup.addSeparator();
+	//popup.addSeparator();
+	//popup.addAction(ui->actionCopyFilters);
+	//popup.addAction(ui->actionPasteFilters);
+	//popup.addSeparator();
 
 	if (idx != -1) {
-		if (addSourceMenu)
-			popup.addSeparator();
+		if (addSourceMenu) popup.addSeparator();
 
 		OBSSceneItem sceneItem = ui->sources->Get(idx);
 		obs_source_t *source = obs_sceneitem_get_source(sceneItem);
 		uint32_t flags = obs_source_get_output_flags(source);
-		bool isAsyncVideo = (flags & OBS_SOURCE_ASYNC_VIDEO) ==
-				    OBS_SOURCE_ASYNC_VIDEO;
+		bool isAsyncVideo = (flags & OBS_SOURCE_ASYNC_VIDEO) == OBS_SOURCE_ASYNC_VIDEO;
 		bool hasAudio = (flags & OBS_SOURCE_AUDIO) == OBS_SOURCE_AUDIO;
 		QAction *action;
 
-		popup.addAction(QTStr("Rename"), this,
-				SLOT(EditSceneItemName()));
-		popup.addAction(QTStr("Remove"), this,
-				SLOT(on_actionRemoveSource_triggered()));
+		popup.addAction(QTStr("Rename"), this, SLOT(EditSceneItemName()));
+		popup.addAction(QTStr("Remove"), this, SLOT(on_actionRemoveSource_triggered()));
 		popup.addSeparator();
+
+		// 加入排序和变换菜单...
 		popup.addMenu(ui->orderMenu);
 		popup.addMenu(ui->transformMenu);
 
-		sourceProjector = new QMenu(QTStr("SourceProjector"));
-		AddProjectorMenuMonitors(sourceProjector, this,
-					 SLOT(OpenSourceProjector()));
-
-		QAction *sourceWindow = popup.addAction(
-			QTStr("SourceWindow"), this, SLOT(OpenSourceWindow()));
-
-		popup.addAction(sourceWindow);
-
-		popup.addSeparator();
-
 		if (hasAudio) {
-			QAction *actionHideMixer =
-				popup.addAction(QTStr("HideMixer"), this,
-						SLOT(ToggleHideMixer()));
+			QAction *actionHideMixer = popup.addAction(QTStr("HideMixer"), this, SLOT(ToggleHideMixer()));
 			actionHideMixer->setCheckable(true);
 			actionHideMixer->setChecked(SourceMixerHidden(source));
 		}
 
 		if (isAsyncVideo) {
 			deinterlaceMenu = new QMenu(QTStr("Deinterlacing"));
-			popup.addMenu(
-				AddDeinterlacingMenu(deinterlaceMenu, source));
+			popup.addMenu(AddDeinterlacingMenu(deinterlaceMenu, source));
 			popup.addSeparator();
 		}
 
-		QAction *resizeOutput =
-			popup.addAction(QTStr("ResizeOutputSizeOfSource"), this,
-					SLOT(ResizeOutputSizeOfSource()));
-
+		// 屏蔽输出画面调整的菜单功能...
+		/*QAction *resizeOutput = popup.addAction(QTStr("ResizeOutputSizeOfSource"), this, SLOT(ResizeOutputSizeOfSource()));
 		int width = obs_source_get_width(source);
 		int height = obs_source_get_height(source);
-
 		resizeOutput->setEnabled(!obs_video_active());
-
-		if (width == 0 || height == 0)
+		if (width == 0 || height == 0) {
 			resizeOutput->setEnabled(false);
-
+		}
+		// 屏蔽尺度滤波的右键菜单功能...
 		scaleFilteringMenu = new QMenu(QTStr("ScaleFiltering"));
-		popup.addMenu(
-			AddScaleFilteringMenu(scaleFilteringMenu, sceneItem));
-		popup.addSeparator();
+		popup.addMenu(AddScaleFilteringMenu(scaleFilteringMenu, sceneItem));
+		popup.addSeparator();*/
 
+		// 添加数据源的全屏投影仪右键菜单功能...
+		sourceProjector = new QMenu(QTStr("SourceProjector"));
+		AddProjectorMenuMonitors(sourceProjector, this, SLOT(OpenSourceProjector()));
 		popup.addMenu(sourceProjector);
+
+		// 添加数据源的投影窗口右键菜单功能...
+		QAction *sourceWindow = popup.addAction(QTStr("SourceWindow"), this, SLOT(OpenSourceWindow()));
 		popup.addAction(sourceWindow);
 		popup.addSeparator();
 
-		action = popup.addAction(QTStr("Interact"), this,
-					 SLOT(on_actionInteract_triggered()));
-
-		action->setEnabled(obs_source_get_output_flags(source) &
-				   OBS_SOURCE_INTERACTION);
-
+		// 添加数据源的滤镜和属性的右键菜单功能...
 		popup.addAction(QTStr("Filters"), this, SLOT(OpenFilters()));
-		popup.addAction(QTStr("Properties"), this,
-				SLOT(on_actionSourceProperties_triggered()));
+		popup.addAction(QTStr("Properties"), this, SLOT(on_actionSourceProperties_triggered()));
 
-		ui->actionCopyFilters->setEnabled(true);
-		ui->actionCopySource->setEnabled(true);
+		// 屏蔽 交互 菜单...
+		//action = popup.addAction(QTStr("Interact"), this, SLOT(on_actionInteract_triggered()));
+		//action->setEnabled(obs_source_get_output_flags(source) & OBS_SOURCE_INTERACTION);
+		//ui->actionCopyFilters->setEnabled(true);
+		//ui->actionCopySource->setEnabled(true);
 	} else {
-		ui->actionPasteFilters->setEnabled(false);
+		//ui->actionPasteFilters->setEnabled(false);
+	}
+
+	// 始终自动追加一个“检查升级”的菜单...
+	if (ui->actionCheckForUpdates != NULL) {
+		popup.addSeparator();
+		popup.addAction(ui->actionCheckForUpdates);
 	}
 
 	popup.exec(QCursor::pos());
@@ -4686,7 +4671,7 @@ void OBSBasic::AddSource(const char *id)
 	}
 }
 
-QMenu *OBSBasic::CreateAddSourcePopupMenu()
+QMenu *OBSBasic::BuildAddSourcePopupMenu()
 {
 	const char *type;
 	bool foundValues = false;
@@ -4801,9 +4786,8 @@ void OBSBasic::AddSourcePopupMenu(const QPoint &pos)
 		return;
 	}
 
-	QScopedPointer<QMenu> popup(CreateAddSourcePopupMenu());
-	if (popup)
-		popup->exec(pos);
+	QScopedPointer<QMenu> popup(this->BuildAddSourcePopupMenu());
+	if (popup) popup->exec(pos);
 }
 
 void OBSBasic::on_actionAddSource_triggered()

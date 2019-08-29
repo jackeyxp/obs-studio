@@ -549,7 +549,7 @@ private:
 	void ResizePreview(uint32_t cx, uint32_t cy);
 
 	void AddSource(const char *id);
-	QMenu *CreateAddSourcePopupMenu();
+	QMenu *BuildAddSourcePopupMenu();
 	void AddSourcePopupMenu(const QPoint &pos);
 	void copyActionsDynamicProperties();
 
