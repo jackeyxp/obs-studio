@@ -4707,8 +4707,7 @@ QMenu *OBSBasic::CreateAddSourcePopupMenu()
 		return (QAction *)nullptr;
 	};
 
-	auto addSource = [this, getActionAfter](QMenu *popup, const char *type,
-						const char *name) {
+	auto addSource = [this, getActionAfter](QMenu *popup, const char *type, const char *name) {
 		QString qname = QT_UTF8(name);
 		QAction *popupItem = new QAction(qname, this);
 		popupItem->setData(QT_UTF8(type));
@@ -4726,6 +4725,24 @@ QMenu *OBSBasic::CreateAddSourcePopupMenu()
 		if ((caps & OBS_SOURCE_CAP_DISABLED) != 0)
 			continue;
 
+#ifdef _WIN32
+		const char *text_source_id = "text_gdiplus";
+#else
+		const char *text_source_id = "text_ft2_source";
+#endif
+		// 去掉 文本(GDI+) 的菜单添加入口...
+		if (astrcmpi(type, text_source_id) == 0)
+			continue;
+		// 去掉 图片幻灯片 的菜单添加入口...
+		//if (astrcmpi(type, "slideshow") == 0)
+		//	continue;
+		// 去掉 色源 的菜单添加入口...
+		if (astrcmpi(type, "color_source") == 0)
+			continue;
+		// 去掉 音频输入捕获 的菜单添加入口...
+		if (astrcmpi(type, "wasapi_input_capture") == 0)
+			continue;
+		// 添加相关数据源的菜单入口...
 		if ((caps & OBS_SOURCE_DEPRECATED) == 0) {
 			addSource(popup, type, name);
 		} else {
@@ -4735,14 +4752,18 @@ QMenu *OBSBasic::CreateAddSourcePopupMenu()
 		foundValues = true;
 	}
 
-	addSource(popup, "scene", Str("Basic.Scene"));
+	// 直接新增 学生屏幕分享 菜单 => 使用一个特殊标志 => AddSource()...
+	//addSource(popup, "slide_screen", Str("Basic.Student.Screen"));
 
-	popup->addSeparator();
+	// 去掉场景叠加功能，只用数据源的组合功能...
+	//addSource(popup, "scene", Str("Basic.Scene"));
+
+	// 去掉分组菜单功能...
+	/*popup->addSeparator();
 	QAction *addGroup = new QAction(QTStr("Group"), this);
 	addGroup->setData(QT_UTF8("group"));
-	connect(addGroup, SIGNAL(triggered(bool)), this,
-		SLOT(AddSourceFromAction()));
-	popup->addAction(addGroup);
+	connect(addGroup, SIGNAL(triggered(bool)), this, SLOT(AddSourceFromAction()));
+	popup->addAction(addGroup);*/
 
 	if (!foundDeprecated) {
 		delete deprecated;
