@@ -3673,17 +3673,14 @@ int OBSBasic::ResetVideo()
 	if (ovi.output_width == 0 || ovi.output_height == 0) {
 		ovi.output_width = ovi.base_width;
 		ovi.output_height = ovi.base_height;
-		config_set_uint(basicConfig, "Video", "OutputCX",
-				ovi.base_width);
-		config_set_uint(basicConfig, "Video", "OutputCY",
-				ovi.base_height);
+		config_set_uint(basicConfig, "Video", "OutputCX", ovi.base_width);
+		config_set_uint(basicConfig, "Video", "OutputCY", ovi.base_height);
 	}
 
 	ret = AttemptToResetVideo(&ovi);
 	if (IS_WIN32 && ret != OBS_VIDEO_SUCCESS) {
 		if (ret == OBS_VIDEO_CURRENTLY_ACTIVE) {
-			blog(LOG_WARNING, "Tried to reset when "
-					  "already active");
+			blog(LOG_WARNING, "Tried to reset when already active");
 			return ret;
 		}
 		// 弹框询问是否安装D3D或者使用OpenGL => 父窗口设定为空，否则无法居中显示...
