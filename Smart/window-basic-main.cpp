@@ -1048,10 +1048,11 @@ retryScene:
 
 	disableSaving--;
 
-	/*if (api) {
+	// ±ØÐëµ÷ÓÃ OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED => SourceTreeModel::OBSFrontendEvent
+	if (api) {
 		api->on_event(OBS_FRONTEND_EVENT_SCENE_CHANGED);
 		api->on_event(OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED);
-	}*/
+	}
 }
 
 #define SERVICE_PATH "service.json"
