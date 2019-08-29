@@ -2029,9 +2029,9 @@ void OBSBasic::DeferredSysTrayLoad(int requeueCount)
 }
 
 /* shows a "what's new" page on startup of new versions using CEF */
+#ifdef BROWSER_AVAILABLE
 void OBSBasic::ReceivedIntroJson(const QString &text)
 {
-#ifdef BROWSER_AVAILABLE
 #ifdef _WIN32
 	std::string err;
 	Json json = Json::parse(QT_TO_UTF8(text), err);
@@ -2142,10 +2142,9 @@ void OBSBasic::ReceivedIntroJson(const QString &text)
 #else
 	UNUSED_PARAMETER(text);
 #endif
-#else
 	UNUSED_PARAMETER(text);
-#endif
 }
+#endif
 
 void OBSBasic::UpdateMultiviewProjectorMenu()
 {
@@ -2373,9 +2372,6 @@ OBSBasic::~OBSBasic()
 	delete sourceProjector;
 	delete sceneProjectorMenu;
 	delete scaleFilteringMenu;
-	delete colorMenu;
-	delete colorWidgetAction;
-	delete colorSelect;
 	delete deinterlaceMenu;
 	delete perSceneTransitionMenu;
 	delete shortcutFilter;
@@ -4440,7 +4436,7 @@ QMenu *OBSBasic::AddScaleFilteringMenu(QMenu *menu, obs_sceneitem_t *item)
 	return menu;
 }
 
-QMenu *OBSBasic::AddBackgroundColorMenu(QMenu *menu,
+/*QMenu *OBSBasic::AddBackgroundColorMenu(QMenu *menu,
 					QWidgetAction *widgetAction,
 					ColorSelect *select,
 					obs_sceneitem_t *item)
@@ -4494,13 +4490,13 @@ QMenu *OBSBasic::AddBackgroundColorMenu(QMenu *menu,
 	menu->addAction(widgetAction);
 
 	return menu;
-}
+}*/
 
-ColorSelect::ColorSelect(QWidget *parent)
+/*ColorSelect::ColorSelect(QWidget *parent)
 	: QWidget(parent), ui(new Ui::ColorSelect)
 {
 	ui->setupUi(this);
-}
+}*/
 
 void OBSBasic::CreateSourcePopupMenu(int idx, bool preview)
 {
@@ -4508,9 +4504,6 @@ void OBSBasic::CreateSourcePopupMenu(int idx, bool preview)
 	delete previewProjectorSource;
 	delete sourceProjector;
 	delete scaleFilteringMenu;
-	delete colorMenu;
-	delete colorWidgetAction;
-	delete colorSelect;
 	delete deinterlaceMenu;
 
 	if (preview) {
@@ -4582,11 +4575,6 @@ void OBSBasic::CreateSourcePopupMenu(int idx, bool preview)
 		bool hasAudio = (flags & OBS_SOURCE_AUDIO) == OBS_SOURCE_AUDIO;
 		QAction *action;
 
-		colorMenu = new QMenu(QTStr("ChangeBG"));
-		colorWidgetAction = new QWidgetAction(colorMenu);
-		colorSelect = new ColorSelect(colorMenu);
-		popup.addMenu(AddBackgroundColorMenu(
-			colorMenu, colorWidgetAction, colorSelect, sceneItem));
 		popup.addAction(QTStr("Rename"), this,
 				SLOT(EditSceneItemName()));
 		popup.addAction(QTStr("Remove"), this,
@@ -5436,9 +5424,9 @@ void OBSBasic::StreamingStop(int code, QString last_error)
 	}
 }
 
-void OBSBasic::AutoRemux()
+/*void OBSBasic::AutoRemux()
 {
-	/*const char *mode = config_get_string(basicConfig, "Output", "Mode");
+	const char *mode = config_get_string(basicConfig, "Output", "Mode");
 	bool advanced = astrcmpi(mode, "Advanced") == 0;
 
 	const char *path = !advanced ? config_get_string(basicConfig,
@@ -5476,8 +5464,8 @@ void OBSBasic::AutoRemux()
 
 	OBSRemux *remux = new OBSRemux(path, this, true);
 	remux->show();
-	remux->AutoRemux(input, output);*/
-}
+	remux->AutoRemux(input, output);
+}*/
 
 void OBSBasic::StartRecording()
 {
@@ -5606,8 +5594,8 @@ void OBSBasic::RecordingStop(int code, QString last_error)
 	if (diskFullTimer->isActive())
 		diskFullTimer->stop();
 
-	if (remuxAfterRecord)
-		AutoRemux();
+	//if (remuxAfterRecord)
+	//	AutoRemux();
 
 	OnDeactivate();
 	UpdatePause(false);
@@ -7290,7 +7278,7 @@ static void ConfirmColor(SourceTree *sources, const QColor &color,
 	}
 }
 
-void OBSBasic::ColorChange()
+/*void OBSBasic::ColorChange()
 {
 	QModelIndexList selectedItems =
 		ui->sources->selectionModel()->selectedIndexes();
@@ -7423,7 +7411,7 @@ void OBSBasic::ColorChange()
 			}
 		}
 	}
-}
+}*/
 
 SourceTreeItem *OBSBasic::GetItemWidgetFromSceneItem(obs_sceneitem_t *sceneItem)
 {

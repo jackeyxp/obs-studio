@@ -50,7 +50,6 @@ class VolControl;
 class OBSBasicStats;
 
 #include "ui_OBSBasic.h"
-#include "ui_ColorSelect.h"
 
 #define DESKTOP_AUDIO_1 Str("DesktopAudioDevice1")
 #define DESKTOP_AUDIO_2 Str("DesktopAudioDevice2")
@@ -104,29 +103,15 @@ private:
 	std::shared_ptr<OBSSignal> renamedSignal;
 };
 
-class ColorSelect : public QWidget {
-
-public:
-	explicit ColorSelect(QWidget *parent = 0);
-
-private:
-	std::unique_ptr<Ui::ColorSelect> ui;
-};
-
 class OBSBasic : public OBSMainWindow {
 	Q_OBJECT
 
-	friend class OBSAbout;
 	friend class OBSBasicPreview;
 	friend class OBSBasicStatusBar;
 	friend class OBSBasicSourceSelect;
 	friend class OBSBasicSettings;
 	friend class Auth;
-	friend class AutoConfig;
-	friend class AutoConfigStreamPage;
 	friend class RecordButton;
-	friend class ExtraBrowsersModel;
-	friend class ExtraBrowsersDelegate;
 	friend struct OBSStudioAPI;
 
 	enum class MoveDir { Up, Down, Left, Right };
@@ -227,9 +212,6 @@ private:
 	QPointer<QMenu> sceneProjectorMenu;
 	QPointer<QMenu> sourceProjector;
 	QPointer<QMenu> scaleFilteringMenu;
-	QPointer<QMenu> colorMenu;
-	QPointer<QWidgetAction> colorWidgetAction;
-	QPointer<ColorSelect> colorSelect;
 	QPointer<QMenu> deinterlaceMenu;
 	QPointer<QMenu> perSceneTransitionMenu;
 	QPointer<QObject> shortcutFilter;
@@ -241,8 +223,6 @@ private:
 	void UpdateMultiviewProjectorMenu();
 
 	void DrawBackdrop(float cx, float cy);
-
-	void SetupEncoders();
 
 	void CreateFirstRunSources();
 	void CreateDefaultScene(bool firstStart);
@@ -418,8 +398,6 @@ private:
 	obs_data_array_t *SaveProjectors();
 	void LoadSavedProjectors(obs_data_array_t *savedProjectors);
 
-	void ReceivedIntroJson(const QString &text);
-
 	bool NoSourcesConfirmation();
 
 #ifdef BROWSER_AVAILABLE
@@ -538,7 +516,7 @@ private slots:
 	void on_actionCopyFilters_triggered();
 	void on_actionPasteFilters_triggered();
 
-	void ColorChange();
+	//void ColorChange();
 
 	SourceTreeItem *GetItemWidgetFromSceneItem(obs_sceneitem_t *sceneItem);
 
@@ -577,7 +555,7 @@ private:
 
 	static void HotkeyTriggered(void *data, obs_hotkey_id id, bool pressed);
 
-	void AutoRemux();
+	//void AutoRemux();
 
 	void UpdatePause(bool activate = true);
 
@@ -653,9 +631,6 @@ public:
 
 	QMenu *AddDeinterlacingMenu(QMenu *menu, obs_source_t *source);
 	QMenu *AddScaleFilteringMenu(QMenu *menu, obs_sceneitem_t *item);
-	QMenu *AddBackgroundColorMenu(QMenu *menu, QWidgetAction *widgetAction,
-				      ColorSelect *select,
-				      obs_sceneitem_t *item);
 	void CreateSourcePopupMenu(int idx, bool preview);
 
 	void UpdateTitleBar();

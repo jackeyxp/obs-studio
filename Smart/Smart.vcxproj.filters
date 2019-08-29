@@ -354,9 +354,6 @@
     <QtUic Include="forms\OBSUpdate.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="forms\ColorSelect.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
     <QtUic Include="forms\NameDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>

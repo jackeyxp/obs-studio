@@ -76,7 +76,6 @@
     <QtUic Include="forms\AutoConfigStreamPage.ui" />
     <QtUic Include="forms\AutoConfigTestPage.ui" />
     <QtUic Include="forms\AutoConfigVideoPage.ui" />
-    <QtUic Include="forms\ColorSelect.ui" />
     <QtUic Include="forms\NameDialog.ui" />
     <QtUic Include="forms\OBSAbout.ui" />
     <QtUic Include="forms\OBSBasic.ui" />
