@@ -522,10 +522,11 @@ void OBSBasicPreview::mousePressEvent(QMouseEvent *event)
 		setCursor(Qt::ArrowCursor);
 	}
 
-	if (locked) {
+	// 屏蔽后，锁定状态下也能绘制编辑框...
+	/*if (locked) {
 		OBSQTDisplay::mousePressEvent(event);
 		return;
-	}
+	}*/
 
 	OBSBasic *main = reinterpret_cast<OBSBasic *>(App()->GetMainWindow());
 #ifdef SUPPORTS_FRACTIONAL_SCALING
@@ -629,16 +630,18 @@ void OBSBasicPreview::mouseReleaseEvent(QMouseEvent *event)
 	if (scrollMode)
 		setCursor(Qt::OpenHandCursor);
 
-	if (locked) {
+	// 屏蔽后，锁定状态下也能绘制编辑框...
+	/*if (locked) {
 		OBSQTDisplay::mouseReleaseEvent(event);
 		return;
-	}
+	}*/
 
 	if (mouseDown) {
 		vec2 pos = GetMouseEventPos(event);
 
-		if (!mouseMoved)
+		if (!mouseMoved) {
 			ProcessClick(pos);
+		}
 
 		if (selectionBox) {
 			Qt::KeyboardModifiers modifiers =
@@ -1416,8 +1419,9 @@ void OBSBasicPreview::mouseMoveEvent(QMouseEvent *event)
 		return;
 	}
 
-	if (locked)
-		return;
+	// 屏蔽后，锁定状态下也能拖动指定数据源窗口...
+	//if (locked)
+	//	return;
 
 	if (mouseDown) {
 		vec2 pos = GetMouseEventPos(event);
@@ -1828,14 +1832,12 @@ bool OBSBasicPreview::DrawSelectionBox(float x1, float y1, float x2, float y2,
 
 void OBSBasicPreview::DrawOverflow()
 {
-	if (locked)
-		return;
+	// 屏蔽后，锁定状态下也能绘制编辑框...
+	//if (locked)
+	//	return;
 
-	bool hidden = config_get_bool(GetGlobalConfig(), "BasicWindow",
-				      "OverflowHidden");
-
-	if (hidden)
-		return;
+	bool hidden = config_get_bool(GetGlobalConfig(), "BasicWindow", "OverflowHidden");
+	if (hidden) return;
 
 	GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_DEFAULT, "DrawOverflow");
 
@@ -1863,8 +1865,9 @@ void OBSBasicPreview::DrawOverflow()
 
 void OBSBasicPreview::DrawSceneEditing()
 {
-	if (locked)
-		return;
+	// 屏蔽后，锁定状态下也能绘制编辑框...
+	//if (locked)
+	//	return;
 
 	GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_DEFAULT, "DrawSceneEditing");
 
