@@ -916,6 +916,8 @@ void OBSBasic::Load(const char *file)
 		obs_data_array_push_back_array(sources, groups);
 	}
 
+	// 内部会触发item_add，但会被GetCurrentScene为空拦截...
+	// 最终SourceTreeModel::OBSFrontendEvent处才添加记录...
 	obs_load_sources(sources, nullptr, nullptr);
 
 	if (transitions)
@@ -1048,6 +1050,8 @@ retryScene:
 
 	disableSaving--;
 
+	// 新版本使用复杂的 SourceTree 进行数据源的管理，通过命令事件来更新数据源，需要绕一些弯子...
+	// 通过这些 API 事件的相关操作，才能进行数据源的添加更新，通过场景数据源的变化事件进行激发的...
 	// 必须调用 OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED => SourceTreeModel::OBSFrontendEvent
 	if (api) {
 		api->on_event(OBS_FRONTEND_EVENT_SCENE_CHANGED);
