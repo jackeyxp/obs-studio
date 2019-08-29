@@ -18,7 +18,7 @@
 #define T_SAMPLING_POINT                obs_module_text("ScaleFiltering.Point")
 #define T_SAMPLING_BILINEAR             obs_module_text("ScaleFiltering.Bilinear")
 #define T_SAMPLING_BICUBIC              obs_module_text("ScaleFiltering.Bicubic")
-#define T_SAMPLING_LANCZOS              obs_module_text("ScaleFiltering.Lanczos")
+//#define T_SAMPLING_LANCZOS            obs_module_text("ScaleFiltering.Lanczos")
 #define T_SAMPLING_AREA                 obs_module_text("ScaleFiltering.Area")
 #define T_UNDISTORT                     obs_module_text("UndistortCenter")
 #define T_BASE                          obs_module_text("Base.Canvas")
@@ -26,7 +26,7 @@
 #define S_SAMPLING_POINT                "point"
 #define S_SAMPLING_BILINEAR             "bilinear"
 #define S_SAMPLING_BICUBIC              "bicubic"
-#define S_SAMPLING_LANCZOS              "lanczos"
+//#define S_SAMPLING_LANCZOS            "lanczos"
 #define S_SAMPLING_AREA                 "area"
 
 /* clang-format on */
@@ -101,8 +101,8 @@ static void scale_filter_update(void *data, obs_data_t *settings)
 	} else if (astrcmpi(sampling, S_SAMPLING_BILINEAR) == 0) {
 		filter->sampling = OBS_SCALE_BILINEAR;
 
-	} else if (astrcmpi(sampling, S_SAMPLING_LANCZOS) == 0) {
-		filter->sampling = OBS_SCALE_LANCZOS;
+	//} else if (astrcmpi(sampling, S_SAMPLING_LANCZOS) == 0) {
+	//	filter->sampling = OBS_SCALE_LANCZOS;
 
 	} else if (astrcmpi(sampling, S_SAMPLING_AREA) == 0) {
 		filter->sampling = OBS_SCALE_AREA;
@@ -233,9 +233,9 @@ static void scale_filter_tick(void *data, float seconds)
 		case OBS_SCALE_BICUBIC:
 			type = OBS_EFFECT_BICUBIC;
 			break;
-		case OBS_SCALE_LANCZOS:
-			type = OBS_EFFECT_LANCZOS;
-			break;
+		//case OBS_SCALE_LANCZOS:
+		//	type = OBS_EFFECT_LANCZOS;
+		//	break;
 		case OBS_SCALE_AREA:
 			type = OBS_EFFECT_AREA;
 			if ((filter->cx_out >= cx) && (filter->cy_out >= cy))
@@ -258,7 +258,7 @@ static void scale_filter_tick(void *data, float seconds)
 		filter->dimension_i_param = NULL;
 	}
 
-	if (type == OBS_EFFECT_BICUBIC || type == OBS_EFFECT_LANCZOS) {
+	if (type == OBS_EFFECT_BICUBIC) { //|| type == OBS_EFFECT_LANCZOS) {
 		filter->undistort_factor_param = gs_effect_get_param_by_name(
 			filter->effect, "undistort_factor");
 	} else {
@@ -326,8 +326,8 @@ static bool sampling_modified(obs_properties_t *props, obs_property_t *p,
 		has_undistort = false;
 	} else if (astrcmpi(sampling, S_SAMPLING_BILINEAR) == 0) {
 		has_undistort = false;
-	} else if (astrcmpi(sampling, S_SAMPLING_LANCZOS) == 0) {
-		has_undistort = true;
+	//} else if (astrcmpi(sampling, S_SAMPLING_LANCZOS) == 0) {
+	//	has_undistort = true;
 	} else if (astrcmpi(sampling, S_SAMPLING_AREA) == 0) {
 		has_undistort = false;
 	} else { /* S_SAMPLING_BICUBIC */
@@ -373,7 +373,7 @@ static obs_properties_t *scale_filter_properties(void *data)
 	obs_property_list_add_string(p, T_SAMPLING_BILINEAR,
 				     S_SAMPLING_BILINEAR);
 	obs_property_list_add_string(p, T_SAMPLING_BICUBIC, S_SAMPLING_BICUBIC);
-	obs_property_list_add_string(p, T_SAMPLING_LANCZOS, S_SAMPLING_LANCZOS);
+	//obs_property_list_add_string(p, T_SAMPLING_LANCZOS, S_SAMPLING_LANCZOS);
 	obs_property_list_add_string(p, T_SAMPLING_AREA, S_SAMPLING_AREA);
 
 	/* ----------------- */

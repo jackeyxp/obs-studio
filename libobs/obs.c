@@ -309,9 +309,9 @@ static int obs_init_graphics(struct obs_video_info *ovi)
 	video->bicubic_effect = gs_effect_create_from_file(filename, NULL);
 	bfree(filename);
 
-	filename = obs_find_data_file("lanczos_scale.effect");
-	video->lanczos_effect = gs_effect_create_from_file(filename, NULL);
-	bfree(filename);
+	//filename = obs_find_data_file("lanczos_scale.effect");
+	//video->lanczos_effect = gs_effect_create_from_file(filename, NULL);
+	//bfree(filename);
 
 	filename = obs_find_data_file("area.effect");
 	video->area_effect = gs_effect_create_from_file(filename, NULL);
@@ -1138,9 +1138,9 @@ int obs_reset_video(struct obs_video_info *ovi)
 	case OBS_SCALE_BILINEAR:
 		scale_type_name = "Bilinear";
 		break;
-	case OBS_SCALE_LANCZOS:
-		scale_type_name = "Lanczos";
-		break;
+	//case OBS_SCALE_LANCZOS:
+	//	scale_type_name = "Lanczos";
+	//	break;
 	case OBS_SCALE_AREA:
 		scale_type_name = "Area";
 		break;
@@ -1635,8 +1635,8 @@ gs_effect_t *obs_get_base_effect(enum obs_base_effect effect)
 		return obs->video.repeat_effect;
 	case OBS_EFFECT_BICUBIC:
 		return obs->video.bicubic_effect;
-	case OBS_EFFECT_LANCZOS:
-		return obs->video.lanczos_effect;
+	//case OBS_EFFECT_LANCZOS:
+	//	return obs->video.lanczos_effect;
 	case OBS_EFFECT_AREA:
 		return obs->video.area_effect;
 	case OBS_EFFECT_BILINEAR_LOWRES:

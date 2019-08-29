@@ -489,8 +489,8 @@ static void render_item_texture(struct obs_scene_item *item)
 				effect = obs->video.bilinear_lowres_effect;
 			} else if (type == OBS_SCALE_BICUBIC) {
 				effect = obs->video.bicubic_effect;
-			} else if (type == OBS_SCALE_LANCZOS) {
-				effect = obs->video.lanczos_effect;
+			//} else if (type == OBS_SCALE_LANCZOS) {
+			//	effect = obs->video.lanczos_effect;
 			} else if (type == OBS_SCALE_AREA) {
 				effect = obs->video.area_effect;
 				if ((item->output_scale.x >= 1.0f) &&
@@ -778,8 +778,8 @@ static void scene_load_item(struct obs_scene *scene, obs_data_t *item_data)
 			item->scale_filter = OBS_SCALE_BILINEAR;
 		else if (astrcmpi(scale_filter_str, "bicubic") == 0)
 			item->scale_filter = OBS_SCALE_BICUBIC;
-		else if (astrcmpi(scale_filter_str, "lanczos") == 0)
-			item->scale_filter = OBS_SCALE_LANCZOS;
+		//else if (astrcmpi(scale_filter_str, "lanczos") == 0)
+		//	item->scale_filter = OBS_SCALE_LANCZOS;
 		else if (astrcmpi(scale_filter_str, "area") == 0)
 			item->scale_filter = OBS_SCALE_AREA;
 	}
@@ -890,8 +890,8 @@ static void scene_save_item(obs_data_array_t *array,
 		scale_filter = "bilinear";
 	else if (item->scale_filter == OBS_SCALE_BICUBIC)
 		scale_filter = "bicubic";
-	else if (item->scale_filter == OBS_SCALE_LANCZOS)
-		scale_filter = "lanczos";
+	//else if (item->scale_filter == OBS_SCALE_LANCZOS)
+	//	scale_filter = "lanczos";
 	else if (item->scale_filter == OBS_SCALE_AREA)
 		scale_filter = "area";
 	else

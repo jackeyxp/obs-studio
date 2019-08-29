@@ -166,8 +166,8 @@ get_scale_effect_internal(struct obs_core_video *video)
 	switch (video->scale_type) {
 	case OBS_SCALE_BILINEAR:
 		return video->default_effect;
-	case OBS_SCALE_LANCZOS:
-		return video->lanczos_effect;
+	//case OBS_SCALE_LANCZOS:
+	//	return video->lanczos_effect;
 	case OBS_SCALE_AREA:
 		return video->area_effect;
 	case OBS_SCALE_BICUBIC:

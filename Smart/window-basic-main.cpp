@@ -864,18 +864,15 @@ void OBSBasic::Load(const char *file)
 	InitDefaultTransitions();
 
 	obs_data_t *modulesObj = obs_data_get_obj(data, "modules");
-	if (api)
-		api->on_preload(modulesObj);
+	if (api) api->on_preload(modulesObj);
 
 	obs_data_array_t *sceneOrder = obs_data_get_array(data, "scene_order");
 	obs_data_array_t *sources = obs_data_get_array(data, "sources");
 	obs_data_array_t *groups = obs_data_get_array(data, "groups");
 	obs_data_array_t *transitions = obs_data_get_array(data, "transitions");
 	const char *sceneName = obs_data_get_string(data, "current_scene");
-	const char *programSceneName =
-		obs_data_get_string(data, "current_program_scene");
-	const char *transitionName =
-		obs_data_get_string(data, "current_transition");
+	const char *programSceneName = obs_data_get_string(data, "current_program_scene");
+	const char *transitionName = obs_data_get_string(data, "current_transition");
 
 	if (!opt_starting_scene.empty()) {
 		programSceneName = opt_starting_scene.c_str();
@@ -941,8 +938,7 @@ retryScene:
 	 * fall back to original settings */
 	if (!opt_starting_scene.empty() && (!curScene || !curProgramScene)) {
 		sceneName = obs_data_get_string(data, "current_scene");
-		programSceneName =
-			obs_data_get_string(data, "current_program_scene");
+		programSceneName = obs_data_get_string(data, "current_program_scene");
 		obs_source_release(curScene);
 		obs_source_release(curProgramScene);
 		opt_starting_scene.clear();
@@ -966,8 +962,7 @@ retryScene:
 
 	/* ------------------- */
 
-	bool projectorSave = config_get_bool(GetGlobalConfig(), "BasicWindow",
-					     "SaveProjectors");
+	bool projectorSave = config_get_bool(GetGlobalConfig(), "BasicWindow", "SaveProjectors");
 
 	if (projectorSave) {
 		obs_data_array_t *savedProjectors =
@@ -987,13 +982,10 @@ retryScene:
 	std::string file_base = strrchr(file, '/') + 1;
 	file_base.erase(file_base.size() - 5, 5);
 
-	config_set_string(App()->GlobalConfig(), "Basic", "SceneCollection",
-			  name);
-	config_set_string(App()->GlobalConfig(), "Basic", "SceneCollectionFile",
-			  file_base.c_str());
+	config_set_string(App()->GlobalConfig(), "Basic", "SceneCollection", name);
+	config_set_string(App()->GlobalConfig(), "Basic", "SceneCollectionFile", file_base.c_str());
 
-	obs_data_array_t *quickTransitionData =
-		obs_data_get_array(data, "quick_transitions");
+	obs_data_array_t *quickTransitionData = obs_data_get_array(data, "quick_transitions");
 	LoadQuickTransitions(quickTransitionData);
 	obs_data_array_release(quickTransitionData);
 
@@ -1022,8 +1014,7 @@ retryScene:
 
 	/* ---------------------- */
 
-	if (api)
-		api->on_load(modulesObj);
+	if (api) api->on_load(modulesObj);
 
 	obs_data_release(modulesObj);
 	obs_data_release(data);
@@ -1033,21 +1024,18 @@ retryScene:
 
 	if (opt_start_streaming) {
 		blog(LOG_INFO, "Starting stream due to command line parameter");
-		QMetaObject::invokeMethod(this, "StartStreaming",
-					  Qt::QueuedConnection);
+		QMetaObject::invokeMethod(this, "StartStreaming", Qt::QueuedConnection);
 		opt_start_streaming = false;
 	}
 
 	if (opt_start_recording) {
 		blog(LOG_INFO, "Starting recording due to command line parameter");
-		QMetaObject::invokeMethod(this, "StartRecording",
-					  Qt::QueuedConnection);
+		QMetaObject::invokeMethod(this, "StartRecording", Qt::QueuedConnection);
 		opt_start_recording = false;
 	}
 
 	if (opt_start_replaybuffer) {
-		QMetaObject::invokeMethod(this, "StartReplayBuffer",
-					  Qt::QueuedConnection);
+		QMetaObject::invokeMethod(this, "StartReplayBuffer", Qt::QueuedConnection);
 		opt_start_replaybuffer = false;
 	}
 
@@ -1058,10 +1046,10 @@ retryScene:
 
 	disableSaving--;
 
-	if (api) {
+	/*if (api) {
 		api->on_event(OBS_FRONTEND_EVENT_SCENE_CHANGED);
 		api->on_event(OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED);
-	}
+	}*/
 }
 
 #define SERVICE_PATH "service.json"
@@ -3506,19 +3494,14 @@ void OBSBasic::RenderMain(void *data, uint32_t cx, uint32_t cy)
 
 	/* --------------------------------------- */
 
-	gs_ortho(0.0f, float(ovi.base_width), 0.0f, float(ovi.base_height),
-		 -100.0f, 100.0f);
-	gs_set_viewport(window->previewX, window->previewY,
-		window->previewCX, window->previewCY);
+	gs_ortho(0.0f, float(ovi.base_width), 0.0f, float(ovi.base_height), -100.0f, 100.0f);
+	gs_set_viewport(window->previewX, window->previewY, window->previewCX, window->previewCY);
 
 	if (window->IsPreviewProgramMode()) {
-		window->DrawBackdrop(float(ovi.base_width),
-				     float(ovi.base_height));
-
+		window->DrawBackdrop(float(ovi.base_width), float(ovi.base_height));
 		OBSScene scene = window->GetCurrentScene();
 		obs_source_t *source = obs_scene_get_source(scene);
-		if (source)
-			obs_source_video_render(source);
+		if (source) obs_source_video_render(source);
 	} else {
 		obs_render_main_texture_src_color_only();
 	}
@@ -3598,8 +3581,8 @@ static inline enum obs_scale_type GetScaleType(ConfigFile &basicConfig)
 
 	if (astrcmpi(scaleTypeStr, "bilinear") == 0)
 		return OBS_SCALE_BILINEAR;
-	else if (astrcmpi(scaleTypeStr, "lanczos") == 0)
-		return OBS_SCALE_LANCZOS;
+	//else if (astrcmpi(scaleTypeStr, "lanczos") == 0)
+	//	return OBS_SCALE_LANCZOS;
 	else if (astrcmpi(scaleTypeStr, "area") == 0)
 		return OBS_SCALE_AREA;
 	else
@@ -4429,7 +4412,7 @@ QMenu *OBSBasic::AddScaleFilteringMenu(QMenu *menu, obs_sceneitem_t *item)
 	ADD_MODE("ScaleFiltering.Point", OBS_SCALE_POINT);
 	ADD_MODE("ScaleFiltering.Bilinear", OBS_SCALE_BILINEAR);
 	ADD_MODE("ScaleFiltering.Bicubic", OBS_SCALE_BICUBIC);
-	ADD_MODE("ScaleFiltering.Lanczos", OBS_SCALE_LANCZOS);
+	//ADD_MODE("ScaleFiltering.Lanczos", OBS_SCALE_LANCZOS);
 	ADD_MODE("ScaleFiltering.Area", OBS_SCALE_AREA);
 #undef ADD_MODE
 
