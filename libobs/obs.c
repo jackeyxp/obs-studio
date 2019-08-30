@@ -711,6 +711,9 @@ static const char *obs_signals[] = {
 	"void source_transition_video_stop(ptr source)",
 	"void source_transition_stop(ptr source)",
 
+	"void source_monitoring(ptr source)",
+	"void source_updated(ptr source)",
+
 	"void channel_change(int channel, in out ptr source, ptr prev_source)",
 	"void master_volume(in out float volume)",
 

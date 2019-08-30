@@ -1432,6 +1432,9 @@ void SourceTree::Remove(OBSSceneItem item)
 {
 	OBSBasic *main = reinterpret_cast<OBSBasic *>(App()->GetMainWindow());
 	GetStm()->Remove(item);
+	// 新增主窗口的删除事件通知...
+	main->RemoveSceneItem(item);
+	// 然后进行配置文件的保存...
 	main->SaveProject();
 
 	if (!main->SavingDisabled()) {

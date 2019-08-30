@@ -58,13 +58,18 @@ class OBSBasicStats;
 #define AUX_AUDIO_3 Str("AuxAudioDevice3")
 #define AUX_AUDIO_4 Str("AuxAudioDevice4")
 
-#define SIMPLE_ENCODER_X264 "x264"
+#define SIMPLE_ENCODER_X264        "x264"
 #define SIMPLE_ENCODER_X264_LOWCPU "x264_lowcpu"
-#define SIMPLE_ENCODER_QSV "qsv"
-#define SIMPLE_ENCODER_NVENC "nvenc"
-#define SIMPLE_ENCODER_AMD "amd"
+#define SIMPLE_ENCODER_QSV         "qsv"
+#define SIMPLE_ENCODER_NVENC       "nvenc"
+#define SIMPLE_ENCODER_AMD         "amd"
 
-#define PREVIEW_EDGE_SIZE 10
+#define PREVIEW_EDGE_SIZE			10			// 预览窗口边框间距
+
+#define DEF_ROW_SIZE				5			// 预览窗口显示行数
+#define DEF_COL_SIZE				5			// 预览窗口显示列数
+#define DEF_ROW_SPACE				8			// 预览窗口行间距
+#define DEF_COL_SPACE				5			// 预览窗口列间距
 
 struct BasicOutputHandler;
 
@@ -135,7 +140,9 @@ private:
 
 	QList<QPointer<QDockWidget>> extraDocks;
 
-	bool loaded = false;
+	bool m_bIsSlientClose = false;
+	bool m_bIsLoaded = false;
+
 	long disableSaving = 1;
 	bool projectChanged = false;
 	bool previewEnabled = true;
@@ -251,7 +258,6 @@ private:
 
 	void OnFirstLoad();
 
-	OBSSceneItem GetSceneItem(QListWidgetItem *item);
 	OBSSceneItem GetCurrentSceneItem();
 
 	bool QueryRemoveSource(obs_source_t *source);
@@ -272,8 +278,7 @@ private:
 	void ChangeSceneIndex(bool relative, int idx, int invalidIdx);
 
 	void TempFileOutput(const char *path, int vBitrate, int aBitrate);
-	void TempStreamOutput(const char *url, const char *key, int vBitrate,
-			      int aBitrate);
+	void TempStreamOutput(const char *url, const char *key, int vBitrate, int aBitrate);
 
 	void CloseDialogs();
 	void ClearSceneData();
@@ -317,7 +322,8 @@ private:
 	obs_data_array_t *SaveTransitions();
 	void LoadTransitions(obs_data_array_t *transitions);
 
-	obs_source_t *fadeTransition;
+	obs_source_t    * fadeTransition = nullptr;
+	obs_sceneitem_t * m_lpZeroSceneItem = nullptr;
 
 	void CreateProgramDisplay();
 	void CreateProgramOptions();
@@ -471,6 +477,8 @@ private slots:
 
 	void ActivateAudioSource(OBSSource source);
 	void DeactivateAudioSource(OBSSource source);
+	void MonitoringSourceChanged(OBSSource source);
+	void UpdatedSourceEvent(OBSSource source);
 
 	void DuplicateSelectedScene();
 	void RemoveSelectedScene();
@@ -543,6 +551,8 @@ private:
 	static void SourceActivated(void *data, calldata_t *params);
 	static void SourceDeactivated(void *data, calldata_t *params);
 	static void SourceRenamed(void *data, calldata_t *params);
+	static void SourceUpdated(void *data, calldata_t *params);
+	static void SourceMonitoring(void *data, calldata_t *params);
 	static void RenderMain(void *data, uint32_t cx, uint32_t cy);
 
 	void ResizePreview(uint32_t cx, uint32_t cy);
@@ -562,6 +572,12 @@ private:
 	void DiskSpaceMessage();
 
 public:
+	inline obs_sceneitem_t * GetZeroSceneItem() { return m_lpZeroSceneItem; }
+	inline void SetSlientClose(bool bIsSlient) { m_bIsSlientClose = bIsSlient; }
+	inline bool IsLoaded() { return m_bIsLoaded; }
+	
+	void RemoveSceneItem(OBSSceneItem item);
+
 	OBSSource GetProgramSource();
 	OBSScene GetCurrentScene();
 
@@ -644,10 +660,19 @@ public:
 	void CreatePropertiesWindow(obs_source_t *source);
 	void CreateFiltersWindow(obs_source_t *source);
 
+	void doCheckBtnPage(bool bIsFirst = false);
+	void doCheckPPTSource(obs_source_t * source);
+	void doHideDShowAudioMixer(obs_sceneitem_t * scene_item);
+	void doSceneItemLayout(obs_sceneitem_t * scene_item);
+	void doSceneItemExchangePos(obs_sceneitem_t * select_item);
+	void doSceneItemToFirst(obs_sceneitem_t * select_item);
+	void doUpdatePTZ(int nDBCameraID);
+	void doMovePageX(int nMoveLeftX);
+	void doBuildAllStudentBtnMic();
+	void doBuildStudentBtnMic(obs_sceneitem_t * lpSceneItem);
+
 	QAction *AddDockWidget(QDockWidget *dock);
-
 	static OBSBasic *Get();
-
 protected:
 	virtual void closeEvent(QCloseEvent *event) override;
 	virtual void changeEvent(QEvent *event) override;
@@ -783,6 +808,10 @@ private slots:
 	void EnablePreviewDisplay(bool enable);
 	void TogglePreview();
 
+	void OpenFloatSource();
+	void ShutFloatSource();
+	void OpenWindowPTZ();
+
 	void NudgeUp();
 	void NudgeDown();
 	void NudgeLeft();
@@ -807,6 +836,10 @@ private slots:
 	void ResizeOutputSizeOfSource();
 
 public slots:
+	void onPagePrevClicked();
+	void onPageNextClicked();
+	void onPageLeftClicked();
+	void onPageRightClicked();
 	void on_actionResetTransform_triggered();
 
 	bool StreamingActive();
@@ -815,6 +848,8 @@ public slots:
 
 private:
 	int  doD3DSetup();
+	void doBtnPrevNext(bool bIsPrev);
+	void doBtnLeftRight(bool bIsLeft);
 public:
 	explicit OBSBasic(QWidget *parent = 0);
 	virtual ~OBSBasic();

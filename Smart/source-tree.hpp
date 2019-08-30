@@ -158,8 +158,9 @@ class SourceTree : public QListView {
 	}
 
 public:
-	inline SourceTreeItem *GetItemWidget(int idx)
-	{
+	inline int count() { return GetStm()->rowCount(QModelIndex()); }
+
+	inline SourceTreeItem *GetItemWidget(int idx) {
 		QWidget *widget = indexWidget(GetStm()->createIndex(idx, 0));
 		return reinterpret_cast<SourceTreeItem *>(widget);
 	}

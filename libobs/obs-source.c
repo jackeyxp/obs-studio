@@ -839,6 +839,13 @@ void obs_source_update(obs_source_t *source, obs_data_t *settings)
 	}
 }
 
+void obs_source_updated(obs_source_t *source)
+{
+	if (!obs_source_valid(source, "obs_source_updated"))
+		return;
+	obs_source_dosignal(source, "source_updated", NULL);
+}
+
 void obs_source_update_properties(obs_source_t *source)
 {
 	if (!obs_source_valid(source, "obs_source_update_properties"))

@@ -32,6 +32,7 @@
 #include <vector>
 #include <deque>
 
+#include "HYDefine.h"
 #include "window-main.hpp"
 
 std::string CurrentTimeString();
@@ -135,6 +136,7 @@ public:
 	std::string GetVersionString() const;
 	bool IsPortableMode();
 
+	const char *DShowInputSource() const;
 	const char *InputAudioSource() const;
 	const char *OutputAudioSource() const;
 	const char *InteractRtpSource() const;

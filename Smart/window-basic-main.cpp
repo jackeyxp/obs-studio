@@ -1547,11 +1547,10 @@ void OBSBasic::InitOBSCallbacks()
 				    OBSBasic::SourceDeactivated, this);
 	signalHandlers.emplace_back(obs_get_signal_handler(), "source_rename",
 				    OBSBasic::SourceRenamed, this);
-
-	//signalHandlers.emplace_back(obs_get_signal_handler(), "source_monitoring",
-	//		OBSBasic::SourceMonitoring, this);
-	//signalHandlers.emplace_back(obs_get_signal_handler(), "source_updated",
-	//		OBSBasic::SourceUpdated, this);
+	signalHandlers.emplace_back(obs_get_signal_handler(), "source_monitoring",
+					OBSBasic::SourceMonitoring, this);
+	signalHandlers.emplace_back(obs_get_signal_handler(), "source_updated",
+					OBSBasic::SourceUpdated, this);
 
 	//obs_add_raw_video_callback(NULL, receive_raw_video, this);
 }
@@ -1786,7 +1785,7 @@ void OBSBasic::OBSInit()
 	// 为了避免弹框被强制关闭，放在这里弹出更新确认框...
 	//this->TimedCheckForUpdates();
 	// 设置已加载完毕的标志...
-	loaded = true;
+	m_bIsLoaded = true;
 
 	previewEnabled = config_get_bool(App()->GlobalConfig(), "BasicWindow", "PreviewEnabled");
 
@@ -1986,6 +1985,20 @@ void OBSBasic::OnFirstLoad()
 {
 	ProfileScope("OBSBasic::OnFirstLoad");
 
+	// 立即启动远程连接...
+	//App()->doCheckRemote();
+	// 为了避免弹框被强制关闭，放在这里弹出更新确认框...
+	// 2019.06.27 - by jackey => 转移到登录界面当中...
+	//this->TimedCheckForUpdates();
+	// 绑定左右翻页按钮的点击事件...
+	ui->preview->BindBtnClickEvent();
+	// 判断是否显示箭头 => 第一次保存0点数据源...
+	this->doCheckBtnPage(true);
+	// 为所有的互动学生端数据源创建第三方麦克风按钮...
+	this->doBuildAllStudentBtnMic();
+	// 这里还需补充创建监视器，有可能source在重建时，scene还没有创建...
+	//this->doSceneCreateMonitor();
+
 	if (api) {
 		api->on_event(OBS_FRONTEND_EVENT_FINISHED_LOADING);
 	}
@@ -2006,6 +2019,13 @@ void OBSBasic::OnFirstLoad()
 #endif
 
 	Auth::Load();
+}
+
+// 思路错误：当source的监视发生变化，需要重建场景的监视器，播放轨道3音频...
+void OBSBasic::MonitoringSourceChanged(OBSSource source)
+{
+	//this->doSceneDestoryMonitor();
+	//this->doSceneCreateMonitor();
 }
 
 void OBSBasic::DeferredSysTrayLoad(int requeueCount)
@@ -2515,10 +2535,10 @@ OBSScene OBSBasic::GetCurrentScene()
 	return item ? GetOBSRef<OBSScene>(item) : nullptr;
 }
 
-OBSSceneItem OBSBasic::GetSceneItem(QListWidgetItem *item)
+/*OBSSceneItem OBSBasic::GetSceneItem(QListWidgetItem *item)
 {
 	return item ? GetOBSRef<OBSSceneItem>(item) : nullptr;
-}
+}*/
 
 OBSSceneItem OBSBasic::GetCurrentSceneItem()
 {
@@ -2544,6 +2564,7 @@ void OBSBasic::UpdatePreviewScalingMenu()
 	ui->actionScaleOutput->setChecked(scalingAmount == float(ovi.output_width)/float(ovi.base_width));
 }
 
+// 注意：已经被UpdateSceneSelection中的OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED事件替代了...
 /*void OBSBasic::UpdateSources(OBSScene scene)
 {
 	ClearListItems(ui->sources);
@@ -2736,6 +2757,21 @@ void OBSBasic::AddSceneItem(OBSSceneItem item)
 
 		obs_scene_enum_items(scene, select_one, (obs_sceneitem_t *)item);
 	}
+}
+
+// 注意：这里与SourceTree::Remove一起完成remove事件通知...
+void OBSBasic::RemoveSceneItem(OBSSceneItem item)
+{
+	// 注意：这里的scene_item并没有被销毁，还有后续操作...
+	// 如果删除0点对象，先强制隐藏PPT翻页按钮，再重置...
+	if (m_lpZeroSceneItem == item) {
+		ui->preview->DispBtnPrev(false);
+		ui->preview->DispBtnNext(false);
+		ui->preview->DispBtnFoot(false, 0, 0, NULL);
+		m_lpZeroSceneItem = NULL;
+	}
+	// 删除预览窗口对应的学生端麦克风按钮...
+	ui->preview->doDeleteStudentBtnMic(item);
 }
 
 void OBSBasic::UpdateSceneSelection(OBSSource source)
@@ -3323,11 +3359,11 @@ void OBSBasic::ReorderSources(OBSScene scene)
 
 /* OBS Callbacks */
 
-/*void OBSBasic::SourceUpdated(void *data, calldata_t *params)
+void OBSBasic::SourceUpdated(void *data, calldata_t *params)
 {
 	OBSBasic *window = static_cast<OBSBasic*>(data);
 	obs_source_t *source = (obs_source_t*)calldata_ptr(params, "source");
-	QMetaObject::invokeMethod(window, "UpdatedSourceItem",
+	QMetaObject::invokeMethod(window, "UpdatedSourceEvent",
 		Q_ARG(OBSSource, OBSSource(source)));
 }
 
@@ -3337,7 +3373,7 @@ void OBSBasic::SourceMonitoring(void *data, calldata_t *params)
 	obs_source_t *source = (obs_source_t*)calldata_ptr(params, "source");
 	QMetaObject::invokeMethod(window, "MonitoringSourceChanged",
 		Q_ARG(OBSSource, OBSSource(source)));
-}*/
+}
 
 void OBSBasic::SceneReordered(void *data, calldata_t *params)
 {
@@ -3384,6 +3420,7 @@ void OBSBasic::SceneItemDeselected(void *data, calldata_t *params)
 				  Q_ARG(bool, false));
 }
 
+// 注意：为了处理场景对象而注册的事件通知...
 void OBSBasic::SourceCreated(void *data, calldata_t *params)
 {
 	obs_source_t *source = (obs_source_t *)calldata_ptr(params, "source");
@@ -3394,6 +3431,7 @@ void OBSBasic::SourceCreated(void *data, calldata_t *params)
 					  Q_ARG(OBSSource, OBSSource(source)));
 }
 
+// 注意：为了处理场景对象而注册的事件通知...
 void OBSBasic::SourceRemoved(void *data, calldata_t *params)
 {
 	obs_source_t *source = (obs_source_t *)calldata_ptr(params, "source");
@@ -3825,9 +3863,9 @@ void OBSBasic::ResizePreview(uint32_t cx, uint32_t cy)
 	previewX += float(PREVIEW_EDGE_SIZE);
 	previewY += float(PREVIEW_EDGE_SIZE);
 	
-	//ui->preview->ResizeBtnPage(ovi.base_height);
-	//ui->preview->ResizeBtnPPT(ovi.base_height);
-	//ui->preview->ResizeBtnMicAll();
+	ui->preview->ResizeBtnPage(ovi.base_height);
+	ui->preview->ResizeBtnPPT(ovi.base_height);
+	ui->preview->ResizeBtnMicAll();
 }
 
 void OBSBasic::CloseDialogs()
@@ -4484,6 +4522,103 @@ QMenu *OBSBasic::AddScaleFilteringMenu(QMenu *menu, obs_sceneitem_t *item)
 	ui->setupUi(this);
 }*/
 
+void OBSBasic::OpenWindowPTZ()
+{
+	// 创建云台控制窗口...
+	/*if (m_PTZWindow == NULL) {
+		m_PTZWindow = new CPTZWindow(this);
+	}
+	// 注意：远程云台控制，只管发命令，不用处理反馈结果...
+	// 显示云台控制窗口，点击鼠标时已经更新摄像头编号...
+	m_PTZWindow->show();*/
+}
+
+void OBSBasic::OpenFloatSource()
+{
+	// 通过标准接口，查找当前已选中数据源...
+	OBSScene scene = this->GetCurrentScene();
+	OBSSceneItem curItem = this->GetCurrentSceneItem();
+	if (scene == NULL || curItem == NULL)
+		return;
+	// 先置顶当前数据源，再浮动已选中的当前数据源对象...
+	obs_sceneitem_set_order(curItem, OBS_ORDER_MOVE_TOP);
+	obs_sceneitem_set_floated(curItem, true);
+	// 获取显示系统的宽和高...
+	obs_video_info ovi = { 0 };
+	obs_get_video_info(&ovi);
+	// 将当前数据源移动到右上角...
+	vec2 vBounds, vPos, vFind;
+	obs_sceneitem_t * lpItemFind = NULL;
+	obs_sceneitem_get_bounds(curItem, &vBounds);
+	float xPos = ovi.base_width;
+	while (xPos > 0.0f) {
+		// 计算X偏移位置...
+		xPos -= vBounds.x;
+		// 设置偏移和查找位置...
+		vec2_set(&vPos, xPos, 0.0f);
+		vec2_set(&vFind, vPos.x + 5, vPos.y + 5);
+		lpItemFind = OBSBasicPreview::GetItemAtPos(vFind, false);
+		bool bIsFloated = obs_sceneitem_floated(lpItemFind);
+		// 查找位置没有数据源或没有浮动，设定位置，跳出循环...
+		if (lpItemFind == NULL || !bIsFloated) {
+			obs_sceneitem_set_pos(curItem, &vPos);
+			break;
+		}
+	}
+	int nCurStep = 0;
+	// 计算第一个资源的宽和高...
+	ovi.base_height -= DEF_ROW_SPACE;
+	uint32_t first_width = ovi.base_width;
+	uint32_t first_height = ovi.base_height - ovi.base_height / DEF_ROW_SIZE;
+	// 计算其它资源的宽和高...
+	ovi.base_width -= (DEF_COL_SIZE - 1) * DEF_COL_SPACE;
+	uint32_t other_width = ovi.base_width / DEF_COL_SIZE;
+	uint32_t other_height = ovi.base_height / DEF_ROW_SIZE;
+	// 由于set_order会重选焦点，需要只保留当前数据源焦点...
+	for (int i = 0; i < ui->sources->count(); i++) {
+		OBSSceneItem theItem = ui->sources->Get(i);
+		bool bIsSelect = ((theItem != curItem) ? false : true);
+		obs_sceneitem_select(theItem, bIsSelect);
+		// 重排所有数据源，目的是腾出空位 => 排除0点位置和已浮动数据源...
+		obs_source_t * source = obs_sceneitem_get_source(theItem);
+		uint32_t flags = obs_source_get_output_flags(source);
+		bool bIsFloated = obs_sceneitem_floated(theItem);
+		// 如果数据源对象无效，继续寻找...
+		if (theItem == NULL || source == NULL)
+			continue;
+		// 如果没有视频数据源标志或处于浮动状态，继续寻找...
+		if (bIsFloated || (flags & OBS_SOURCE_VIDEO) == 0)
+			continue;
+		// 如果数据源是在0点位置，继续寻找...
+		if (theItem == m_lpZeroSceneItem)
+			continue;
+		vec2 vPos = { 1.0f, 1.0f };
+		// 遍历第二行的位置，查找空闲位置，即使越界了也要查找...
+		uint32_t pos_x = (nCurStep++) * (other_width + DEF_COL_SPACE);
+		uint32_t pos_y = first_height + DEF_ROW_SPACE;
+		vec2_set(&vPos, float(pos_x), float(pos_y));
+		obs_sceneitem_set_pos(theItem, &vPos);
+	}
+	// 判断是否显示左右箭头...
+	this->doCheckBtnPage();
+	// 将全部麦克风按钮都重置显示位置...
+	ui->preview->ResizeBtnMicAll();
+}
+
+void OBSBasic::ShutFloatSource()
+{
+	// 通过标准接口，查找当前已选中数据源...
+	OBSScene scene = this->GetCurrentScene();
+	OBSSceneItem curItem = this->GetCurrentSceneItem();
+	if (scene == NULL || curItem == NULL)
+		return;
+	// 先关闭浮动，然后给当前浮动对象寻找放置位置...
+	obs_sceneitem_set_floated(curItem, false);
+	this->doSceneItemLayout(curItem);
+	// 将全部麦克风按钮都重置显示位置...
+	ui->preview->ResizeBtnMicAll();
+}
+
 void OBSBasic::CreateSourcePopupMenu(int idx, bool preview)
 {
 	QMenu popup(this);
@@ -4492,6 +4627,28 @@ void OBSBasic::CreateSourcePopupMenu(int idx, bool preview)
 	delete scaleFilteringMenu;
 	delete deinterlaceMenu;
 
+	OBSSceneItem sceneItem = ui->sources->Get(idx);
+	obs_source_t *source = obs_sceneitem_get_source(sceneItem);
+	bool bIsRtpSource = ((astrcmpi(obs_source_get_id(source), App()->InteractRtpSource()) == 0) ? true : false);
+
+	// 如果数据源有效，创建一个可浮动数据源的菜单项...
+	if (source != NULL) {
+		QAction * actionFloated = NULL;
+		bool bIsFloatedSource = obs_sceneitem_floated(sceneItem);
+		actionFloated = popup.addAction(QTStr(bIsFloatedSource ? "Basic.Main.ShutFloatSource" : "Basic.Main.OpenFloatSource"),
+										this, bIsFloatedSource ? SLOT(ShutFloatSource()) : SLOT(OpenFloatSource()));
+		// 如果是第一个数据源并且是未浮动状态，需要对菜单进行灰色处理...
+		if ((m_lpZeroSceneItem == sceneItem) && !bIsFloatedSource) {
+			actionFloated->setEnabled(false);
+		}
+		// 增加一个分隔符...
+		popup.addSeparator();
+	}
+	// 针对互动教室，增加打开云台控制菜单...
+	if ((source != NULL) && bIsRtpSource) {
+		popup.addAction(QTStr("Basic.Main.OpenRtpPTZ"), this, SLOT(OpenWindowPTZ()));
+		popup.addSeparator();
+	}
 	// 针对预览窗口的右键菜单...
 	if (preview != NULL) {
 		// 屏蔽 开启预览 菜单开关 => 永远开启预览...
@@ -4547,9 +4704,6 @@ void OBSBasic::CreateSourcePopupMenu(int idx, bool preview)
 
 	if (idx != -1) {
 		if (addSourceMenu) popup.addSeparator();
-
-		OBSSceneItem sceneItem = ui->sources->Get(idx);
-		obs_source_t *source = obs_sceneitem_get_source(sceneItem);
 		uint32_t flags = obs_source_get_output_flags(source);
 		bool isAsyncVideo = (flags & OBS_SOURCE_ASYNC_VIDEO) == OBS_SOURCE_ASYNC_VIDEO;
 		bool hasAudio = (flags & OBS_SOURCE_AUDIO) == OBS_SOURCE_AUDIO;
@@ -5415,6 +5569,18 @@ void OBSBasic::StreamingStop(int code, QString last_error)
 	}
 }
 
+void OBSBasic::doUpdatePTZ(int nDBCameraID)
+{
+	// 创建云台控制窗口...
+	/*if (m_PTZWindow == NULL) {
+		m_PTZWindow = new CPTZWindow(this);
+	}
+	// 更新摄像头编号到云台控制窗口对象当中...
+	if (nDBCameraID > 0 && m_PTZWindow != NULL) {
+		m_PTZWindow->doUpdatePTZ(nDBCameraID);
+	}*/
+}
+
 /*void OBSBasic::AutoRemux()
 {
 	const char *mode = config_get_string(basicConfig, "Output", "Mode");
@@ -6164,7 +6330,7 @@ static bool reset_tr(obs_scene_t *scene, obs_sceneitem_t *item, void *param)
 	vec2_set(&info.scale, 1.0f, 1.0f);
 	info.rot = 0.0f;
 	info.alignment = OBS_ALIGN_TOP | OBS_ALIGN_LEFT;
-	info.bounds_type = OBS_BOUNDS_NONE;
+	info.bounds_type = OBS_BOUNDS_SCALE_INNER;
 	info.bounds_alignment = OBS_ALIGN_CENTER;
 	vec2_set(&info.bounds, 0.0f, 0.0f);
 	obs_sceneitem_set_info(item, &info);
@@ -6539,7 +6705,7 @@ void OBSBasic::NudgeRight()
 }
 
 OBSProjector *OBSBasic::OpenProjector(obs_source_t *source, int monitor,
-				      QString title, ProjectorType type)
+	QString title, ProjectorType type)
 {
 	/* seriously?  10 monitors? */
 	if (monitor > 9 || monitor > QGuiApplication::screens().size() - 1)
@@ -6575,6 +6741,386 @@ OBSProjector *OBSBasic::OpenProjector(obs_source_t *source, int monitor,
 	//	projector->Init();
 	//}
 	return projector;
+}
+
+// 响应鼠标双击事件 => 交换0点位置的场景资源...
+void OBSBasic::doSceneItemExchangePos(obs_sceneitem_t * select_item)
+{
+	// 输入场景资源为空，直接返回...
+	if (select_item == NULL)
+		return;
+	// 0点无效，将当前设定为0点...
+	if (m_lpZeroSceneItem == NULL) {
+		// 设定选中对象为0点数据源对象...
+		this->doSceneItemToFirst(select_item);
+		// 保存当前数据源为0点数据源...
+		m_lpZeroSceneItem = select_item;
+		return;
+	}
+	// 0点数据源必须一定不为空...
+	ASSERT(m_lpZeroSceneItem != NULL);
+	// 获取当前选中资源的坐标信息...
+	obs_transform_info selectInfo = { 0 };
+	obs_sceneitem_get_info(select_item, &selectInfo);
+	// 获取第一个资源对象的全部坐标信息 => 0点数据源对象...
+	obs_transform_info firstInfo = { 0 };
+	obs_sceneitem_t  * lpFirstSceneItem = m_lpZeroSceneItem;
+	obs_sceneitem_get_info(lpFirstSceneItem, &firstInfo);
+	ASSERT(firstInfo.pos.x <= 0.0f && firstInfo.pos.y <= 0.0f);
+	// 将当前选中资源的坐标信息与第一个资源的坐标信息进行交换...
+	obs_sceneitem_set_pos(lpFirstSceneItem, &selectInfo.pos);
+	obs_sceneitem_set_bounds(lpFirstSceneItem, &selectInfo.bounds);
+	obs_sceneitem_set_pos(select_item, &firstInfo.pos);
+	obs_sceneitem_set_bounds(select_item, &firstInfo.bounds);
+	// 注意：不能交换全部信息，只交换坐标位置和图像高宽...
+	//obs_sceneitem_set_info(lpFirstSceneItem, &selectInfo);
+	//obs_sceneitem_set_info(select_item, &firstInfo);
+	// 轨道1|轨道2 => 屏蔽旧的第一个窗口音频输出...
+	//setAudioMixer(lpFirstSceneItem, 0, false);
+	//setAudioMixer(lpFirstSceneItem, 1, false);
+	// 轨道1|轨道2 => 强制新的第一个窗口音频输出...
+	//setAudioMixer(select_item, 0, true);
+	//setAudioMixer(select_item, 1, true);
+	// 强制新的数据源置于0点位置的最底层，避免遮挡浮动窗口...
+	obs_sceneitem_set_order(select_item, OBS_ORDER_MOVE_BOTTOM);
+	// 由于set_order会重选焦点，需要只保留当前数据源焦点...
+	for (int i = 0; i < ui->sources->count(); i++) {
+		OBSSceneItem theItem = ui->sources->Get(i);
+		bool bIsSelect = ((theItem != select_item) ? false : true);
+		obs_sceneitem_select(theItem, bIsSelect);
+	}
+	// 0点位置如果是幻灯片数据源，需要显示上下页按钮...
+	obs_source_t * lpSource = obs_sceneitem_get_source(select_item);
+	//this->doCheckPPTSource(lpSource);
+	// 保存当前数据源为0点数据源...
+	m_lpZeroSceneItem = select_item;
+}
+
+// 对场景资源位置进行重新排列 => 两行（1行1列，1行5列）...
+void OBSBasic::doSceneItemLayout(obs_sceneitem_t * scene_item)
+{
+	// 如果数据源无效或没有视频内容，直接返回...
+	if (scene_item == NULL)
+		return;
+	obs_source_t *source = obs_sceneitem_get_source(scene_item);
+	uint32_t flags = obs_source_get_output_flags(source);
+	// 如果场景资源，没有视频，不重排位置，直接返回...
+	if ((flags & OBS_SOURCE_VIDEO) == 0)
+		return;
+	// 场景数据资源必须包含视频内容...
+	ASSERT(flags & OBS_SOURCE_VIDEO);
+	// 如果0点无效，将当前设定为0点...
+	if (m_lpZeroSceneItem == NULL) {
+		// 设定选中对象为0点数据源对象...
+		this->doSceneItemToFirst(scene_item);
+		// 学生监听状态由讲师手动控制，不再由焦点控制...
+		//this->doSendCameraPusherID(scene_item);
+		// 更新场景资源的显示位置信息...
+		m_lpZeroSceneItem = scene_item;
+		return;
+	}
+	// 获取显示系统的宽和高...
+	obs_video_info ovi = { 0 };
+	obs_get_video_info(&ovi);
+	// 计算第一个资源的宽和高...
+	ovi.base_height -= DEF_ROW_SPACE;
+	uint32_t first_width = ovi.base_width;
+	uint32_t first_height = ovi.base_height - ovi.base_height / DEF_ROW_SIZE;
+	// 计算其它资源的宽和高...
+	ovi.base_width -= (DEF_COL_SIZE - 1) * DEF_COL_SPACE;
+	uint32_t other_width = ovi.base_width / DEF_COL_SIZE;
+	uint32_t other_height = ovi.base_height / DEF_ROW_SIZE;
+	// 设置统一默认的数据源对齐参数...
+	obs_transform_info itemInfo = { 0 };
+	obs_sceneitem_get_info(scene_item, &itemInfo);
+	itemInfo.alignment = OBS_ALIGN_LEFT | OBS_ALIGN_TOP;
+	itemInfo.bounds_type = OBS_BOUNDS_SCALE_INNER;
+	itemInfo.bounds_alignment = OBS_ALIGN_CENTER;
+	int nCurStep = 0, nItemStep = 0;
+	// 重排所有数据源(排除0点位置和已浮动数据源)...
+	for (int i = 0; i < ui->sources->count(); i++) {
+		obs_sceneitem_t * lpCurItem = ui->sources->Get(i);
+		obs_source_t * lpCurSource = obs_sceneitem_get_source(lpCurItem);
+		uint32_t nCurflags = obs_source_get_output_flags(lpCurSource);
+		bool bIsFloated = obs_sceneitem_floated(lpCurItem);
+		// 如果数据源对象无效，继续寻找...
+		if (lpCurItem == NULL || lpCurSource == NULL)
+			continue;
+		// 如果没有视频数据源标志或处于浮动状态，继续寻找...
+		if (bIsFloated || (nCurflags & OBS_SOURCE_VIDEO) == 0)
+			continue;
+		// 如果数据源就在0点位置，继续寻找...
+		if (m_lpZeroSceneItem == lpCurItem)
+			continue;
+		// 遍历第二行的位置，查找空闲位置，即使越界了也要查找...
+		uint32_t pos_x = (nCurStep++) * (other_width + DEF_COL_SPACE);
+		uint32_t pos_y = first_height + DEF_ROW_SPACE;
+		// 当前位置等于输入数据源，调整输入数据源的位置信息...
+		if (lpCurItem == scene_item) {
+			// 当前位置没有数据源，更新数据源位置信息...
+			vec2_set(&itemInfo.pos, float(pos_x), float(pos_y));
+			vec2_set(&itemInfo.bounds, float(other_width), float(other_height));
+			obs_sceneitem_set_info(scene_item, &itemInfo);
+			// 轨道1|轨道2 => 屏蔽非第一个窗口资源的音频输出，只保留全局音频资源和第一个窗口的音频资源输出...
+			//setAudioMixer(scene_item, 0, false);
+			//setAudioMixer(scene_item, 1, false);
+			nItemStep = nCurStep;
+		} else {
+			vec2 vPos = { 0.0f, 0.0f };
+			vec2_set(&vPos, float(pos_x), float(pos_y));
+			obs_sceneitem_set_pos(lpCurItem, &vPos);
+		}
+	}
+	// 计算所有的数据源需要向左移动的步数...
+	if (nItemStep > DEF_COL_SIZE) {
+		int nMoveLeftX = (nItemStep - DEF_COL_SIZE) * (other_width + DEF_COL_SPACE);
+		this->doMovePageX(nMoveLeftX);
+	}
+	// 判断是否显示左右箭头...
+	this->doCheckBtnPage();
+}
+
+// PPT数据源向上翻页...
+void OBSBasic::onPagePrevClicked()
+{
+	this->doBtnPrevNext(true);
+}
+
+// PPT数据源向下翻页...
+void OBSBasic::onPageNextClicked()
+{
+	this->doBtnPrevNext(false);
+}
+
+// 具体执行上部前后翻页操作的接口函数...
+void OBSBasic::doBtnPrevNext(bool bIsPrev)
+{
+	// 如果0点数据源无效，直接返回...
+	if (m_lpZeroSceneItem == NULL)
+		return;
+	obs_source_t * lpSource = obs_sceneitem_get_source(m_lpZeroSceneItem);
+	const char * lpSrcID = obs_source_get_id(lpSource);
+	// 如果0点数据源不是PPT文件，直接返回...
+	if (astrcmpi(lpSrcID, "slideshow") != 0)
+		return;
+	// 获取到幻灯片数据源的上一页和下一页的快捷热键值...
+	obs_data_t * lpSettings = obs_source_get_settings(lpSource);
+	obs_hotkey_id next_hotkey = obs_data_get_int(lpSettings, "next_hotkey");
+	obs_hotkey_id prev_hotkey = obs_data_get_int(lpSettings, "prev_hotkey");
+	obs_data_release(lpSettings);
+	// 根据具体的输入参数标志，得到具体的点击热键值...
+	obs_hotkey_id click_hotkey = bIsPrev ? prev_hotkey : next_hotkey;
+	// 直接调用幻灯片数据源的热键回调接口 => 激发翻页操作...
+	obs_hotkey_trigger_routed_callback(click_hotkey, true);
+	// 重新读取被幻灯片改变后的配置...
+	lpSettings = obs_source_get_settings(lpSource);
+	const char * lpName = obs_data_get_string(lpSettings, "item_name");
+	int nCurItem = obs_data_get_int(lpSettings, "cur_item");
+	int nFileNum = obs_data_get_int(lpSettings, "file_num");
+	obs_data_release(lpSettings);
+	// 将读取到的幻灯片数据，直接更新到预览界面当中...
+	ui->preview->DispBtnFoot(true, nCurItem, nFileNum, lpName);
+}
+
+// 所有第二行数据源窗口向右移动一格...
+void OBSBasic::onPageLeftClicked()
+{
+	this->doBtnLeftRight(true);
+}
+
+// 所有第二行数据源窗口向左移动一格...
+void OBSBasic::onPageRightClicked()
+{
+	this->doBtnLeftRight(false);
+}
+
+// 具体执行底部左右翻页操作的接口函数...
+void OBSBasic::doBtnLeftRight(bool bIsLeft)
+{
+	// 获取显示系统的宽和高...
+	obs_video_info ovi = { 0 };
+	obs_get_video_info(&ovi);
+	// 计算第一个资源的宽和高...
+	ovi.base_height -= DEF_ROW_SPACE;
+	uint32_t first_width = ovi.base_width;
+	uint32_t first_height = ovi.base_height - ovi.base_height / DEF_ROW_SIZE;
+	// 计算其它资源的宽和高...
+	ovi.base_width -= (DEF_COL_SIZE - 1) * DEF_COL_SPACE;
+	uint32_t other_width = ovi.base_width / DEF_COL_SIZE;
+	uint32_t other_height = ovi.base_height / DEF_ROW_SIZE;
+	// 计算所有的数据源需要向右移动的步数 => 注意是负数...
+	int nMoveLeftX = (bIsLeft ? -1 : 1) * (other_width + DEF_COL_SPACE);
+	// 所有第二行数据源窗口向右移动...
+	this->doMovePageX(nMoveLeftX);
+	// 判断是否显示左右箭头...
+	this->doCheckBtnPage();
+}
+
+// 遍历所有的数据源，排除0点位置数据源和浮动数据源...
+void OBSBasic::doMovePageX(int nMoveLeftX)
+{
+	for (int i = 0; i < ui->sources->count(); i++) {
+		obs_sceneitem_t * item = ui->sources->Get(i);
+		obs_source_t * source = obs_sceneitem_get_source(item);
+		uint32_t flags = obs_source_get_output_flags(source);
+		bool bIsFloated = obs_sceneitem_floated(item);
+		// 如果数据源对象无效，继续寻找...
+		if (item == NULL || source == NULL)
+			continue;
+		// 如果没有视频数据源标志或处于浮动状态，继续寻找...
+		if (bIsFloated || (flags & OBS_SOURCE_VIDEO) == 0)
+			continue;
+		vec2 vPos = { 1.0f, 1.0f };
+		obs_sceneitem_get_pos(item, &vPos);
+		// 如果数据源是在0点位置，继续寻找...
+		if (vPos.x <= 0.0f && vPos.y <= 0.0f)
+			continue;
+		// 设定这个数据源的新位置...
+		vPos.x -= nMoveLeftX;
+		obs_sceneitem_set_pos(item, &vPos);
+	}
+}
+
+// 为所有的互动学生端数据源创建第三方麦克风按钮...
+void OBSBasic::doBuildAllStudentBtnMic()
+{
+	// 遍历所有的数据源对象，找到互动学生端对象，注意关联数据源...
+	for (int i = 0; i < ui->sources->count(); i++) {
+		obs_sceneitem_t * item = ui->sources->Get(i);
+		// 创建数据源对应的麦克风按钮 => 需要处理关联数据源...
+		ui->preview->doBuildStudentBtnMic(item);
+	}
+}
+
+// 调用预览窗口创建学生端麦克风按钮，并重排所有麦克风按钮...
+void OBSBasic::doBuildStudentBtnMic(obs_sceneitem_t * lpSceneItem)
+{
+	ui->preview->doBuildStudentBtnMic(lpSceneItem);
+	ui->preview->ResizeBtnMicAll();
+}
+
+// 判断是否显示左右箭头 => 第一次运行时需要保存0点位置数据源...
+void OBSBasic::doCheckBtnPage(bool bIsFirst/* = false*/)
+{
+	// 获取显示系统的宽和高...
+	obs_video_info ovi = { 0 };
+	obs_get_video_info(&ovi);
+	bool bIsShowLeft = false;
+	bool bIsShowRight = false;
+	// 遍历所有的数据源对象，判断是否需要显示左右翻页箭头按钮...
+	for (int i = 0; i < ui->sources->count(); i++) {
+		obs_sceneitem_t * item = ui->sources->Get(i);
+		obs_source_t * source = obs_sceneitem_get_source(item);
+		uint32_t flags = obs_source_get_output_flags(source);
+		bool bIsFloated = obs_sceneitem_floated(item);
+		// 如果数据源对象无效，继续寻找...
+		if (item == NULL || source == NULL)
+			continue;
+		// 如果没有视频数据源标志或处于浮动状态，继续寻找...
+		if (bIsFloated || (flags & OBS_SOURCE_VIDEO) == 0)
+			continue;
+		// 获取当前数据源的显示位置...
+		vec2 vPos = { 1.0f, 1.0f };
+		obs_sceneitem_get_pos(item, &vPos);
+		// 如果是第一次，需要保存0点数据源 => 不要调用doCheckPPTSource()...
+		// 因为，PPT数据源还没准备完毕，需要ss_update之后才准备完毕...
+		// ss会发起source_updated信号，执行UpdatedSourceItem()...
+		if (bIsFirst && vPos.x == 0.0f && vPos.y == 0.0f) {
+			m_lpZeroSceneItem = item;
+		}
+		// < 0 => 显示左侧按钮..
+		if (vPos.x < 0.0f) {
+			bIsShowLeft = true;
+			continue;
+		}
+		// > ovi.base_width => 显示右侧按钮...
+		if (vPos.x > ovi.base_width) {
+			bIsShowRight = true;
+			continue;
+		}
+	}
+	// 根据最终计算的结果显示左右翻页按钮...
+	ui->preview->DispBtnLeft(bIsShowLeft);
+	ui->preview->DispBtnRight(bIsShowRight);
+}
+
+// 注意：这是为了更新PPT数据源的操作按钮而设定的事件通知...
+// 注意：事先假定doCheckBtnPage先执行，已保存0点数据源...
+// source完全加载更新完毕通知，这里只处理0点数据源通知...
+void OBSBasic::UpdatedSourceEvent(OBSSource source)
+{
+	// 如果不是0点数据源，或0点数据源无效，直接返回...
+	obs_source_t * lpSource = obs_sceneitem_get_source(m_lpZeroSceneItem);
+	if (lpSource == NULL || lpSource != source)
+		return;
+	// 更新0点幻灯片数据源信息...
+	ASSERT(lpSource == source);
+	this->doCheckPPTSource(lpSource);
+}
+
+void OBSBasic::doCheckPPTSource(obs_source_t * source)
+{
+	const char * lpSrcID = obs_source_get_id(source);
+	bool bIsSlideShow = ((astrcmpi(lpSrcID, "slideshow") == 0) ? true : false);
+	int nCurItem = 0; int nFileNum = 0;
+	const char * lpName = NULL;
+	if (bIsSlideShow) {
+		obs_data_t * settings = obs_source_get_settings(source);
+		lpName = obs_data_get_string(settings, "item_name");
+		nCurItem = obs_data_get_int(settings, "cur_item");
+		nFileNum = obs_data_get_int(settings, "file_num");
+		obs_data_release(settings);
+	}
+	// 是否显示上一页或下一页按钮标志...
+	ui->preview->DispBtnPrev(bIsSlideShow);
+	ui->preview->DispBtnNext(bIsSlideShow);
+	// 页码栏需要当前播放编号和总幻灯片个数...
+	ui->preview->DispBtnFoot(bIsSlideShow, nCurItem, nFileNum, lpName);
+}
+
+// 将当前场景资源设置为第一个显示资源，重新计算显示坐标...
+void OBSBasic::doSceneItemToFirst(obs_sceneitem_t * select_item)
+{
+	// 输入资源无效，直接返回...
+	if (select_item == NULL)
+		return;
+	// 获取显示系统的宽和高...
+	obs_video_info ovi = { 0 };
+	obs_get_video_info(&ovi);
+	// 计算第一个资源的宽和高...
+	ovi.base_height -= DEF_ROW_SPACE;
+	uint32_t first_width = ovi.base_width;
+	uint32_t first_height = ovi.base_height - ovi.base_height / DEF_ROW_SIZE;
+	// 设置默认的场景资源参数...
+	obs_transform_info itemInfo = { 0 };
+	vec2_set(&itemInfo.scale, 1.0f, 1.0f);
+	itemInfo.alignment = OBS_ALIGN_LEFT | OBS_ALIGN_TOP;
+	itemInfo.bounds_type = OBS_BOUNDS_SCALE_INNER;
+	itemInfo.bounds_alignment = OBS_ALIGN_CENTER;
+	vec2_set(&itemInfo.pos, 0.0f, 0.0f);
+	vec2_set(&itemInfo.bounds, float(first_width), float(first_height));
+	// 更新场景资源的显示位置信息...
+	obs_sceneitem_set_info(select_item, &itemInfo);
+	// 设置场景资源的裁剪区域 => 不要重置裁剪区...
+	//obs_sceneitem_crop crop = { 0 };
+	//obs_sceneitem_set_crop(select_item, &crop);
+	// 轨道1|轨道2 => 强制第一个窗口资源的音频输出，只保留全局音频资源和第一个窗口的音频资源输出...
+	//setAudioMixer(select_item, 0, true);
+	//setAudioMixer(select_item, 1, true);
+	// 注意：doSendCameraPusherID 会在外层调用...
+	// 0点位置如果是幻灯片数据源，需要显示上下页按钮...
+	obs_source_t * lpSource = obs_sceneitem_get_source(select_item);
+	//this->doCheckPPTSource(lpSource);
+}
+
+void OBSBasic::doHideDShowAudioMixer(obs_sceneitem_t * scene_item)
+{
+	obs_source_t * source = obs_sceneitem_get_source(scene_item);
+	const char * lpID = obs_source_get_id(source);
+	if (lpID != NULL && astrcmpi(lpID, App()->DShowInputSource()) == 0) {
+		SetSourceMixerHidden(source, true);
+		DeactivateAudioSource(source);
+	}
 }
 
 void OBSBasic::OpenStudioProgramProjector()

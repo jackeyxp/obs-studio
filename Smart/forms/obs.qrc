@@ -17,6 +17,14 @@
     <file>images/visible.svg</file>
     <file>images/trash.svg</file>
     <file>images/revert.svg</file>
+    <file>images/camera_on.png</file>
+    <file>images/camera.png</file>
+    <file>images/btn_left.png</file>
+    <file>images/btn_right.png</file>
+    <file>images/btn_prev.png</file>
+    <file>images/btn_next.png</file>
+    <file>images/btn_foot.png</file>
+    <file>images/btn_mic.png</file>
     <file>../HaoYi.ico</file>
   </qresource>
   <qresource prefix="/settings">
@@ -27,5 +35,28 @@
     <file>images/settings/audio.svg</file>
     <file>images/settings/general.svg</file>
     <file>images/settings/hotkeys.svg</file>
+  </qresource>
+  <qresource prefix="/ptz">
+    <file>css/PTZWindow.css</file>
+    <file>images/ptz/ptz.png</file>
+    <file>images/ptz/add.png</file>
+    <file>images/ptz/sub.png</file>
+    <file>images/ptz/pan.png</file>
+    <file>images/ptz/back.png</file>
+    <file>images/ptz/close.png</file>
+    <file>images/ptz/up.png</file>
+    <file>images/ptz/down.png</file>
+    <file>images/ptz/left.png</file>
+    <file>images/ptz/right.png</file>
+    <file>images/ptz/speed-blue.png</file>
+    <file>images/ptz/speed-black.png</file>
+    <file>images/ptz/speed-circle.png</file>
+  </qresource>
+  <qresource prefix="/mini">
+    <file>css/LoginMini.css</file>
+    <file>images/mini/min.png</file>
+    <file>images/mini/close.png</file>
+    <file>images/mini/loading.gif</file>
+    <file>images/mini/scan.png</file>
   </qresource>
 </RCC>

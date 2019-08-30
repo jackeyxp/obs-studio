@@ -326,7 +326,7 @@
       <Filter>Update Files</Filter>
     </QtMoc>
     <QtMoc Include="menu-button.hpp">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
@@ -499,6 +499,9 @@
     </ClInclude>
     <ClInclude Include="..\libobs\obs-config.h">
       <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HYDefine.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

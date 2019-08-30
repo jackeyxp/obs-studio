@@ -678,9 +678,7 @@ void OBSBasic::SetCurrentScene(OBSSource scene, bool force, bool direct)
 				ui->scenes->blockSignals(true);
 				ui->scenes->setCurrentItem(item);
 				ui->scenes->blockSignals(false);
-				if (api)
-					api->on_event(
-						OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED);
+				if (api) api->on_event(OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED);
 				break;
 			}
 		}

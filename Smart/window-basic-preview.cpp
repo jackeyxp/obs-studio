@@ -1,5 +1,6 @@
 #include <QGuiApplication>
 #include <QMouseEvent>
+#include <QBitmap>
 
 #include <algorithm>
 #include <cmath>
@@ -8,8 +9,9 @@
 #include <graphics/matrix4.h>
 #include "window-basic-preview.hpp"
 #include "window-basic-main.hpp"
-#include "obs-app.hpp"
+#include "display-helpers.hpp"
 #include "platform.hpp"
+#include "obs-app.hpp"
 
 #define HANDLE_RADIUS 4.0f
 #define HANDLE_SEL_RADIUS (HANDLE_RADIUS * 1.5f)
@@ -24,10 +26,29 @@ OBSBasicPreview::OBSBasicPreview(QWidget *parent, Qt::WindowFlags flags)
 {
 	ResetScrollingOffset();
 	setMouseTracking(true);
+
+	m_btnLeft = this->CreateBtnPage(true);
+	m_btnRight = this->CreateBtnPage(false);
+
+	m_btnPrev = this->CreateBtnPPT(true);
+	m_btnNext = this->CreateBtnPPT(false);
+	m_btnFoot = this->CreateBtnFoot();
 }
 
 OBSBasicPreview::~OBSBasicPreview()
 {
+	if (m_btnRight != NULL) { delete m_btnRight; m_btnRight = NULL; }
+	if (m_btnLeft != NULL) { delete m_btnLeft; m_btnLeft = NULL; }
+	if (m_btnPrev != NULL) { delete m_btnPrev; m_btnPrev = NULL; }
+	if (m_btnNext != NULL) { delete m_btnNext; m_btnNext = NULL; }
+	if (m_btnFoot != NULL) { delete m_btnFoot; m_btnFoot = NULL; }
+
+	GM_MapBtnMic::iterator itorItem;
+	for (itorItem = m_MapBtnMic.begin(); itorItem != m_MapBtnMic.end(); ++itorItem) {
+		delete itorItem->second;
+	}
+	m_MapBtnMic.clear();
+
 	obs_enter_graphics();
 
 	if (overflow)
@@ -36,6 +57,318 @@ OBSBasicPreview::~OBSBasicPreview()
 		gs_vertexbuffer_destroy(rectFill);
 
 	obs_leave_graphics();
+}
+
+void OBSBasicPreview::BindBtnClickEvent()
+{
+	OBSBasic *main = reinterpret_cast<OBSBasic*>(App()->GetMainWindow());
+	this->connect(m_btnLeft, SIGNAL(clicked()), main, SLOT(onPageLeftClicked()));
+	this->connect(m_btnRight, SIGNAL(clicked()), main, SLOT(onPageRightClicked()));
+	this->connect(m_btnPrev, SIGNAL(clicked()), main, SLOT(onPagePrevClicked()));
+	this->connect(m_btnNext, SIGNAL(clicked()), main, SLOT(onPageNextClicked()));
+}
+
+void OBSBasicPreview::doDeleteStudentBtnMic(obs_sceneitem_t * lpSceneItem)
+{
+	// 通过数据源对象找到对应的麦克风按钮...
+	GM_MapBtnMic::iterator itorItem = m_MapBtnMic.find(lpSceneItem);
+	if (itorItem == m_MapBtnMic.end())
+		return;
+	// 获取当前学生端数据源的摄像头编号配置信息...
+	OBSBasic * main = reinterpret_cast<OBSBasic*>(App()->GetMainWindow());
+	obs_source_t * lpSourceItem = obs_sceneitem_get_source(lpSceneItem);
+	obs_data_t * lpSettings = obs_source_get_settings(lpSourceItem);
+	int nDBCameraID = obs_data_get_int(lpSettings, "camera_id");
+	obs_data_release(lpSettings);
+	// 如果摄像头编号有效，并且与当前正在监听的第三方编号一致，需要归零处理...
+	//if (nDBCameraID > 0 && main->m_nDBCameraPusherID == nDBCameraID) {
+	//	main->doSendCameraPusherID(0);
+	//}
+	// 删除麦克风按钮，删除索引...
+	delete itorItem->second;
+	m_MapBtnMic.erase(itorItem);
+}
+
+// 通过输入的数据源对象，创建麦克风按钮对象 => 简化外部操作，在这里进行有效性判断...
+void OBSBasicPreview::doBuildStudentBtnMic(obs_sceneitem_t * lpSceneItem)
+{
+	obs_source_t * lpNewSource = obs_sceneitem_get_source(lpSceneItem);
+	uint32_t flags = obs_source_get_output_flags(lpNewSource);
+	const char * lpSrcID = obs_source_get_id(lpNewSource);
+	if (lpSceneItem == NULL || lpNewSource == NULL)
+		return;
+	// 如果没有视频数据源，直接返回...
+	if ((flags & OBS_SOURCE_VIDEO) == 0)
+		return;
+	// 如果不是互动学生端，直接返回...
+	if (astrcmpi(lpSrcID, App()->InteractRtpSource()) != 0)
+		return;
+	// 遍历已经存在的麦克风按钮集合...
+	GM_MapBtnMic::iterator itorItem;
+	for (itorItem = m_MapBtnMic.begin(); itorItem != m_MapBtnMic.end(); ++itorItem) {
+		obs_source_t * lpSrcSource = obs_sceneitem_get_source(itorItem->first);
+		// 如果存在相同的数据源对象，直接返回...
+		if (lpSrcSource == lpNewSource)
+			return;
+		ASSERT(lpSrcSource != lpNewSource);
+	}
+	// 创建一个新的麦克风按钮，放入集合队列当中...
+	QPushButton * lpNewBtnMic = this->CreateBtnMic();
+	m_MapBtnMic[lpSceneItem] = lpNewBtnMic;
+	// 设置麦克风按钮默认的初始风格 => 默认处于第三方静音状态...
+	QString strStyle = QString("QPushButton{ background:transparent; border-image:url(:/res/images/btn_mic.png) 0 30 0 60; }"
+		"QPushButton:hover{border-image:url(:/res/images/btn_mic.png) 0 0 0 90;}"
+		"QPushButton:pressed{border-image:url(:/res/images/btn_mic.png) 0 90 0 0;}");
+	lpNewBtnMic->setStyleSheet(strStyle);
+	// 移动麦克风按钮到数据源窗口的对应位置上...
+	this->doResizeBtnMic(lpSceneItem);
+	// 保存当前麦克风按钮的自定义状态属性 => 非活动状态...
+	lpNewBtnMic->setProperty("is_active", QVariant(false));
+	lpNewBtnMic->setProperty("scene_item", QVariant((qulonglong)lpSceneItem));
+	// 绑定按钮相关的点击事件 => 关联到预览窗口自己身上...
+	this->connect(lpNewBtnMic, SIGNAL(clicked()), this, SLOT(onBtnMicClicked()));
+}
+
+void OBSBasicPreview::onBtnMicClicked()
+{
+	QPushButton * lpBtnMic = reinterpret_cast<QPushButton*>(sender());
+	if (lpBtnMic == NULL)
+		return;
+	obs_sceneitem_t * lpSceneItem = (obs_sceneitem_t*)lpBtnMic->property("scene_item").toULongLong();
+	obs_source_t * lpSourceItem = obs_sceneitem_get_source(lpSceneItem);
+	if (lpSceneItem == NULL || lpSourceItem == NULL)
+		return;
+	// 设置麦克风按钮的活动状态风格 => 活动或非活动...
+	QString strStyleActive = QString("QPushButton{ background:transparent; border-image:url(:/res/images/btn_mic.png) 0 90 0 0; }"
+		"QPushButton:hover{border-image:url(:/res/images/btn_mic.png) 0 60 0 30;}"
+		"QPushButton:pressed{border-image:url(:/res/images/btn_mic.png) 0 30 0 60;}");
+	QString strStyleOffLine = QString("QPushButton{ background:transparent; border-image:url(:/res/images/btn_mic.png) 0 30 0 60; }"
+		"QPushButton:hover{border-image:url(:/res/images/btn_mic.png) 0 0 0 90;}"
+		"QPushButton:pressed{border-image:url(:/res/images/btn_mic.png) 0 90 0 0;}");
+	// 获取当前的麦克风按钮状态和数据源的核心状态...
+	bool isActive = lpBtnMic->property("is_active").toBool();
+	obs_data_t * lpSettings = obs_source_get_settings(lpSourceItem);
+	bool bHasRecvThread = obs_data_get_bool(lpSettings, "recv_thread");
+	int nDBCameraID = obs_data_get_int(lpSettings, "camera_id");
+	obs_data_release(lpSettings);
+	// 先将当前活动状态取反，得到新状态...
+	bool isNewActive = !isActive;
+	// 如果是活动状态，但数据源没有在线，设置为非活动状态...
+	if (isNewActive && (!bHasRecvThread || nDBCameraID <= 0)) {
+		isNewActive = false;
+	}
+	// 向服务器发送第三方监听学生端变化消息通知...
+	OBSBasic * main = reinterpret_cast<OBSBasic*>(App()->GetMainWindow());
+	int nNewDBCameraID = isNewActive ? nDBCameraID : 0;
+	//main->doSendCameraPusherID(nNewDBCameraID);
+	// 设置活动状态属性，设置按钮风格状态图标信息...
+	lpBtnMic->setProperty("is_active", QVariant(isNewActive));
+	lpBtnMic->setStyleSheet(isNewActive ? strStyleActive : strStyleOffLine);
+	lpBtnMic->setToolTip(QTStr(isNewActive ? "Preview.Mic.On" : "Preview.Mic.Off"));
+	// 如果当前按钮处于新的非活动状态，直接返回...
+	if (!isNewActive)
+		return;
+	ASSERT(isNewActive);
+	// 如果当前按钮处于新的活动状态，需要修改其它按钮为非活动状态...
+	QPushButton * lpBtnItem = NULL;
+	GM_MapBtnMic::iterator itorItem;
+	for (itorItem = m_MapBtnMic.begin(); itorItem != m_MapBtnMic.end(); ++itorItem) {
+		lpBtnItem = itorItem->second;
+		if (lpBtnItem == lpBtnMic) continue;
+		lpBtnItem->setStyleSheet(strStyleOffLine);
+	}
+}
+
+void OBSBasicPreview::ResizeBtnMicAll()
+{
+	GM_MapBtnMic::iterator itorItem;
+	for (itorItem = m_MapBtnMic.begin(); itorItem != m_MapBtnMic.end(); ++itorItem) {
+		this->doResizeBtnMic(itorItem->first);
+	}
+}
+
+void OBSBasicPreview::doResizeBtnMic(obs_sceneitem_t * lpSceneItem)
+{
+	OBSBasic * main = reinterpret_cast<OBSBasic*>(App()->GetMainWindow());
+	if (main == NULL || lpSceneItem == NULL)
+		return;
+	// 通过数据源对象找到麦克风按钮...
+	GM_MapBtnMic::iterator itorItem;
+	itorItem = m_MapBtnMic.find(lpSceneItem);
+	if (itorItem == m_MapBtnMic.end())
+		return;
+	// 判断找到麦克风按钮对象指针是否有效...
+	QPushButton * lpBtnMic = itorItem->second;
+	if (lpBtnMic == NULL)
+		return;
+	// 获取数据源在obs坐标系位置和大小...
+	vec2 vPos = { 0 }, vBounds = { 0 };
+	obs_sceneitem_get_pos(lpSceneItem, &vPos);
+	obs_sceneitem_get_bounds(lpSceneItem, &vBounds);
+	// 先计算居中位置，再计算比例，最后添加预览位置偏移...
+	int nPosNewX = (vPos.x + vBounds.x / 2) * main->previewScale + main->previewX - 15;
+	int nPosNewY = vPos.y * main->previewScale + main->previewY + 1;
+	lpBtnMic->setGeometry(nPosNewX, nPosNewY, 30, 30);
+}
+
+QPushButton * OBSBasicPreview::CreateBtnMic()
+{
+	QPushButton * lpObjButton = new QPushButton(this);
+	QString strBtnName = QStringLiteral("btn_mic");
+	lpObjButton->setObjectName(strBtnName);
+	lpObjButton->setMinimumSize(QSize(30, 30));
+	lpObjButton->setMaximumSize(QSize(30, 30));
+	lpObjButton->setCursor(QCursor(Qt::PointingHandCursor));
+	lpObjButton->setToolTip(QTStr("Preview.Mic.Off"));
+	// 进行按钮图片的透明化处理...
+	QPalette myPalette;
+	QPixmap  myPixmap(QString(":/res/images/%1.png").arg(strBtnName));
+	// 让背景图片适应窗口的大小，在背景图片上做 scaled 操作...
+	myPalette.setBrush(QPalette::Background, QBrush(myPixmap));
+	lpObjButton->setPalette(myPalette);
+	lpObjButton->setMask(myPixmap.mask());
+	lpObjButton->show();
+	return lpObjButton;
+}
+
+QPushButton * OBSBasicPreview::CreateBtnFoot()
+{
+	QPushButton * lpObjButton = new QPushButton(this);
+	QString strBtnName = QStringLiteral("btn_foot");
+	QString strStyle = QString("QPushButton{ font-family:'Microsoft YaHei'; font-size:14px; color:#FFFFFF;}"
+		"QPushButton{ background:transparent; border-image:url(:/res/images/%1.png);}").arg(strBtnName);
+	lpObjButton->setStyleSheet(strStyle);
+	lpObjButton->setObjectName(strBtnName);
+	lpObjButton->setMinimumSize(QSize(100, 30));
+	lpObjButton->setMaximumSize(QSize(100, 30));
+	// 进行按钮图片的透明化处理...
+	QPalette myPalette;
+	QPixmap  myPixmap(QString(":/res/images/%1.png").arg(strBtnName));
+	// 让背景图片适应窗口的大小，在背景图片上做 scaled 操作...
+	myPalette.setBrush(QPalette::Background, QBrush(myPixmap));
+	lpObjButton->setPalette(myPalette);
+	lpObjButton->setMask(myPixmap.mask());
+	lpObjButton->hide();
+	return lpObjButton;
+}
+
+QPushButton * OBSBasicPreview::CreateBtnPPT(bool bIsPrev)
+{
+	QPushButton * lpObjButton = new QPushButton(this);
+	QString strBtnName = (bIsPrev ? QStringLiteral("btn_prev") : QStringLiteral("btn_next"));
+	QString strStyle = QString("QPushButton{ background:transparent; border-image:url(:/res/images/%1.png) 0 80 0 0; }"
+		"QPushButton:hover{border-image:url(:/res/images/%1.png) 0 40 0 40;}"
+		"QPushButton:pressed{border-image:url(:/res/images/%1.png) 0 0 0 80;}")
+		.arg(strBtnName);
+	lpObjButton->setStyleSheet(strStyle);
+	lpObjButton->setObjectName(strBtnName);
+	lpObjButton->setMinimumSize(QSize(40, 50));
+	lpObjButton->setMaximumSize(QSize(40, 50));
+	lpObjButton->setCursor(QCursor(Qt::PointingHandCursor));
+	lpObjButton->setToolTip(QTStr((bIsPrev ? "Preview.Page.Prev" : "Preview.Page.Next")));
+	// 进行按钮图片的透明化处理...
+	QPalette myPalette;
+	QPixmap  myPixmap(QString(":/res/images/%1.png").arg(strBtnName));
+	// 让背景图片适应窗口的大小，在背景图片上做 scaled 操作...
+	myPalette.setBrush(QPalette::Background, QBrush(myPixmap));
+	lpObjButton->setPalette(myPalette);
+	lpObjButton->setMask(myPixmap.mask());
+	lpObjButton->hide();
+	return lpObjButton;
+}
+
+QPushButton * OBSBasicPreview::CreateBtnPage(bool bIsLeft)
+{
+	QPushButton * lpObjButton = new QPushButton(this);
+	QString strBtnName = (bIsLeft ? QStringLiteral("btn_left") : QStringLiteral("btn_right"));
+	QString strStyle = QString("QPushButton{ background:transparent; border-image:url(:/res/images/%1.png) 0 80 0 0; }"
+		"QPushButton:hover{border-image:url(:/res/images/%1.png) 0 40 0 40;}"
+		"QPushButton:pressed{border-image:url(:/res/images/%1.png) 0 0 0 80;}")
+		.arg(strBtnName);
+	lpObjButton->setStyleSheet(strStyle);
+	lpObjButton->setObjectName(strBtnName);
+	lpObjButton->setMinimumSize(QSize(40, 40));
+	lpObjButton->setMaximumSize(QSize(40, 40));
+	lpObjButton->setCursor(QCursor(Qt::PointingHandCursor));
+	lpObjButton->setToolTip(QTStr((bIsLeft ? "Preview.Page.Left" : "Preview.Page.Right")));
+	// 进行按钮图片的透明化处理...
+	QPalette myPalette;
+	QPixmap  myPixmap(QString(":/res/images/%1.png").arg(strBtnName));
+	// 让背景图片适应窗口的大小，在背景图片上做 scaled 操作...
+	myPalette.setBrush(QPalette::Background, QBrush(myPixmap));
+	lpObjButton->setPalette(myPalette);
+	lpObjButton->setMask(myPixmap.mask());
+	lpObjButton->hide();
+	return lpObjButton;
+}
+
+// 第二排数据源左右圆形按钮的位置调整...
+void OBSBasicPreview::ResizeBtnPage(int baseCY)
+{
+	// obs的坐标系投射到预览画面的坐标位置，previewScale是投射比例...
+	// previewScale 对 X 和 Y 都是适合的，详见 GetScaleAndCenterPos()...
+	OBSBasic * main = reinterpret_cast<OBSBasic*>(App()->GetMainWindow());
+	int nPrevCY = int(main->previewScale * float(baseCY));
+	int nPosY = main->previewY + nPrevCY - nPrevCY / 5 / 2 - 20;
+	QSize targetSize = GetPixelSize(this);
+	int nPosLeftX = 0; int nPosRightX = 0;
+	nPosRightX = targetSize.width() - 40;
+	// 设定左右圆形按钮的位置和大小 => 40*40...
+	m_btnLeft->setGeometry(nPosLeftX, nPosY, 40, 40);
+	m_btnRight->setGeometry(nPosRightX, nPosY, 40, 40);
+}
+
+void OBSBasicPreview::ResizeBtnPPT(int baseCY)
+{
+	// obs的坐标系投射到预览画面的坐标位置，previewScale是投射比例...
+	// previewScale 对 X 和 Y 都是适合的，详见 GetScaleAndCenterPos()...
+	OBSBasic * main = reinterpret_cast<OBSBasic*>(App()->GetMainWindow());
+	int nPrevCY = int(main->previewScale * float(baseCY));
+	int nPosY = main->previewY + (nPrevCY - nPrevCY / 5) / 2 - 30;
+	QSize targetSize = GetPixelSize(this);
+	int nPosLeftX = 0; int nPosRightX = 0;
+	nPosRightX = targetSize.width() - 40;
+	// 设定左右翻页按钮的位置和大小 => 40*50...
+	m_btnPrev->setGeometry(nPosLeftX, nPosY, 40, 50);
+	m_btnNext->setGeometry(nPosRightX, nPosY, 40, 50);
+	// 设定顶部信息按钮的位置和大小 => 100*30...
+	nPosLeftX = (targetSize.width() - 100) / 2;
+	m_btnFoot->setGeometry(nPosLeftX, main->previewY, 100, 30);
+}
+
+void OBSBasicPreview::DispBtnRight(bool bIsShow)
+{
+	if (m_btnRight == NULL) return;
+	(bIsShow ? m_btnRight->show() : m_btnRight->hide());
+}
+
+void OBSBasicPreview::DispBtnLeft(bool bIsShow)
+{
+	if (m_btnLeft == NULL) return;
+	(bIsShow ? m_btnLeft->show() : m_btnLeft->hide());
+}
+
+void OBSBasicPreview::DispBtnPrev(bool bIsShow)
+{
+	if (m_btnPrev == NULL) return;
+	(bIsShow ? m_btnPrev->show() : m_btnPrev->hide());
+}
+
+void OBSBasicPreview::DispBtnNext(bool bIsShow)
+{
+	if (m_btnNext == NULL) return;
+	(bIsShow ? m_btnNext->show() : m_btnNext->hide());
+}
+
+void OBSBasicPreview::DispBtnFoot(bool bIsShow, int nCurItem, int nFileNum, const char * lpName)
+{
+	if (m_btnFoot == NULL) return;
+	(bIsShow ? m_btnFoot->show() : m_btnFoot->hide());
+	if (lpName != NULL) {
+		m_btnFoot->setText(QString("%1 %2/%3").arg(lpName).arg(nCurItem + 1).arg(nFileNum));
+	} else {
+		m_btnFoot->setText(QString("%1/%2").arg(nCurItem + 1).arg(nFileNum));
+	}
 }
 
 vec2 OBSBasicPreview::GetMouseEventPos(QMouseEvent *event)
@@ -461,11 +794,12 @@ void OBSBasicPreview::GetStretchHandleData(const vec2 &pos)
 
 void OBSBasicPreview::keyPressEvent(QKeyEvent *event)
 {
+	// 处理其它情况的快捷键...
 	if (!IsFixedScaling() || event->isAutoRepeat()) {
 		OBSQTDisplay::keyPressEvent(event);
 		return;
 	}
-
+	// 空格键按下时，设置鼠标形状...
 	switch (event->key()) {
 	case Qt::Key_Space:
 		setCursor(Qt::OpenHandCursor);
@@ -482,7 +816,7 @@ void OBSBasicPreview::keyReleaseEvent(QKeyEvent *event)
 		OBSQTDisplay::keyReleaseEvent(event);
 		return;
 	}
-
+	// 空格键抬起时，设置鼠标形状...
 	switch (event->key()) {
 	case Qt::Key_Space:
 		scrollMode = false;
@@ -562,8 +896,7 @@ void OBSBasicPreview::mousePressEvent(QMouseEvent *event)
 		vec2 s;
 		SceneFindBoxData data(s, s);
 
-		obs_scene_enum_items(main->GetCurrentScene(), FindSelected,
-				     &data);
+		obs_scene_enum_items(main->GetCurrentScene(), FindSelected, &data);
 
 		std::lock_guard<std::mutex> lock(selectMutex);
 		selectedItems = data.sceneItems;
@@ -576,7 +909,16 @@ void OBSBasicPreview::mousePressEvent(QMouseEvent *event)
 	startPos.x = std::round(startPos.x);
 	startPos.y = std::round(startPos.y);
 
-	mouseOverItems = SelectedAtPos(startPos);
+	//注意：右键时需要选中上面的数据源对象...
+	if (event->button() == Qt::RightButton) {
+		this->DoSelect(startPos, false);
+	}
+
+	//注意：只查看最上层的选中标志，避免下层选中造成无法拖动...
+	OBSSceneItem item = GetItemAtPos(startPos, false);
+	mouseOverItems = obs_sceneitem_selected(item);
+	//注意：选中的可能是最下面的，造成选中误差...
+	//mouseOverItems = SelectedAtPos(startPos);
 	vec2_zero(&lastMoveOffset);
 
 	mousePos = startPos;
@@ -595,14 +937,29 @@ static bool select_one(obs_scene_t *scene, obs_sceneitem_t *item, void *param)
 	return true;
 }
 
-void OBSBasicPreview::DoSelect(const vec2 &pos)
+void OBSBasicPreview::DoSelect(const vec2 &pos, bool selectBelow/* = true*/)
 {
 	OBSBasic *main = reinterpret_cast<OBSBasic *>(App()->GetMainWindow());
 
 	OBSScene scene = main->GetCurrentScene();
-	OBSSceneItem item = GetItemAtPos(pos, true);
+	OBSSceneItem item = GetItemAtPos(pos, selectBelow);
 
 	obs_scene_enum_items(scene, select_one, (obs_sceneitem_t *)item);
+
+	obs_source_t * lpSource = obs_sceneitem_get_source(item);
+	const char * lpSrcID = obs_source_get_id(lpSource);
+	if (lpSource == NULL || lpSrcID == NULL)
+		return;
+	ASSERT(lpSource != NULL && lpSrcID != NULL);
+	// 进行ID判断，如果是rtp资源，需要获取摄像头通道编号...
+	if (astrcmpi(lpSrcID, App()->InteractRtpSource()) == 0) {
+		obs_data_t * lpSettings = obs_source_get_settings(lpSource);
+		int theDBCameraID = obs_data_get_int(lpSettings, "camera_id");
+		// 将新的摄像头编号更新到云台控制当中...
+		main->doUpdatePTZ(theDBCameraID);
+		// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏...
+		obs_data_release(lpSettings);
+	}
 }
 
 void OBSBasicPreview::DoCtrlSelect(const vec2 &pos)
@@ -864,7 +1221,11 @@ void OBSBasicPreview::SnapItemMovement(vec2 &offset)
 
 static bool move_items(obs_scene_t *scene, obs_sceneitem_t *item, void *param)
 {
+	// 如果数据源被锁定，直接返回...
 	if (obs_sceneitem_locked(item))
+		return true;
+	// 如果数据源没有浮动，直接返回...
+	if (!obs_sceneitem_floated(item))
 		return true;
 
 	bool selected = obs_sceneitem_selected(item);
@@ -1224,6 +1585,9 @@ static float minfunc(float x, float y)
 
 void OBSBasicPreview::CropItem(const vec2 &pos)
 {
+	// 如果拉伸数据源不是浮动状态，直接返回...
+	if (!obs_sceneitem_floated(stretchItem))
+		return;
 	obs_bounds_type boundsType = obs_sceneitem_get_bounds_type(stretchItem);
 	uint32_t stretchFlags = (uint32_t)stretchHandle;
 	uint32_t align = obs_sceneitem_get_alignment(stretchItem);
@@ -1340,6 +1704,9 @@ void OBSBasicPreview::CropItem(const vec2 &pos)
 
 void OBSBasicPreview::StretchItem(const vec2 &pos)
 {
+	// 如果拉伸数据源不是浮动状态，直接返回...
+	if (!obs_sceneitem_floated(stretchItem))
+		return;
 	Qt::KeyboardModifiers modifiers = QGuiApplication::keyboardModifiers();
 	obs_bounds_type boundsType = obs_sceneitem_get_bounds_type(stretchItem);
 	uint32_t stretchFlags = (uint32_t)stretchHandle;
@@ -1423,13 +1790,15 @@ void OBSBasicPreview::mouseMoveEvent(QMouseEvent *event)
 	//if (locked)
 	//	return;
 
+	/////////////////////////////////////////////////////
+	// 注意：限制MoveItem还需要move_items中进一步处理...
+	/////////////////////////////////////////////////////
 	if (mouseDown) {
-		vec2 pos = GetMouseEventPos(event);
+		vec2 pos = this->GetMouseEventPos(event);
 
-		if (!mouseMoved && !mouseOverItems &&
-		    stretchHandle == ItemHandle::None) {
-			ProcessClick(startPos);
-			mouseOverItems = SelectedAtPos(startPos);
+		if (!mouseMoved && !mouseOverItems && stretchHandle == ItemHandle::None) {
+			this->ProcessClick(startPos);
+			mouseOverItems = this->SelectedAtPos(startPos);
 		}
 
 		pos.x = std::round(pos.x);
@@ -1437,42 +1806,31 @@ void OBSBasicPreview::mouseMoveEvent(QMouseEvent *event)
 
 		if (stretchHandle != ItemHandle::None) {
 			selectionBox = false;
-
-			OBSBasic *main = reinterpret_cast<OBSBasic *>(
-				App()->GetMainWindow());
+			OBSBasic *main = reinterpret_cast<OBSBasic *>(App()->GetMainWindow());
 			OBSScene scene = main->GetCurrentScene();
-			obs_sceneitem_t *group =
-				obs_sceneitem_get_group(scene, stretchItem);
+			obs_sceneitem_t *group = obs_sceneitem_get_group(scene, stretchItem);
 			if (group) {
 				vec3 group_pos;
 				vec3_set(&group_pos, pos.x, pos.y, 0.0f);
-				vec3_transform(&group_pos, &group_pos,
-					       &invGroupTransform);
+				vec3_transform(&group_pos, &group_pos, &invGroupTransform);
 				pos.x = group_pos.x;
 				pos.y = group_pos.y;
 			}
-
-			if (cropping)
-				CropItem(pos);
-			else
-				StretchItem(pos);
-
+			if (cropping) CropItem(pos);
+			else StretchItem(pos);
 		} else if (mouseOverItems) {
 			selectionBox = false;
 			MoveItems(pos);
 		} else {
 			selectionBox = true;
-			if (!mouseMoved)
-				DoSelect(startPos);
+			if (!mouseMoved) DoSelect(startPos);
 			BoxItems(startPos, pos);
 		}
-
 		mouseMoved = true;
 		mousePos = pos;
 	} else {
 		vec2 pos = GetMouseEventPos(event);
 		OBSSceneItem item = GetItemAtPos(pos, true);
-
 		std::lock_guard<std::mutex> lock(selectMutex);
 		hoveredPreviewItems.clear();
 		hoveredPreviewItems.push_back(item);
@@ -1943,4 +2301,30 @@ void OBSBasicPreview::SetScalingAmount(float newScalingAmountVal)
 OBSBasicPreview *OBSBasicPreview::Get()
 {
 	return OBSBasic::Get()->ui->preview;
+}
+
+// 处理场景资源显示位置的交换操作 => 尽量保持按序号排列显示资源位置...
+void OBSBasicPreview::mouseDoubleClickEvent(QMouseEvent *event)
+{
+	// 获取主窗口对象指针...
+	OBSBasic * main = reinterpret_cast<OBSBasic*>(App()->GetMainWindow());
+	// 先找到当前鼠标双击位置的场景资源...
+	vec2 posMouse, posItem, posDisp;
+	posMouse = this->GetMouseEventPos(event);
+	OBSSceneItem itemSelect = this->GetItemAtPos(posMouse, false);
+	// 如果没有找到对应的场景资源，直接返回...
+	if (itemSelect == NULL)
+		return;
+	// 如果当前场景是浮动数据源，不能进行位置切换...
+	if (obs_sceneitem_floated(itemSelect))
+		return;
+	// 如果双击的本身就是0点位置数据源，直接返回...
+	if (itemSelect == main->GetZeroSceneItem())
+		return;
+	// 向主窗口通知，鼠标双击事件，进行位置切换...
+	main->doSceneItemExchangePos(itemSelect);
+	// 学生监听状态由讲师手动控制，不再由焦点控制...
+	//main->doSendCameraPusherID(itemSelect);
+	// 将全部麦克风按钮都重置显示位置...
+	this->ResizeBtnMicAll();
 }

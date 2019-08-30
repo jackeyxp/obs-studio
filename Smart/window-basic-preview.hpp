@@ -11,6 +11,7 @@
 
 class OBSBasic;
 class QMouseEvent;
+class QPushButton;
 
 #define ITEM_LEFT (1 << 0)
 #define ITEM_RIGHT (1 << 1)
@@ -18,6 +19,8 @@ class QMouseEvent;
 #define ITEM_BOTTOM (1 << 3)
 
 #define ZOOM_SENSITIVITY 1.125f
+
+typedef std::map<obs_sceneitem_t*, QPushButton*> GM_MapBtnMic;
 
 enum class ItemHandle : uint32_t {
 	None = 0,
@@ -52,6 +55,13 @@ private:
 	gs_texture_t *overflow = nullptr;
 	gs_vertbuffer_t *rectFill = nullptr;
 
+	QPushButton * m_btnLeft = nullptr;
+	QPushButton * m_btnRight = nullptr;
+	QPushButton * m_btnPrev = nullptr;
+	QPushButton * m_btnNext = nullptr;
+	QPushButton * m_btnFoot = nullptr;
+	GM_MapBtnMic  m_MapBtnMic;
+
 	vec2 startPos;
 	vec2 mousePos;
 	vec2 lastMoveOffset;
@@ -73,19 +83,14 @@ private:
 	std::mutex selectMutex;
 
 	static vec2 GetMouseEventPos(QMouseEvent *event);
-	static bool FindSelected(obs_scene_t *scene, obs_sceneitem_t *item,
-				 void *param);
-	static bool DrawSelectedOverflow(obs_scene_t *scene,
-					 obs_sceneitem_t *item, void *param);
-	static bool DrawSelectedItem(obs_scene_t *scene, obs_sceneitem_t *item,
-				     void *param);
-	static bool DrawSelectionBox(float x1, float y1, float x2, float y2,
-				     gs_vertbuffer_t *box);
+	static bool FindSelected(obs_scene_t *scene, obs_sceneitem_t *item, void *param);
+	static bool DrawSelectedOverflow(obs_scene_t *scene, obs_sceneitem_t *item, void *param);
+	static bool DrawSelectedItem(obs_scene_t *scene, obs_sceneitem_t *item, void *param);
+	static bool DrawSelectionBox(float x1, float y1, float x2, float y2, gs_vertbuffer_t *box);
 
-	static OBSSceneItem GetItemAtPos(const vec2 &pos, bool selectBelow);
 	static bool SelectedAtPos(const vec2 &pos);
 
-	static void DoSelect(const vec2 &pos);
+	static void DoSelect(const vec2 &pos, bool selectBelow = true);
 	static void DoCtrlSelect(const vec2 &pos);
 
 	static vec3 GetSnapOffset(const vec3 &tl, const vec3 &br);
@@ -104,17 +109,39 @@ private:
 
 	void ProcessClick(const vec2 &pos);
 
+	QPushButton * CreateBtnPage(bool bIsLeft);
+	QPushButton * CreateBtnPPT(bool bIsPrev);
+	QPushButton * CreateBtnFoot();
+	QPushButton * CreateBtnMic();
+public slots:
+	void onBtnMicClicked();
 public:
 	OBSBasicPreview(QWidget *parent, Qt::WindowFlags flags = 0);
 	~OBSBasicPreview();
 
 	static OBSBasicPreview *Get();
 
+	void BindBtnClickEvent();
+	void DispBtnRight(bool bIsShow);
+	void DispBtnLeft(bool bIsShow);
+	void DispBtnPrev(bool bIsShow);
+	void DispBtnNext(bool bIsShow);
+	void DispBtnFoot(bool bIsShow, int nCurItem, int nFileNum, const char * lpName);
+
+	void doDeleteStudentBtnMic(obs_sceneitem_t * lpSceneItem);
+	void doBuildStudentBtnMic(obs_sceneitem_t * lpSceneItem);
+	void doResizeBtnMic(obs_sceneitem_t * lpSceneItem);
+
+	void ResizeBtnPage(int baseCY);
+	void ResizeBtnPPT(int baseCY);
+	void ResizeBtnMicAll();
+
 	virtual void keyPressEvent(QKeyEvent *event) override;
 	virtual void keyReleaseEvent(QKeyEvent *event) override;
 
 	virtual void wheelEvent(QWheelEvent *event) override;
 
+	virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
 	virtual void mousePressEvent(QMouseEvent *event) override;
 	virtual void mouseReleaseEvent(QMouseEvent *event) override;
 	virtual void mouseMoveEvent(QMouseEvent *event) override;
@@ -152,4 +179,5 @@ public:
 	 * byte boundary. */
 	static inline void *operator new(size_t size) { return bmalloc(size); }
 	static inline void operator delete(void *ptr) { bfree(ptr); }
+	static OBSSceneItem GetItemAtPos(const vec2 &pos, bool selectBelow);
 };

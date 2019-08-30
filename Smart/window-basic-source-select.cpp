@@ -114,6 +114,21 @@ static void AddSource(void *_data, obs_scene_t *scene)
 
 	sceneitem = obs_scene_add(scene, data->source);
 	obs_sceneitem_set_visible(sceneitem, data->visible);
+
+	// 设置非0点位置，避免混乱...
+	vec2 vPos = { 0 };
+	vec2_set(&vPos, 20.0f, 20.0f);
+	obs_sceneitem_set_pos(sceneitem, &vPos);
+
+	// 调用主窗口接口 => 只对当前场景资源进行位置重排，两行（1行1列，1行5列）
+	OBSBasic *main = reinterpret_cast<OBSBasic*>(App()->GetMainWindow());
+	main->doSceneItemLayout(sceneitem);
+
+	// 创建学生端麦克风按钮并重排所有麦克风按钮...
+	main->doBuildStudentBtnMic(sceneitem);
+
+	// 如果新数据源是视频捕捉设备，在混音中隐藏音频数据源...
+	main->doHideDShowAudioMixer(sceneitem);
 }
 
 static char *get_new_source_name(const char *name)

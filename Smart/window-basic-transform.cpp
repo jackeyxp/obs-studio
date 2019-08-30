@@ -89,14 +89,10 @@ void OBSBasicTransform::SetScene(OBSScene scene)
 		signal_handler_t *signal =
 			obs_source_get_signal_handler(source);
 
-		transformSignal.Connect(signal, "item_transform",
-					OBSSceneItemTransform, this);
-		removeSignal.Connect(signal, "item_remove", OBSSceneItemRemoved,
-				     this);
-		selectSignal.Connect(signal, "item_select", OBSSceneItemSelect,
-				     this);
-		deselectSignal.Connect(signal, "item_deselect",
-				       OBSSceneItemDeselect, this);
+		transformSignal.Connect(signal, "item_transform", OBSSceneItemTransform, this);
+		removeSignal.Connect(signal, "item_remove", OBSSceneItemRemoved, this);
+		selectSignal.Connect(signal, "item_select", OBSSceneItemSelect, this);
+		deselectSignal.Connect(signal, "item_deselect", OBSSceneItemDeselect, this);
 	}
 }
 
