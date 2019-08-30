@@ -46,7 +46,8 @@ struct obs_scene_item {
 	bool user_visible;
 	bool visible;
 	bool selected;
-	bool locked;
+	bool locked;   // 锁定，不显示边框，不可移动
+	bool floated;  // 漂浮，可移动，可以拉伸，可变换
 
 	gs_texrender_t *item_render;
 	struct obs_sceneitem_crop crop;

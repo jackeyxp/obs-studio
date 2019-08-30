@@ -1492,6 +1492,8 @@ EXPORT void obs_sceneitem_select(obs_sceneitem_t *item, bool select);
 EXPORT bool obs_sceneitem_selected(const obs_sceneitem_t *item);
 EXPORT bool obs_sceneitem_locked(const obs_sceneitem_t *item);
 EXPORT bool obs_sceneitem_set_locked(obs_sceneitem_t *item, bool lock);
+EXPORT bool obs_sceneitem_floated(const obs_sceneitem_t *item);
+EXPORT bool obs_sceneitem_set_floated(obs_sceneitem_t *item, bool floated);
 
 /* Functions for getting/setting specific orientation of a scene item */
 EXPORT void obs_sceneitem_set_pos(obs_sceneitem_t *item,

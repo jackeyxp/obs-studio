@@ -706,6 +706,7 @@ static void scene_load_item(struct obs_scene *scene, obs_data_t *item_data)
 	obs_source_t *source;
 	const char *scale_filter_str;
 	struct obs_scene_item *item;
+	bool floated;
 	bool visible;
 	bool lock;
 
@@ -743,6 +744,7 @@ static void scene_load_item(struct obs_scene *scene, obs_data_t *item_data)
 	item->rot = (float)obs_data_get_double(item_data, "rot");
 	item->align = (uint32_t)obs_data_get_int(item_data, "align");
 	visible = obs_data_get_bool(item_data, "visible");
+	floated = obs_data_get_bool(item_data, "floated");
 	lock = obs_data_get_bool(item_data, "locked");
 	obs_data_get_vec2(item_data, "pos", &item->pos);
 	obs_data_get_vec2(item_data, "scale", &item->scale);
@@ -755,6 +757,7 @@ static void scene_load_item(struct obs_scene *scene, obs_data_t *item_data)
 
 	set_visibility(item, visible);
 	obs_sceneitem_set_locked(item, lock);
+	obs_sceneitem_set_floated(item, floated);
 
 	item->bounds_type = (enum obs_bounds_type)obs_data_get_int(
 		item_data, "bounds_type");
@@ -851,6 +854,7 @@ static void scene_save_item(obs_data_array_t *array,
 
 	obs_data_set_string(item_data, "name", name);
 	obs_data_set_bool(item_data, "visible", item->user_visible);
+	obs_data_set_bool  (item_data, "floated", item->floated);
 	obs_data_set_bool(item_data, "locked", item->locked);
 	obs_data_set_double(item_data, "rot", rot);
 	obs_data_set_vec2(item_data, "pos", &pos);
@@ -1653,6 +1657,7 @@ static obs_sceneitem_t *obs_scene_add_internal(obs_scene_t *scene,
 	item->actions_mutex = mutex;
 	item->user_visible = true;
 	item->locked = false;
+	item->floated = false;
 	item->is_group = source->info.id == group_info.id;
 	item->private_settings = obs_data_create();
 	item->toggle_visibility = OBS_INVALID_HOTKEY_PAIR_ID;
@@ -2147,6 +2152,27 @@ bool obs_sceneitem_set_locked(obs_sceneitem_t *item, bool lock)
 	calldata_set_bool(&cd, "locked", lock);
 
 	signal_parent(item->parent, "item_locked", &cd);
+
+	return true;
+}
+
+bool obs_sceneitem_floated(const obs_sceneitem_t *item)
+{
+	return item ? item->floated : false;
+}
+
+bool obs_sceneitem_set_floated(obs_sceneitem_t *item, bool floated)
+{
+	if (!item)
+		return false;
+
+	if (item->floated == floated)
+		return false;
+
+	if (!item->parent)
+		return false;
+
+	item->floated = floated;
 
 	return true;
 }
