@@ -30,13 +30,17 @@ class OBSBasicSourceSelect : public QDialog {
 private:
 	std::unique_ptr<Ui::OBSBasicSourceSelect> ui;
 	const char *id;
+	bool m_bHasMicSource = false;
+	bool m_bHasScreenSource = false;
+	bool m_bIsScreen = false;
 
 	static bool EnumSources(void *data, obs_source_t *source);
 	static bool EnumGroups(void *data, obs_source_t *source);
 
 	static void OBSSourceRemoved(void *data, calldata_t *calldata);
 	static void OBSSourceAdded(void *data, calldata_t *calldata);
-
+private:
+	void doSaveScreenPath(obs_data_t * settings);
 private slots:
 	void on_buttonBox_accepted();
 	void on_buttonBox_rejected();
@@ -45,9 +49,11 @@ private slots:
 	void SourceRemoved(OBSSource source);
 
 public:
-	OBSBasicSourceSelect(OBSBasic *parent, const char *id);
+	OBSBasicSourceSelect(OBSBasic *parent, const char *id, bool bIsScreen = false);
 
 	OBSSource newSource;
 
 	static void SourcePaste(const char *name, bool visible, bool duplicate);
+
+	static void AddFilterToSourceByID(obs_source_t *source, const char * lpFilterID);
 };

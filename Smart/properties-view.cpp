@@ -27,6 +27,7 @@
 #include "qt-wrappers.hpp"
 #include "properties-view.hpp"
 #include "properties-view.moc.hpp"
+#include "window-wait-ppt.hpp"
 #include "obs-app.hpp"
 
 #include <cstdlib>
@@ -1605,6 +1606,13 @@ bool WidgetInfo::PathChanged(const char *setting)
 	QLineEdit *edit = static_cast<QLineEdit *>(widget);
 	edit->setText(path);
 	obs_data_set_string(view->settings, setting, QT_TO_UTF8(path));
+
+	// 针对PPT文件进行特殊的转换处理 => 转换成JPG文件...
+	if (astrcmpi(setting, "ppt_file") == 0) {
+		CPPTWait dlgWait(view, path);
+		dlgWait.exec();
+	}
+
 	return true;
 }
 

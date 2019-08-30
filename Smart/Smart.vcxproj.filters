@@ -191,6 +191,12 @@
     <ClCompile Include="window-basic-main-browser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="window-wait-ppt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="md5.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="obs-app.hpp">
@@ -328,6 +334,9 @@
     <QtMoc Include="menu-button.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="window-wait-ppt.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="forms\OBSBasicSettings.ui">
@@ -342,9 +351,6 @@
     <QtUic Include="forms\OBSBasicFilters.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="forms\OBSAbout.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
     <QtUic Include="forms\OBSBasic.ui">
       <Filter>Form Files</Filter>
     </QtUic>
@@ -357,25 +363,7 @@
     <QtUic Include="forms\NameDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="forms\AutoConfigFinishPage.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="forms\AutoConfigStartPage.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="forms\AutoConfigStreamPage.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="forms\AutoConfigTestPage.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="forms\AutoConfigVideoPage.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="forms\OBSLogReply.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="forms\OBSRemux.ui">
+    <QtUic Include="forms\PPTWait.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -501,6 +489,9 @@
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="HYDefine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="md5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

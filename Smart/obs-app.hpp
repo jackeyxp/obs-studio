@@ -136,6 +136,7 @@ public:
 	std::string GetVersionString() const;
 	bool IsPortableMode();
 
+	const char *GetNSFilter() const;
 	const char *DShowInputSource() const;
 	const char *InputAudioSource() const;
 	const char *OutputAudioSource() const;

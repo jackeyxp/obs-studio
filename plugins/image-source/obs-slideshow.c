@@ -20,6 +20,7 @@
 #define S_LOOP                         "loop"
 #define S_HIDE                         "hide"
 #define S_FILES                        "files"
+#define S_PPT_FILE                     "ppt_file"
 #define S_BEHAVIOR                     "playback_behavior"
 #define S_BEHAVIOR_STOP_RESTART        "stop_restart"
 #define S_BEHAVIOR_PAUSE_UNPAUSE       "pause_unpause"
@@ -68,6 +69,8 @@ extern uint64_t image_source_get_memory_usage(void *data);
 
 struct image_file_data {
 	char *path;
+	char * name;
+	int    slide_id;
 	obs_source_t *source;
 };
 
@@ -104,6 +107,8 @@ struct slideshow {
 
 	pthread_mutex_t mutex;
 	DARRAY(struct image_file_data) files;
+
+	char * ppt_file;
 
 	enum behavior behavior;
 
@@ -166,6 +171,7 @@ static void free_files(struct darray *array)
 
 	for (size_t i = 0; i < files.num; i++) {
 		bfree(files.array[i].path);
+		bfree(files.array[i].name);
 		obs_source_release(files.array[i].source);
 	}
 
@@ -185,8 +191,78 @@ static const char *ss_getname(void *unused)
 	return obs_module_text("SlideShow");
 }
 
+static const char * get_cur_item_name(struct slideshow *ss)
+{
+	// 总数有效，并且当前编号小于总数，直接返回元素名称...
+	if (ss->files.num > 0 && ss->cur_item < ss->files.num) {
+		return ss->files.array[ss->cur_item].name;
+	}
+	// 其它无效情况，直接返回默认元素名称...
+	return obs_module_text("SlideShow.ItemName");
+}
+
+static int8_t sDigitMask[] =
+{
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //0-9
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //10-19 
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //20-29
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //30-39
+	0, 0, 0, 0, 0, 0, 0, 0, 1, 1, //40-49 //stop on every character except a number
+	1, 1, 1, 1, 1, 1, 1, 1, 0, 0, //50-59
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //60-69 
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //70-79
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //80-89
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //90-99
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //100-109
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //110-119
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //120-129
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //130-139
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //140-149
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //150-159
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //160-169
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //170-179
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //180-189
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //190-199
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //200-209
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //210-219
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //220-229
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //230-239
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //240-249
+	0, 0, 0, 0, 0, 0			 //250-255
+};
+
+// 解析出文件名中的序号，没有解析到，返回-1
+int parse_slide(const char *path)
+{
+	int slide_id = 0;
+	uint8_t * fStartGet = (uint8_t*)path;
+	uint8_t * fEndGet = fStartGet + strlen(path);
+	// 遍历字符串，直到遇到数字就停止遍历...
+	while ((fStartGet < fEndGet) && (!sDigitMask[*fStartGet])) {
+		fStartGet++;
+	}
+	// 如果开始大于或等于结束，说明没有找到数字，返回-1
+	if (fStartGet >= fEndGet)
+		return -1;
+	// 从当前位置开始，解析出数字内容...
+	while ((fStartGet < fEndGet) && (*fStartGet >= '0') && (*fStartGet <= '9')) {
+		slide_id = (slide_id * 10) + (*fStartGet - '0');
+		fStartGet++;
+	}
+	// 返回有效序号...
+	return slide_id;
+}
+
+// 数组元素按照slide_id从小到大进行有序排列...
+static int file_slide_compare(const void *first, const void *second)
+{
+	int diff = ((struct image_file_data*)first)->slide_id - ((struct image_file_data*)second)->slide_id;
+	return diff < 0 ? -1 : (diff > 0 ? 1 : 0);
+}
+
+// 新增排序编号，编号为-1，表示不排序...
 static void add_file(struct slideshow *ss, struct darray *array,
-		     const char *path, uint32_t *cx, uint32_t *cy)
+		const char *path, uint32_t *cx, uint32_t *cy, int slide_id)
 {
 	DARRAY(struct image_file_data) new_files;
 	struct image_file_data data;
@@ -207,8 +283,10 @@ static void add_file(struct slideshow *ss, struct darray *array,
 		uint32_t new_cx = obs_source_get_width(new_source);
 		uint32_t new_cy = obs_source_get_height(new_source);
 
+		data.name = bstrdup(obs_module_text("SlideShow.ItemName"));
 		data.path = bstrdup(path);
 		data.source = new_source;
+		data.slide_id = slide_id;
 		da_push_back(new_files, &data);
 
 		if (new_cx > *cx)
@@ -256,6 +334,105 @@ static void do_transition(void *data, bool to_null)
 				     ss->tr_speed, NULL);
 }
 
+static void do_update_user(void *data, obs_data_t *settings, const char * lpFile, const char * lpUser)
+{
+	int nIndexItem = -1;
+	struct slideshow *ss = data;
+	pthread_mutex_lock(&ss->mutex);
+	for (size_t i = 0; i < ss->files.num; i++) {
+		const char *cur_path = ss->files.array[i].path;
+		if (strcmp(lpFile, cur_path) == 0) {
+			bfree(ss->files.array[i].name);
+			ss->files.array[i].name = bstrdup(lpUser);
+			nIndexItem = i;
+			break;
+		}
+	}
+	pthread_mutex_unlock(&ss->mutex);
+	// 更新用户名称到配置当中，并通知上层数据源发生变化...
+	if (nIndexItem >= 0 && ss->cur_item == nIndexItem) {
+		const char *cur_name = ss->files.array[nIndexItem].name;
+		obs_data_set_string(settings, "item_name", cur_name);
+		obs_source_updated(ss->source);
+	}
+}
+
+static void do_update_size(void *data)
+{
+	struct slideshow *ss = data;
+	pthread_mutex_lock(&ss->mutex);
+	uint32_t cx = 0; uint32_t cy = 0;
+	for (size_t i = 0; i < ss->files.num; i++) {
+		obs_source_t * source = ss->files.array[i].source;
+		uint32_t new_cx = obs_source_get_width(source);
+		uint32_t new_cy = obs_source_get_height(source);
+		if (new_cx > cx) cx = new_cx;
+		if (new_cy > cy) cy = new_cy;
+	}
+	// 保存遍历后的最大尺寸...
+	ss->cx = cx; ss->cy = cy;
+	obs_transition_set_size(ss->transition, cx, cy);
+	pthread_mutex_unlock(&ss->mutex);
+}
+
+static void do_screen_change(void *data, obs_data_t *settings)
+{
+	struct slideshow *ss = data;
+	int nScreenID = (int)obs_data_get_int(settings, "screen_id");
+	const char * lpUser = obs_data_get_string(settings, "screen_user");
+	const char * lpFile = obs_data_get_string(settings, "screen_file");
+
+	obs_data_set_bool(settings, "screen_change", false);
+	
+	obs_source_t * new_source = NULL;
+	pthread_mutex_lock(&ss->mutex);
+	// 用文件路径查找图片对象，注意释放引用计数器...
+	new_source = get_source(&ss->files.da, lpFile);
+	obs_source_release(new_source);
+	pthread_mutex_unlock(&ss->mutex);
+	// 强制更新已经存在的图片数据源...
+	if (new_source != NULL) {
+		obs_data_t * lpImageSettings = obs_source_get_settings(new_source);
+		obs_data_set_string(lpImageSettings, "file", lpFile);
+		obs_data_set_bool(lpImageSettings, "unload", false);
+		obs_source_update(new_source, lpImageSettings);
+		obs_data_release(lpImageSettings);
+		// 寻找最大尺寸更新到幻灯对象当中...
+		do_update_size(data);
+		// 找到指定的文件名，更新用户名称...
+		if (lpFile != NULL && lpUser != NULL) {
+			do_update_user(data, settings, lpFile, lpUser);
+		}
+		return;
+	}
+	// 如果当前更新文件没有在文件队列当中，需要新建...
+	struct image_file_data item;
+	new_source = create_source_from_file(lpFile);
+	if (new_source == NULL) return;
+	assert(new_source != NULL);
+	// 新建图像追加到列表末尾...
+	item.name = bstrdup(lpUser);
+	item.path = bstrdup(lpFile);
+	item.source = new_source;
+	item.slide_id = nScreenID;
+	da_push_back(ss->files, &item);
+	// 对读取到的文件列表，进行排序，依据slide_id排序 => 从小到大...
+	qsort(ss->files.array, ss->files.num, sizeof(struct image_file_data), file_slide_compare);
+	// 寻找最大尺寸更新到幻灯对象当中...
+	do_update_size(data);
+	// 只有一个文件，强制显示...
+	if (ss->files.num == 1) {
+		ss->cur_item = 0;
+		do_transition(ss, false);
+	}
+	// 保存当前编号和总数到配置当中 => 方便外层界面使用...
+	obs_data_set_string(settings, "item_name", get_cur_item_name(ss));
+	obs_data_set_int(settings, "cur_item", ss->cur_item);
+	obs_data_set_int(settings, "file_num", ss->files.num);
+	// 进行数据源的上层通知，幻灯片已经完全加载更新完毕...
+	obs_source_updated(ss->source);
+}
+
 static void ss_update(void *data, obs_data_t *settings)
 {
 	DARRAY(struct image_file_data) new_files;
@@ -265,6 +442,7 @@ static void ss_update(void *data, obs_data_t *settings)
 	struct slideshow *ss = data;
 	obs_data_array_t *array;
 	const char *tr_name;
+	const char *ppt_file;
 	uint32_t new_duration;
 	uint32_t new_speed;
 	uint32_t cx = 0;
@@ -276,10 +454,23 @@ static void ss_update(void *data, obs_data_t *settings)
 	/* ------------------------------------- */
 	/* get settings data */
 
+	// 对学生屏幕分享进行拦截操作...
+	bool bIsScreen = obs_data_get_bool(settings, "screen_slide");
+	bool bIsChanged = obs_data_get_bool(settings, "screen_change");
+	if (bIsChanged && bIsChanged) {
+		do_screen_change(data, settings);
+		return;
+	}
+
+	ppt_file = obs_data_get_string(settings, S_PPT_FILE);
+	if (ss->ppt_file) {
+		bfree(ss->ppt_file);
+	}
+	ss->ppt_file = bstrdup(ppt_file);
+
 	da_init(new_files);
 
 	behavior = obs_data_get_string(settings, S_BEHAVIOR);
-
 	if (astrcmpi(behavior, S_BEHAVIOR_PAUSE_UNPAUSE) == 0)
 		ss->behavior = BEHAVIOR_PAUSE_UNPAUSE;
 	else if (astrcmpi(behavior, S_BEHAVIOR_ALWAYS_PLAY) == 0)
@@ -330,6 +521,7 @@ static void ss_update(void *data, obs_data_t *settings)
 
 			for (;;) {
 				const char *ext;
+				int slide_id = -1;
 
 				ent = os_readdir(dir);
 				if (!ent)
@@ -341,11 +533,14 @@ static void ss_update(void *data, obs_data_t *settings)
 				if (!valid_extension(ext))
 					continue;
 
+				// 解析出文件名中的序号，没有解析到，返回-1
+				slide_id = parse_slide(ent->d_name);
+
 				dstr_copy(&dir_path, path);
 				dstr_cat_ch(&dir_path, '/');
 				dstr_cat(&dir_path, ent->d_name);
-				add_file(ss, &new_files.da, dir_path.array, &cx,
-					 &cy);
+				add_file(ss, &new_files.da, dir_path.array,
+						&cx, &cy, slide_id);
 
 				if (ss->mem_usage >= MAX_MEM_USAGE)
 					break;
@@ -354,7 +549,7 @@ static void ss_update(void *data, obs_data_t *settings)
 			dstr_free(&dir_path);
 			os_closedir(dir);
 		} else {
-			add_file(ss, &new_files.da, path, &cx, &cy);
+			add_file(ss, &new_files.da, path, &cx, &cy, -1);
 		}
 
 		obs_data_release(item);
@@ -362,6 +557,9 @@ static void ss_update(void *data, obs_data_t *settings)
 		if (ss->mem_usage >= MAX_MEM_USAGE)
 			break;
 	}
+
+	// 对读取到的文件列表，进行排序，依据slide_id排序 => 从小到大...
+	qsort(new_files.array, new_files.num, sizeof(struct image_file_data), file_slide_compare);
 
 	/* ------------------------------------- */
 	/* update settings data */
@@ -457,6 +655,13 @@ static void ss_update(void *data, obs_data_t *settings)
 		do_transition(ss, false);
 
 	obs_data_array_release(array);
+
+	// 保存当前编号和总数到配置当中 => 方便外层界面使用...
+	obs_data_set_string(settings, "item_name", get_cur_item_name(ss));
+	obs_data_set_int(settings, "cur_item", ss->cur_item);
+	obs_data_set_int(settings, "file_num", ss->files.num);
+	// 进行数据源的上层通知，幻灯片已经完全加载更新完毕...
+	obs_source_updated(ss->source);
 }
 
 static void ss_play_pause(void *data)
@@ -503,6 +708,24 @@ static void ss_next_slide(void *data)
 	if (++ss->cur_item >= ss->files.num)
 		ss->cur_item = 0;
 
+	// 保存当前编号和总数到配置当中 => 方便外层界面使用...
+	if (ss->source != NULL) {
+		obs_data_t * settings = obs_source_get_settings(ss->source);
+		obs_data_set_string(settings, "item_name", get_cur_item_name(ss));
+		obs_data_set_int(settings, "cur_item", ss->cur_item);
+		obs_data_set_int(settings, "file_num", ss->files.num);
+		obs_data_release(settings);
+	}
+
+	// 如果transition是slide或swipe变换，需要修改成left滑动方向...
+	if (astrcmpi(obs_source_get_id(ss->transition), "slide_transition") == 0 ||
+		astrcmpi(obs_source_get_id(ss->transition), "swipe_transition") == 0) {
+		obs_data_t * lpSettings = obs_source_get_settings(ss->transition);
+		obs_data_set_string(lpSettings, "direction", "left");
+		obs_source_update(ss->transition, lpSettings);
+		obs_data_release(lpSettings);
+	}
+
 	do_transition(ss, false);
 }
 
@@ -517,6 +740,24 @@ static void ss_previous_slide(void *data)
 		ss->cur_item = ss->files.num - 1;
 	else
 		--ss->cur_item;
+
+	// 保存当前编号和总数到配置当中 => 方便外层界面使用...
+	if (ss->source != NULL) {
+		obs_data_t * settings = obs_source_get_settings(ss->source);
+		obs_data_set_string(settings, "item_name", get_cur_item_name(ss));
+		obs_data_set_int(settings, "cur_item", ss->cur_item);
+		obs_data_set_int(settings, "file_num", ss->files.num);
+		obs_data_release(settings);
+	}
+
+	// 如果transition是slide或swipe变换，需要修改成right滑动方向...
+	if (astrcmpi(obs_source_get_id(ss->transition), "slide_transition") == 0 ||
+		astrcmpi(obs_source_get_id(ss->transition), "swipe_transition") == 0) {
+		obs_data_t * lpSettings = obs_source_get_settings(ss->transition);
+		obs_data_set_string(lpSettings, "direction", "right");
+		obs_source_update(ss->transition, lpSettings);
+		obs_data_release(lpSettings);
+	}
 
 	do_transition(ss, false);
 }
@@ -533,8 +774,7 @@ static void play_pause_hotkey(void *data, obs_hotkey_id id,
 		ss_play_pause(ss);
 }
 
-static void restart_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey,
-			   bool pressed)
+static void restart_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, bool pressed)
 {
 	UNUSED_PARAMETER(id);
 	UNUSED_PARAMETER(hotkey);
@@ -545,8 +785,7 @@ static void restart_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey,
 		ss_restart(ss);
 }
 
-static void stop_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey,
-			bool pressed)
+static void stop_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, bool pressed)
 {
 	UNUSED_PARAMETER(id);
 	UNUSED_PARAMETER(hotkey);
@@ -593,6 +832,7 @@ static void ss_destroy(void *data)
 
 	obs_source_release(ss->transition);
 	free_files(&ss->files.da);
+	bfree(ss->ppt_file);
 	pthread_mutex_destroy(&ss->mutex);
 	bfree(ss);
 }
@@ -619,7 +859,8 @@ static void *ss_create(obs_data_t *settings, obs_source_t *source)
 		source, "SlideShow.Stop", obs_module_text("SlideShow.Stop"),
 		stop_hotkey, ss);
 
-	ss->prev_hotkey = obs_hotkey_register_source(
+	// 注意：原始代码里面这里有问题，写成了prev_hotkey...
+	ss->next_hotkey = obs_hotkey_register_source(
 		source, "SlideShow.NextSlide",
 		obs_module_text("SlideShow.NextSlide"), next_slide_hotkey, ss);
 
@@ -627,6 +868,10 @@ static void *ss_create(obs_data_t *settings, obs_source_t *source)
 		source, "SlideShow.PreviousSlide",
 		obs_module_text("SlideShow.PreviousSlide"),
 		previous_slide_hotkey, ss);
+
+	// 将上一页和下一页的热键编号存入当前数据源的配置当中...
+	obs_data_set_int(settings, "next_hotkey", ss->next_hotkey);
+	obs_data_set_int(settings, "prev_hotkey", ss->prev_hotkey);
 
 	pthread_mutex_init_value(&ss->mutex);
 	if (pthread_mutex_init(&ss->mutex, NULL) != 0)
@@ -718,6 +963,15 @@ static void ss_video_tick(void *data, float seconds)
 		if (ss->files.num)
 			do_transition(ss, false);
 	}
+
+	// 保存当前编号和总数到配置当中 => 方便外层界面使用...
+	if (ss->source != NULL) {
+		obs_data_t * settings = obs_source_get_settings(ss->source);
+		obs_data_set_string(settings, "item_name", get_cur_item_name(ss));
+		obs_data_set_int(settings, "cur_item", ss->cur_item);
+		obs_data_set_int(settings, "file_num", ss->files.num);
+		obs_data_release(settings);
+	}
 }
 
 static inline bool ss_audio_render_(obs_source_t *transition, uint64_t *ts_out,
@@ -799,19 +1053,21 @@ static uint32_t ss_height(void *data)
 
 static void ss_defaults(obs_data_t *settings)
 {
-	obs_data_set_default_string(settings, S_TRANSITION, "fade");
-	obs_data_set_default_int(settings, S_SLIDE_TIME, 8000);
-	obs_data_set_default_int(settings, S_TR_SPEED, 700);
-	obs_data_set_default_string(settings, S_CUSTOM_SIZE,
-				    T_CUSTOM_SIZE_AUTO);
-	obs_data_set_default_string(settings, S_BEHAVIOR,
-				    S_BEHAVIOR_ALWAYS_PLAY);
-	obs_data_set_default_string(settings, S_MODE, S_MODE_AUTO);
+	obs_data_set_default_string(settings, S_TRANSITION, "slide"); //fade slide cut swipe
+	obs_data_set_default_int(settings, S_SLIDE_TIME, 5000); //8000
+	obs_data_set_default_int(settings, S_TR_SPEED, 800); //700
+	obs_data_set_default_string(settings, S_CUSTOM_SIZE, T_CUSTOM_SIZE_AUTO);
+	obs_data_set_default_string(settings, S_BEHAVIOR, S_BEHAVIOR_ALWAYS_PLAY); //S_BEHAVIOR_PAUSE_UNPAUSE
+	obs_data_set_default_string(settings, S_MODE, S_MODE_MANUAL); //S_MODE_AUTO
 	obs_data_set_default_bool(settings, S_LOOP, true);
+	obs_data_set_default_bool(settings, "screen_slide", false);
 }
 
+//static const char *file_filter =
+//	"Image files (*.bmp *.tga *.png *.jpeg *.jpg *.gif)";
+
 static const char *file_filter =
-	"Image files (*.bmp *.tga *.png *.jpeg *.jpg *.gif)";
+	"PPT files (*.ppt *.pptx)";
 
 static const char *aspects[] = {"16:9", "16:10", "4:3", "1:1"};
 
@@ -835,21 +1091,47 @@ static obs_properties_t *ss_properties(void *data)
 
 	/* ----------------- */
 
-	p = obs_properties_add_list(ppts, S_BEHAVIOR, T_BEHAVIOR,
-				    OBS_COMBO_TYPE_LIST,
-				    OBS_COMBO_FORMAT_STRING);
+	obs_data_t * settings = obs_source_get_settings(ss->source);
+	bool bIsScreenSlide = obs_data_get_bool(settings, "screen_slide");
+	obs_data_release(settings);
+
+	// 如果不是学生屏幕分享，才显示PPT文件名称...
+	if (!bIsScreenSlide) {
+		struct dstr path = { 0 };
+		// 读取 PPT文件 路径，设定为默认路径...
+		if (ss && ss->ppt_file && *ss->ppt_file) {
+			const char *slash;
+			dstr_copy(&path, ss->ppt_file);
+			dstr_replace(&path, "\\", "/");
+			slash = strrchr(path.array, '/');
+			if (slash) {
+				dstr_resize(&path, slash - path.array + 1);
+			}
+		}
+		// 追加 PPT文件 属性配置栏...
+		obs_properties_add_path(ppts, S_PPT_FILE, ss_getname(NULL),
+			OBS_PATH_FILE, file_filter, path.array);
+		// 释放PPT路径...
+		dstr_free(&path);
+	}
+
+	// 隐藏 可见性的行为 属性配置栏...
+	/*p = obs_properties_add_list(ppts, S_BEHAVIOR, T_BEHAVIOR,
+			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 	obs_property_list_add_string(p, T_BEHAVIOR_ALWAYS_PLAY,
-				     S_BEHAVIOR_ALWAYS_PLAY);
+			S_BEHAVIOR_ALWAYS_PLAY);
 	obs_property_list_add_string(p, T_BEHAVIOR_STOP_RESTART,
-				     S_BEHAVIOR_STOP_RESTART);
+			S_BEHAVIOR_STOP_RESTART);
 	obs_property_list_add_string(p, T_BEHAVIOR_PAUSE_UNPAUSE,
-				     S_BEHAVIOR_PAUSE_UNPAUSE);
+			S_BEHAVIOR_PAUSE_UNPAUSE);*/
 
-	p = obs_properties_add_list(ppts, S_MODE, T_MODE, OBS_COMBO_TYPE_LIST,
-				    OBS_COMBO_FORMAT_STRING);
+	// 隐藏 幻灯片模式 属性配置栏...
+	/*p = obs_properties_add_list(ppts, S_MODE, T_MODE,
+			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 	obs_property_list_add_string(p, T_MODE_AUTO, S_MODE_AUTO);
-	obs_property_list_add_string(p, T_MODE_MANUAL, S_MODE_MANUAL);
+	obs_property_list_add_string(p, T_MODE_MANUAL, S_MODE_MANUAL);*/
 
+	// 开启 过渡模式 属性配置栏...
 	p = obs_properties_add_list(ppts, S_TRANSITION, T_TRANSITION,
 				    OBS_COMBO_TYPE_LIST,
 				    OBS_COMBO_FORMAT_STRING);
@@ -858,45 +1140,45 @@ static obs_properties_t *ss_properties(void *data)
 	obs_property_list_add_string(p, T_TR_SWIPE, TR_SWIPE);
 	obs_property_list_add_string(p, T_TR_SLIDE, TR_SLIDE);
 
-	obs_properties_add_int(ppts, S_SLIDE_TIME, T_SLIDE_TIME, 50, 3600000,
-			       50);
+	// 开启 过渡速度 隐藏 幻灯停留时间 属性配置栏...
+	//obs_properties_add_int(ppts, S_SLIDE_TIME, T_SLIDE_TIME, 50, 3600000, 50);
 	obs_properties_add_int(ppts, S_TR_SPEED, T_TR_SPEED, 0, 3600000, 50);
-	obs_properties_add_bool(ppts, S_LOOP, T_LOOP);
-	obs_properties_add_bool(ppts, S_HIDE, T_HIDE);
-	obs_properties_add_bool(ppts, S_RANDOMIZE, T_RANDOMIZE);
+	
+	// 隐藏 随机播放 属性配置栏...
+	//obs_properties_add_bool(ppts, S_LOOP, T_LOOP);
+	//obs_properties_add_bool(ppts, S_HIDE, T_HIDE);
+	//obs_properties_add_bool(ppts, S_RANDOMIZE, T_RANDOMIZE);
 
-	p = obs_properties_add_list(ppts, S_CUSTOM_SIZE, T_CUSTOM_SIZE,
-				    OBS_COMBO_TYPE_EDITABLE,
-				    OBS_COMBO_FORMAT_STRING);
-
+	// 隐藏 边框大小/高宽比 属性配置栏...
+	/*p = obs_properties_add_list(ppts, S_CUSTOM_SIZE, T_CUSTOM_SIZE,
+			OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING);
 	obs_property_list_add_string(p, T_CUSTOM_SIZE_AUTO, T_CUSTOM_SIZE_AUTO);
-
-	for (size_t i = 0; i < NUM_ASPECTS; i++)
+	for (size_t i = 0; i < NUM_ASPECTS; i++) {
 		obs_property_list_add_string(p, aspects[i], aspects[i]);
-
+	}
+	// 追加屏幕分辨率...
 	char str[32];
 	snprintf(str, 32, "%dx%d", cx, cy);
-	obs_property_list_add_string(p, str, str);
+	obs_property_list_add_string(p, str, str);*/
 
-	if (ss) {
+	// 读取已经配置的 图像文件 列表...
+	/*if (ss && ss->files.num) {
 		pthread_mutex_lock(&ss->mutex);
-		if (ss->files.num) {
 			struct image_file_data *last = da_end(ss->files);
 			const char *slash;
 
 			dstr_copy(&path, last->path);
 			dstr_replace(&path, "\\", "/");
 			slash = strrchr(path.array, '/');
-			if (slash)
+		if (slash) {
 				dstr_resize(&path, slash - path.array + 1);
 		}
 		pthread_mutex_unlock(&ss->mutex);
 	}
-
-	obs_properties_add_editable_list(ppts, S_FILES, T_FILES,
-					 OBS_EDITABLE_LIST_TYPE_FILES,
-					 file_filter, path.array);
-	dstr_free(&path);
+	// 隐藏 图像文件 属性配置栏...
+	//obs_properties_add_editable_list(ppts, S_FILES, T_FILES,
+	//		OBS_EDITABLE_LIST_TYPE_FILES, file_filter, path.array);
+	//dstr_free(&path);*/
 
 	return ppts;
 }

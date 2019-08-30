@@ -210,8 +210,7 @@ private:
 	QPointer<QAction> showHide;
 	QPointer<QAction> exit;
 	QPointer<QMenu> trayMenu;
-	QPointer<QMenu> previewProjector;
-	QPointer<QMenu> studioProgramProjector;
+
 	QPointer<QMenu> multiviewProjectorMenu;
 	QPointer<QMenu> previewProjectorSource;
 	QPointer<QMenu> previewProjectorMain;

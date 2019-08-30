@@ -1341,6 +1341,12 @@ bool OBSApp::IsPortableMode()
 
 #define DSHOW_INPUT_SOURCE    "dshow_input"
 #define INTERACT_RTP_SOURCE   "rtp_source"
+#define NOISE_SUPPRESS_FILTER "noise_suppress_filter"
+
+const char *OBSApp::GetNSFilter() const
+{
+	return NOISE_SUPPRESS_FILTER;
+}
 
 const char *OBSApp::DShowInputSource() const
 {
@@ -2266,7 +2272,7 @@ int main(int argc, char *argv[])
 				<< "--version, -V: Get current version.\n";
 			exit(0);
 		} else if (arg_is(argv[i], "--version", "-V")) {
-			std::cout << "OBS Studio - " << App()->GetVersionString() << "\n";
+			std::cout << "Smart - " << App()->GetVersionString() << "\n";
 			exit(0);
 		}
 	}*/

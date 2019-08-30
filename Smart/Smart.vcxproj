@@ -26,6 +26,7 @@
     <ClCompile Include="horizontal-scroll-area.cpp" />
     <ClCompile Include="hotkey-edit.cpp" />
     <ClCompile Include="item-widget-helpers.cpp" />
+    <ClCompile Include="md5.cpp" />
     <ClCompile Include="menu-button.cpp" />
     <ClCompile Include="obs-app.cpp" />
     <ClCompile Include="platform-windows.cpp" />
@@ -66,27 +67,21 @@
     <ClCompile Include="window-dock.cpp" />
     <ClCompile Include="window-namedialog.cpp" />
     <ClCompile Include="window-projector.cpp" />
+    <ClCompile Include="window-wait-ppt.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="obs-app.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <QtUic Include="forms\AutoConfigFinishPage.ui" />
-    <QtUic Include="forms\AutoConfigStartPage.ui" />
-    <QtUic Include="forms\AutoConfigStreamPage.ui" />
-    <QtUic Include="forms\AutoConfigTestPage.ui" />
-    <QtUic Include="forms\AutoConfigVideoPage.ui" />
     <QtUic Include="forms\NameDialog.ui" />
-    <QtUic Include="forms\OBSAbout.ui" />
     <QtUic Include="forms\OBSBasic.ui" />
     <QtUic Include="forms\OBSBasicFilters.ui" />
     <QtUic Include="forms\OBSBasicInteraction.ui" />
     <QtUic Include="forms\OBSBasicSettings.ui" />
     <QtUic Include="forms\OBSBasicSourceSelect.ui" />
     <QtUic Include="forms\OBSBasicTransform.ui" />
-    <QtUic Include="forms\OBSLogReply.ui" />
-    <QtUic Include="forms\OBSRemux.ui" />
     <QtUic Include="forms\OBSUpdate.ui" />
+    <QtUic Include="forms\PPTWait.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="forms\obs.qrc" />
@@ -228,7 +223,12 @@
     <ClInclude Include="..\vsbuild\config\obsconfig.h" />
     <ClInclude Include="audio-encoders.hpp" />
     <ClInclude Include="HYDefine.h" />
+    <ClInclude Include="md5.h" />
     <ClInclude Include="resource.h" />
+    <QtMoc Include="window-wait-ppt.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\win-update -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\deps\w32-pthreads -IF:\obs-studio\vsbuild\deps\jansson\include -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
     <QtMoc Include="menu-button.hpp">
       <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\win-update -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -IF:\obs-studio\vsbuild\deps\jansson\include -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
@@ -456,7 +456,7 @@
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <AdditionalLibraryDirectories>$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Networkd.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Widgetsd.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Guid.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Cored.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\qtmaind.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Svgd.lib;F:\obs-deps\win32\bin\avcodec.lib;F:\obs-deps\win32\bin\avutil.lib;F:\obs-deps\win32\bin\avformat.lib;F:\obs-deps\win32\bin\libcurl.lib;F:\obs-studio\vsbuild\libobs\Debug\obs.lib;F:\obs-studio\vsbuild\deps\blake2\Debug\blake2.lib;F:\obs-studio\vsbuild\deps\jansson\lib\Debug\jansson_d.lib;F:\obs-studio\vsbuild\deps\w32-pthreads\Debug\w32-pthreads.lib;F:\obs-studio\vsbuild\UI\obs-frontend-api\Debug\obs-frontend-api.lib;crypt32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Networkd.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Widgetsd.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Guid.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Cored.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\qtmaind.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5Svgd.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5AxBased.lib;E:\Qt\Qt5.7.0\5.7\msvc2015\lib\Qt5AxContainerd.lib;F:\obs-deps\win32\bin\avcodec.lib;F:\obs-deps\win32\bin\avutil.lib;F:\obs-deps\win32\bin\avformat.lib;F:\obs-deps\win32\bin\libcurl.lib;F:\obs-studio\vsbuild\libobs\Debug\obs.lib;F:\obs-studio\vsbuild\deps\blake2\Debug\blake2.lib;F:\obs-studio\vsbuild\deps\jansson\lib\Debug\jansson_d.lib;F:\obs-studio\vsbuild\deps\w32-pthreads\Debug\w32-pthreads.lib;F:\obs-studio\vsbuild\UI\obs-frontend-api\Debug\obs-frontend-api.lib;crypt32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <QtMoc>

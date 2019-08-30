@@ -28,14 +28,26 @@ struct AddSourceData {
 
 bool OBSBasicSourceSelect::EnumSources(void *data, obs_source_t *source)
 {
-	OBSBasicSourceSelect *window =
-		static_cast<OBSBasicSourceSelect *>(data);
+	OBSBasicSourceSelect *window = static_cast<OBSBasicSourceSelect*>(data);
 	const char *name = obs_source_get_name(source);
 	const char *id = obs_source_get_id(source);
 
-	if (strcmp(id, window->id) == 0)
+	// 如果数据源已经存在，显示在列表框中 => 不是学生屏幕...
+	if (strcmp(id, window->id) == 0 && !window->m_bIsScreen) {
 		window->ui->sourceList->addItem(QT_UTF8(name));
-
+	}
+	// 如果数据源是麦克风数据源 => 设置标志...
+	if (astrcmpi(id, App()->InputAudioSource()) == 0) {
+		window->m_bHasMicSource = true;
+	}
+	// 如果当前添加的是学生屏幕分享，只能添加一个...
+	if (astrcmpi(id, "slideshow") == 0 && window->m_bIsScreen) {
+		obs_data_t * settings = obs_source_get_settings(source);
+		if (obs_data_get_bool(settings, "screen_slide")) {
+			window->m_bHasScreenSource = true;
+		}
+		obs_data_release(settings);
+	}
 	return true;
 }
 
@@ -228,10 +240,51 @@ bool AddNew(QWidget *parent, const char *id, const char *name,
 	return success;
 }
 
+void OBSBasicSourceSelect::doSaveScreenPath(obs_data_t * settings)
+{
+	char path[512] = { 0 };
+	if (GetConfigPath(path, sizeof(path), "obs-smart/screen") <= 0)
+		return;
+	QString strQScreenPath = QString("%1").arg(path);
+	obs_data_array *array = obs_data_array_create();
+	obs_data_t *arrayItem = obs_data_create();
+	obs_data_set_string(arrayItem, "value", QT_TO_UTF8(strQScreenPath));
+	obs_data_set_bool(arrayItem, "selected", true);
+	obs_data_set_bool(arrayItem, "hidden", false);
+	obs_data_array_push_back(array, arrayItem);
+	obs_data_release(arrayItem);
+	obs_data_set_array(settings, "files", array);
+	obs_data_array_release(array);
+}
+
 void OBSBasicSourceSelect::on_buttonBox_accepted()
 {
 	bool useExisting = ui->selectExisting->isChecked();
 	bool visible = ui->sourceVisible->isChecked();
+
+	// 当前新添加的资源是否是 => rtp_source => 互动教室...
+	bool bIsNewRtpSource = ((astrcmpi(id, App()->InteractRtpSource()) == 0) ? true : false);
+
+	// 当前新添加的资源是否是 学生屏幕分享...
+	bool bIsNewScreenSource = ((astrcmpi(id, "slideshow") == 0) && m_bIsScreen);
+
+	// 如果已经有了学生屏幕资源，就不能再添加新的学生屏幕资源了...
+	if (m_bHasScreenSource && bIsNewScreenSource) {
+		OBSMessageBox::information(this, 
+			QTStr("SingleScreenSource.Title"), 
+			QTStr("SingleScreenSource.Text"));
+		return;
+	}
+
+	// 当前新添加的资源是否是 => InputAudioSource => 麦克风输入...
+	bool bIsNewMicSource = ((astrcmpi(id, App()->InputAudioSource()) == 0) ? true : false);
+	// 如果已经有了麦克风资源，就不能再添加新的麦克风数据源了...
+	if (m_bHasMicSource && bIsNewMicSource) {
+		OBSMessageBox::information(this,
+			QTStr("SingleMicSource.Title"),
+			QTStr("SingleMicSource.Text"));
+		return;
+	}
 
 	if (useExisting) {
 		QListWidgetItem *item = ui->sourceList->currentItem();
@@ -246,13 +299,55 @@ void OBSBasicSourceSelect::on_buttonBox_accepted()
 					       QTStr("NoNameEntered.Text"));
 			return;
 		}
-
-		if (!AddNew(this, id, QT_TO_UTF8(ui->sourceName->text()),
-			    visible, newSource))
+		// 如果添加新的场景资源失败，直接返回...
+		if (!AddNew(this, id, QT_TO_UTF8(ui->sourceName->text()), visible, newSource))
 			return;
+		// 如果是 学生屏幕分享 数据源，设置状态标志参数和默认的路径...
+		if (bIsNewScreenSource) {
+			obs_data_t * settings = obs_source_get_settings(newSource);
+			obs_data_set_bool(settings, "screen_slide", true);
+			this->doSaveScreenPath(settings);
+			obs_source_update(newSource, settings);
+			obs_data_release(settings);
+		}
+		// 如果新添加资源是互动教室 => 需要监视并输出，开启本地监视，添加噪音抑制过滤器...
+		// 轨道1 => 输出给直播使用，始终屏蔽互动教室的声音...
+		// 轨道2 => 输出给录像使用，当互动教室处于焦点状态时录制声音...
+		if (bIsNewRtpSource) {
+			obs_source_set_monitoring_type(newSource, OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT);
+			blog(LOG_INFO, "User changed audio monitoring for source '%s' to: %s", obs_source_get_name(newSource), "monitor and output");
+			// 给互动教室数据源，添加噪音抑制过滤器...
+			AddFilterToSourceByID(newSource, App()->GetNSFilter());
+		}
+		// 给麦克风音频输入数据源添加噪音抑制过滤器...
+		if (bIsNewMicSource) {
+			AddFilterToSourceByID(newSource, App()->GetNSFilter());
+		}
 	}
 
 	done(DialogCode::Accepted);
+}
+
+void OBSBasicSourceSelect::AddFilterToSourceByID(obs_source_t *source, const char * lpFilterID)
+{
+	////////////////////////////////////////////////////////
+	// 2019.06.20 - 去掉系统自带的噪声抑制功能，效果一般...
+	////////////////////////////////////////////////////////
+	// 通过id名称查找过滤器资源名称...
+	/*string strFilterName = obs_source_get_display_name(lpFilterID);
+	obs_source_t * existing_filter = obs_source_get_filter_by_name(source, strFilterName.c_str());
+	// 如果资源上已经挂载了相同名称的过滤器，直接返回...
+	if (existing_filter != nullptr)
+		return;
+	// 创建一个新的过滤器资源对象，创建失败，直接返回...
+	obs_source_t * new_filter = obs_source_create(lpFilterID, strFilterName.c_str(), nullptr, nullptr);
+	if (new_filter == nullptr)
+		return;
+	// 获取资源名称，打印信息，挂载过滤器到当前资源，释放过滤器的引用计数...
+	const char *sourceName = obs_source_get_name(source);
+	blog(LOG_INFO, "User added filter '%s' (%s) to source '%s'", strFilterName.c_str(), lpFilterID, sourceName);
+	obs_source_filter_add(source, new_filter);
+	obs_source_release(new_filter);*/
 }
 
 void OBSBasicSourceSelect::on_buttonBox_rejected()
@@ -260,10 +355,12 @@ void OBSBasicSourceSelect::on_buttonBox_rejected()
 	done(DialogCode::Rejected);
 }
 
-static inline const char *GetSourceDisplayName(const char *id)
+static inline const char *GetSourceDisplayName(const char *id, bool bIsScreen)
 {
 	if (strcmp(id, "scene") == 0)
 		return Str("Basic.Scene");
+	if (strcmp(id, "slideshow") == 0 && bIsScreen)
+		return Str("Basic.Student.Screen");
 	return obs_source_get_display_name(id);
 }
 
@@ -274,16 +371,21 @@ template<typename T> static inline T GetOBSRef(QListWidgetItem *item)
 	return item->data(static_cast<int>(QtDataRole::OBSRef)).value<T>();
 }
 
-OBSBasicSourceSelect::OBSBasicSourceSelect(OBSBasic *parent, const char *id_)
-	: QDialog(parent), ui(new Ui::OBSBasicSourceSelect), id(id_)
+OBSBasicSourceSelect::OBSBasicSourceSelect(OBSBasic *parent, const char *id_, bool bIsScreen/* = false*/)
+  : QDialog (parent),
+	ui (new Ui::OBSBasicSourceSelect),
+	id (id_),
+	m_bIsScreen(bIsScreen)
 {
+	m_bHasMicSource = false;
+
 	setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
 	ui->setupUi(this);
 
 	ui->sourceList->setAttribute(Qt::WA_MacShowFocusRect, false);
 
-	QString placeHolderText{QT_UTF8(GetSourceDisplayName(id))};
+	QString placeHolderText{QT_UTF8(GetSourceDisplayName(id, m_bIsScreen))};
 
 	QString text{placeHolderText};
 	int i = 2;
@@ -300,8 +402,7 @@ OBSBasicSourceSelect::OBSBasicSourceSelect(OBSBasic *parent, const char *id_)
 	installEventFilter(CreateShortcutFilter());
 
 	if (strcmp(id_, "scene") == 0) {
-		OBSBasic *main =
-			reinterpret_cast<OBSBasic *>(App()->GetMainWindow());
+		OBSBasic *main = reinterpret_cast<OBSBasic *>(App()->GetMainWindow());
 		OBSSource curSceneSource = main->GetCurrentSceneSource();
 
 		ui->selectExisting->setChecked(true);

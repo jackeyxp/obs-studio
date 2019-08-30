@@ -1418,7 +1418,7 @@ static bool DoProcSaveJpeg(struct video_data * frame)
 	// 获取存盘需要的配置信息 => 路径和文件名...
 	char szSaveFile[100] = { 0 };
 	char szSavePath[300] = { 0 };
-	sprintf(szSaveFile, "obs-teacher/live_%d.jpg", 200002);
+	sprintf(szSaveFile, "obs-smart/live_%d.jpg", 200002);
 	if (os_get_config_path(szSavePath, sizeof(szSavePath), szSaveFile) <= 0) {
 		blog(LOG_ERROR, "DoProcSaveJpeg: save path error!");
 		return false;
@@ -1633,10 +1633,8 @@ void OBSBasic::ResetOutputs()
 			replayBufferButton->setProperty("themeID", "replayBufferButton");
 			ui->buttonsVLayout->insertWidget(2, replayBufferButton);
 		}
-
 		if (sysTrayReplayBuffer)
-			sysTrayReplayBuffer->setEnabled(
-				!!outputHandler->replayBuffer);
+			sysTrayReplayBuffer->setEnabled(!!outputHandler->replayBuffer);
 	} else {
 		outputHandler->Update();
 	}
@@ -2378,9 +2376,9 @@ OBSBasic::~OBSBasic()
 	if (introCheckThread && introCheckThread->isRunning()) {
 		introCheckThread->wait();
 	}*/
+	//delete previewProjector;
+	//delete studioProgramProjector;
 	delete multiviewProjectorMenu;
-	delete previewProjector;
-	delete studioProgramProjector;
 	delete previewProjectorSource;
 	delete previewProjectorMain;
 	delete sourceProjector;
@@ -4804,7 +4802,14 @@ void OBSBasic::on_scenes_itemDoubleClicked(QListWidgetItem *witem)
 void OBSBasic::AddSource(const char *id)
 {
 	if (id && *id) {
-		OBSBasicSourceSelect sourceSelect(this, id);
+		bool bIsScreen = false;
+		const char * lpNewID = id;
+		// 这里需要对slide_screen特殊处理...
+		if (strcmp(id, "slide_screen") == 0) {
+			lpNewID = "slideshow";
+			bIsScreen = true;
+		}
+		OBSBasicSourceSelect sourceSelect(this, lpNewID, bIsScreen);
 		sourceSelect.exec();
 		if (sourceSelect.newSource && strcmp(id, "group") != 0)
 			CreatePropertiesWindow(sourceSelect.newSource);
@@ -5250,8 +5255,7 @@ void OBSBasic::StartStreaming()
 	if (disableOutputsRef)
 		return;
 
-	if (api)
-		api->on_event(OBS_FRONTEND_EVENT_STREAMING_STARTING);
+	if (api) api->on_event(OBS_FRONTEND_EVENT_STREAMING_STARTING);
 
 	SaveProject();
 
@@ -5277,8 +5281,7 @@ void OBSBasic::StartStreaming()
 			sysTrayStream->setEnabled(true);
 		}
 
-		QMessageBox::critical(this, QTStr("Output.StartStreamFailed"),
-				      message);
+		QMessageBox::critical(this, QTStr("Output.StartStreamFailed"), message);
 		return;
 	}
 
@@ -5678,8 +5681,7 @@ void OBSBasic::RecordingStart()
 		sysTrayRecord->setText(ui->recordButton->text());
 
 	recordingStopping = false;
-	if (api)
-		api->on_event(OBS_FRONTEND_EVENT_RECORDING_STARTED);
+	if (api) api->on_event(OBS_FRONTEND_EVENT_RECORDING_STARTED);
 
 	if (!diskFullTimer->isActive())
 		diskFullTimer->start(1000);
@@ -5853,8 +5855,7 @@ void OBSBasic::ReplayBufferStopping()
 		sysTrayReplayBuffer->setText(replayBufferButton->text());
 
 	replayBufferStopping = true;
-	if (api)
-		api->on_event(OBS_FRONTEND_EVENT_REPLAY_BUFFER_STOPPING);
+	if (api) api->on_event(OBS_FRONTEND_EVENT_REPLAY_BUFFER_STOPPING);
 }
 
 void OBSBasic::StopReplayBuffer()
@@ -5882,8 +5883,7 @@ void OBSBasic::ReplayBufferStart()
 		sysTrayReplayBuffer->setText(replayBufferButton->text());
 
 	replayBufferStopping = false;
-	if (api)
-		api->on_event(OBS_FRONTEND_EVENT_REPLAY_BUFFER_STARTED);
+	if (api) api->on_event(OBS_FRONTEND_EVENT_REPLAY_BUFFER_STARTED);
 
 	OnActivate();
 
@@ -5898,8 +5898,7 @@ void OBSBasic::ReplayBufferSave()
 		return;
 
 	calldata_t cd = {0};
-	proc_handler_t *ph =
-		obs_output_get_proc_handler(outputHandler->replayBuffer);
+	proc_handler_t *ph = obs_output_get_proc_handler(outputHandler->replayBuffer);
 	proc_handler_call(ph, "save", &cd);
 	calldata_free(&cd);
 }
@@ -6791,7 +6790,7 @@ void OBSBasic::doSceneItemExchangePos(obs_sceneitem_t * select_item)
 	}
 	// 0点位置如果是幻灯片数据源，需要显示上下页按钮...
 	obs_source_t * lpSource = obs_sceneitem_get_source(select_item);
-	//this->doCheckPPTSource(lpSource);
+	this->doCheckPPTSource(lpSource);
 	// 保存当前数据源为0点数据源...
 	m_lpZeroSceneItem = select_item;
 }
@@ -7110,7 +7109,7 @@ void OBSBasic::doSceneItemToFirst(obs_sceneitem_t * select_item)
 	// 注意：doSendCameraPusherID 会在外层调用...
 	// 0点位置如果是幻灯片数据源，需要显示上下页按钮...
 	obs_source_t * lpSource = obs_sceneitem_get_source(select_item);
-	//this->doCheckPPTSource(lpSource);
+	this->doCheckPPTSource(lpSource);
 }
 
 void OBSBasic::doHideDShowAudioMixer(obs_sceneitem_t * scene_item)
@@ -7571,30 +7570,27 @@ void OBSBasic::ToggleShowHide()
 
 void OBSBasic::SystemTrayInit()
 {
+	ProfileScope("OBSBasic::SystemTrayInit");
+
 	trayIcon.reset(new QSystemTrayIcon(
-		QIcon::fromTheme("obs-tray", QIcon(":/res/images/obs.png")),
-		this));
-	trayIcon->setToolTip("OBS Studio");
+		QIcon::fromTheme("obs-tray", QIcon(":/res/images/obs.png")), this));
+	trayIcon->setToolTip("Smart");
 
 	showHide = new QAction(QTStr("Basic.SystemTray.Show"), trayIcon.data());
-	sysTrayStream = new QAction(QTStr("Basic.Main.StartStreaming"),
-				    trayIcon.data());
-	sysTrayRecord = new QAction(QTStr("Basic.Main.StartRecording"),
-				    trayIcon.data());
-	sysTrayReplayBuffer = new QAction(QTStr("Basic.Main.StartReplayBuffer"),
-					  trayIcon.data());
+	sysTrayStream = new QAction(QTStr("Basic.Main.StartStreaming"), trayIcon.data());
+	sysTrayRecord = new QAction(QTStr("Basic.Main.StartRecording"), trayIcon.data());
+	sysTrayReplayBuffer = new QAction(QTStr("Basic.Main.StartReplayBuffer"), trayIcon.data());
 	exit = new QAction(QTStr("Exit"), trayIcon.data());
 
 	trayMenu = new QMenu;
-	previewProjector = new QMenu(QTStr("PreviewProjector"));
-	studioProgramProjector = new QMenu(QTStr("StudioProgramProjector"));
-	AddProjectorMenuMonitors(previewProjector, this,
-				 SLOT(OpenPreviewProjector()));
-	AddProjectorMenuMonitors(studioProgramProjector, this,
-				 SLOT(OpenStudioProgramProjector()));
+	//注意：投影菜单，可能会造成启动缓慢，进行了屏蔽...
+	//previewProjector = new QMenu(QTStr("PreviewProjector"));
+	//studioProgramProjector = new QMenu(QTStr("StudioProgramProjector"));
+	//AddProjectorMenuMonitors(previewProjector, this, SLOT(OpenPreviewProjector()));
+	//AddProjectorMenuMonitors(studioProgramProjector, this, SLOT(OpenStudioProgramProjector()));
 	trayMenu->addAction(showHide);
-	trayMenu->addMenu(previewProjector);
-	trayMenu->addMenu(studioProgramProjector);
+	//trayMenu->addMenu(previewProjector);
+	//trayMenu->addMenu(studioProgramProjector);
 	trayMenu->addAction(sysTrayStream);
 	trayMenu->addAction(sysTrayRecord);
 	trayMenu->addAction(sysTrayReplayBuffer);
@@ -7621,24 +7617,20 @@ void OBSBasic::SystemTrayInit()
 void OBSBasic::IconActivated(QSystemTrayIcon::ActivationReason reason)
 {
 	// Refresh projector list
-	previewProjector->clear();
-	studioProgramProjector->clear();
-	AddProjectorMenuMonitors(previewProjector, this,
-				 SLOT(OpenPreviewProjector()));
-	AddProjectorMenuMonitors(studioProgramProjector, this,
-				 SLOT(OpenStudioProgramProjector()));
+	//previewProjector->clear();
+	//studioProgramProjector->clear();
+	//AddProjectorMenuMonitors(previewProjector, this, SLOT(OpenPreviewProjector()));
+	//AddProjectorMenuMonitors(studioProgramProjector, this, SLOT(OpenStudioProgramProjector()));
 
 	if (reason == QSystemTrayIcon::Trigger)
 		ToggleShowHide();
 }
 
-void OBSBasic::SysTrayNotify(const QString &text,
-			     QSystemTrayIcon::MessageIcon n)
+void OBSBasic::SysTrayNotify(const QString &text, QSystemTrayIcon::MessageIcon n)
 {
 	if (trayIcon && QSystemTrayIcon::supportsMessages()) {
-		QSystemTrayIcon::MessageIcon icon =
-			QSystemTrayIcon::MessageIcon(n);
-		trayIcon->showMessage("OBS Studio", text, icon, 10000);
+		QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::MessageIcon(n);
+		trayIcon->showMessage("Smart", text, icon, 10000);
 	}
 }
 
@@ -7651,18 +7643,15 @@ void OBSBasic::SystemTray(bool firstStarted)
 	if (!trayIcon && !firstStarted)
 		return;
 
-	bool sysTrayWhenStarted = config_get_bool(
-		GetGlobalConfig(), "BasicWindow", "SysTrayWhenStarted");
-	bool sysTrayEnabled = config_get_bool(GetGlobalConfig(), "BasicWindow",
-					      "SysTrayEnabled");
+	bool sysTrayWhenStarted = config_get_bool(GetGlobalConfig(), "BasicWindow", "SysTrayWhenStarted");
+	bool sysTrayEnabled = config_get_bool(GetGlobalConfig(), "BasicWindow", "SysTrayEnabled");
 
 	if (firstStarted)
 		SystemTrayInit();
 
 	if (!sysTrayWhenStarted && !sysTrayEnabled) {
 		trayIcon->hide();
-	} else if ((sysTrayWhenStarted && sysTrayEnabled) ||
-		   opt_minimize_tray) {
+	} else if ((sysTrayWhenStarted && sysTrayEnabled) || opt_minimize_tray) {
 		trayIcon->show();
 		if (firstStarted) {
 			QTimer::singleShot(50, this, SLOT(hide()));
@@ -7689,14 +7678,13 @@ void OBSBasic::SystemTray(bool firstStarted)
 
 bool OBSBasic::sysTrayMinimizeToTray()
 {
-	return config_get_bool(GetGlobalConfig(), "BasicWindow",
-			       "SysTrayMinimizeToTray");
+	return config_get_bool(GetGlobalConfig(), "BasicWindow", "SysTrayMinimizeToTray");
 }
 
 void OBSBasic::on_actionCopySource_triggered()
 {
 	OBSSceneItem item = GetCurrentSceneItem();
-	if (!item)
+	if (item == NULL)
 		return;
 
 	on_actionCopyTransform_triggered();
