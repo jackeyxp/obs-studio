@@ -18,7 +18,6 @@
     <ClCompile Include="adv-audio-control.cpp" />
     <ClCompile Include="api-interface.cpp" />
     <ClCompile Include="audio-encoders.cpp" />
-    <ClCompile Include="auth-base.cpp" />
     <ClCompile Include="combobox-ignorewheel.cpp" />
     <ClCompile Include="crash-report.cpp" />
     <ClCompile Include="double-slider.cpp" />
@@ -185,12 +184,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="auth-base.hpp">
-      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
-      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
-    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="clickable-label.hpp">

@@ -28,8 +28,6 @@
 
 #include <obs.hpp>
 
-#include "auth-base.hpp"
-
 class OBSBasic;
 class QAbstractButton;
 class QComboBox;
@@ -103,8 +101,6 @@ private:
 	OBSBasic *main;
 
 	std::unique_ptr<Ui::OBSBasicSettings> ui;
-
-	std::shared_ptr<Auth> auth;
 
 	bool generalChanged = false;
 	bool stream1Changed = false;

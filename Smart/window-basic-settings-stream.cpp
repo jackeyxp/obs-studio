@@ -170,9 +170,8 @@ void OBSBasicSettings::SaveStream1Settings()
 
 	main->SetService(newService);
 	main->SaveService();
-	main->auth = auth;
-	if (!!main->auth)
-		main->auth->LoadUI();
+	//main->auth = auth;
+	//if (!!main->auth) main->auth->LoadUI();
 }
 
 void OBSBasicSettings::UpdateKeyLink()
@@ -270,7 +269,8 @@ void OBSBasicSettings::LoadServices(bool showAll)
 
 static inline bool is_auth_service(const std::string &service)
 {
-	return Auth::AuthType(service) != Auth::Type::None;
+	//return Auth::AuthType(service) != Auth::Type::None;
+	return false;
 }
 
 void OBSBasicSettings::on_service_currentIndexChanged(int)
@@ -448,7 +448,7 @@ void OBSBasicSettings::OnOAuthStreamKeyConnected()
 
 void OBSBasicSettings::OnAuthConnected()
 {
-	std::string service = QT_TO_UTF8(ui->service->currentText());
+	/*std::string service = QT_TO_UTF8(ui->service->currentText());
 	Auth::Type type = Auth::AuthType(service);
 
 	if (type == Auth::Type::OAuth_StreamKey) {
@@ -458,7 +458,7 @@ void OBSBasicSettings::OnAuthConnected()
 	if (!loading) {
 		stream1Changed = true;
 		EnableApplyButton(true);
-	}
+	}*/
 }
 
 void OBSBasicSettings::on_connectAccount_clicked()
@@ -488,8 +488,8 @@ void OBSBasicSettings::on_disconnectAccount_clicked()
 		return;
 	}
 
-	main->auth.reset();
-	auth.reset();
+	//main->auth.reset();
+	//auth.reset();
 
 	std::string service = QT_TO_UTF8(ui->service->currentText());
 

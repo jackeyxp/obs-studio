@@ -35,9 +35,6 @@
     <ClCompile Include="obs-app.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="auth-base.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="crash-report.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -200,9 +197,6 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="obs-app.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="auth-base.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="clickable-label.hpp">

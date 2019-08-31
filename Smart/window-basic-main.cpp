@@ -848,7 +848,6 @@ void OBSBasic::LogScenes()
 
 void OBSBasic::Load(const char *file)
 {
-	// 记录正在调用加载函数过程...
 	ProfileScope("OBSBasic::Load");
 
 	disableSaving++;
@@ -1774,16 +1773,18 @@ void OBSBasic::OBSInit()
 #undef SET_VISIBILITY
 
 	// 注意：这里弹出的确认框容易被Load()过程关闭...
-	// 注意：放到完全加载之后调用 => OnFirstLoad()...
+	// 注意：放到完全加载之后调用 => DeferredLoad()...
+	// 注意：Load()放在这里执行，还会造成阻塞缓慢的问题...
+	// 注意：为了解决Load加载慢的问题，进行了2次异步操作...
 
 	// 加载系统各种配置参数...
-	disableSaving--;
+	/*disableSaving--;
 	this->Load(savePath);
 	disableSaving++;
 	// 为了避免弹框被强制关闭，放在这里弹出更新确认框...
 	//this->TimedCheckForUpdates();
 	// 设置已加载完毕的标志...
-	m_bIsLoaded = true;
+	m_bIsLoaded = true;*/
 
 	previewEnabled = config_get_bool(App()->GlobalConfig(), "BasicWindow", "PreviewEnabled");
 
@@ -1800,8 +1801,9 @@ void OBSBasic::OBSInit()
 	}
 #endif
 
-	// 这里必须在Load之后调用，否则无法执行CreateDefaultScene()...
-	RefreshSceneCollections();
+	// 注意：这里必须在 Load() 之后调用，否则无法执行 CreateDefaultScene()...
+	// 注意：RefreshSceneCollections() 放在 DeferredLoad() 里面的 Load() 之后执行...
+
 	RefreshProfiles();
 	disableSaving--;
 
@@ -1909,7 +1911,10 @@ void OBSBasic::OBSInit()
 	obs_enable_source_type("game_capture", false);
 	obs_enable_source_type("wasapi_output_capture", false);
 
-	this->SystemTray(true);
+	// 为了快速启动，这里对系统托盘图标菜单放到了 DeferredLoad 异步执行...
+	//#ifndef __APPLE__
+	//	SystemTray(true);
+	//#endif
 
 	if (windowState().testFlag(Qt::WindowFullScreen))
 		fullscreenInterface = true;
@@ -1971,17 +1976,52 @@ void OBSBasic::OBSInit()
 	ui->actionCheckForUpdates = nullptr;
 #endif
 
-	this->OnFirstLoad();
-
-#ifdef __APPLE__
-	QMetaObject::invokeMethod(this, "DeferredSysTrayLoad",
-				  Qt::QueuedConnection, Q_ARG(int, 10));
-#endif
+	// 保存配置路径以便后续使用...
+	m_strSavePath = QT_UTF8(savePath);
+	// 为了避免阻塞主界面的显示，进行两次异步加载Load()配置...
+	QTimer::singleShot(20, this, SLOT(OnFinishedLoad()));
 }
 
-void OBSBasic::OnFirstLoad()
+// 异步时钟调用系统托盘图标加载...
+void OBSBasic::OnFirstSystemTray()
 {
-	ProfileScope("OBSBasic::OnFirstLoad");
+	this->SystemTray(true);
+}
+
+// 异步时钟调用加载完毕事件通知...
+void OBSBasic::OnFinishedLoad()
+{
+	QMetaObject::invokeMethod(this, "DeferredLoad",
+		Qt::QueuedConnection,
+		Q_ARG(QString, m_strSavePath),
+		Q_ARG(int, 1));
+}
+
+// 第二次异步信号槽调用实际的 Load() 接口...
+void OBSBasic::DeferredLoad(const QString &file, int requeueCount)
+{
+	ProfileScope("OBSBasic::DeferredLoad");
+
+	if (--requeueCount > 0) {
+		QMetaObject::invokeMethod(this, "DeferredLoad",
+			Qt::QueuedConnection,
+			Q_ARG(QString, file),
+			Q_ARG(int, requeueCount));
+		return;
+	}
+
+	// 加载系统各种配置参数...
+	this->Load(QT_TO_UTF8(file));
+
+	// 注意：这里必须在 Load() 之后调用，否则无法执行 CreateDefaultScene()...
+	// 注意：RefreshSceneCollections() 放在 DeferredLoad() 里面的 Load() 之后执行...
+	this->RefreshSceneCollections();
+
+	// 注意：加载托盘图标和菜单有两种方式，一种是同步，一种是异步...
+	QTimer::singleShot(20, this, SLOT(OnFirstSystemTray()));
+
+	// 设置已加载完毕的标志...
+	m_bIsLoaded = true;
 
 	// 立即启动远程连接...
 	//App()->doCheckRemote();
@@ -2016,28 +2056,28 @@ void OBSBasic::OnFirstLoad()
 	}
 #endif
 
-	Auth::Load();
+	// 去掉了针对Auth的支持...
+	//Auth::Load();
 }
+
+// 这里是针对Apple的特殊操作，我们做了统一到DeferredLoad()当中...
+/*void OBSBasic::DeferredSysTrayLoad(int requeueCount)
+{
+	if (--requeueCount > 0) {
+		QMetaObject::invokeMethod(this, "DeferredSysTrayLoad",
+			Qt::QueuedConnection, Q_ARG(int, requeueCount));
+		return;
+	}
+	// Minimizng to tray on initial startup does not work on mac
+	// unless it is done in the deferred load
+	SystemTray(true);
+}*/
 
 // 思路错误：当source的监视发生变化，需要重建场景的监视器，播放轨道3音频...
 void OBSBasic::MonitoringSourceChanged(OBSSource source)
 {
 	//this->doSceneDestoryMonitor();
 	//this->doSceneCreateMonitor();
-}
-
-void OBSBasic::DeferredSysTrayLoad(int requeueCount)
-{
-	if (--requeueCount > 0) {
-		QMetaObject::invokeMethod(this, "DeferredSysTrayLoad",
-					  Qt::QueuedConnection,
-					  Q_ARG(int, requeueCount));
-		return;
-	}
-
-	/* Minimizng to tray on initial startup does not work on mac
-	 * unless it is done in the deferred load */
-	SystemTray(true);
 }
 
 /* shows a "what's new" page on startup of new versions using CEF */
@@ -3996,9 +4036,9 @@ void OBSBasic::closeEvent(QCloseEvent *event)
 
 	signalHandlers.clear();
 
-	Auth::Save();
+	//Auth::Save();
 	SaveProjectNow();
-	auth.reset();
+	//auth.reset();
 
 	delete extraBrowsers;
 
@@ -7582,8 +7622,7 @@ void OBSBasic::SystemTrayInit()
 	sysTrayReplayBuffer = new QAction(QTStr("Basic.Main.StartReplayBuffer"), trayIcon.data());
 	exit = new QAction(QTStr("Exit"), trayIcon.data());
 
-	trayMenu = new QMenu;
-	//注意：投影菜单，可能会造成启动缓慢，进行了屏蔽...
+	/*//注意：trayIcon->show()可能会造成堵塞，转移到QTimer执行...
 	//previewProjector = new QMenu(QTStr("PreviewProjector"));
 	//studioProgramProjector = new QMenu(QTStr("StudioProgramProjector"));
 	//AddProjectorMenuMonitors(previewProjector, this, SLOT(OpenPreviewProjector()));
@@ -7596,7 +7635,7 @@ void OBSBasic::SystemTrayInit()
 	trayMenu->addAction(sysTrayReplayBuffer);
 	trayMenu->addAction(exit);
 	trayIcon->setContextMenu(trayMenu);
-	trayIcon->show();
+	trayIcon->show();*/
 
 	if (outputHandler && !outputHandler->replayBuffer)
 		sysTrayReplayBuffer->setEnabled(false);
@@ -7605,13 +7644,12 @@ void OBSBasic::SystemTrayInit()
 		SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this,
 		SLOT(IconActivated(QSystemTrayIcon::ActivationReason)));
 	connect(showHide, SIGNAL(triggered()), this, SLOT(ToggleShowHide()));
-	connect(sysTrayStream, SIGNAL(triggered()), this,
-		SLOT(on_streamButton_clicked()));
-	connect(sysTrayRecord, SIGNAL(triggered()), this,
-		SLOT(on_recordButton_clicked()));
-	connect(sysTrayReplayBuffer.data(), &QAction::triggered, this,
-		&OBSBasic::ReplayBufferClicked);
+	connect(sysTrayStream, SIGNAL(triggered()), this, SLOT(on_streamButton_clicked()));
+	connect(sysTrayRecord, SIGNAL(triggered()), this, SLOT(on_recordButton_clicked()));
+	connect(sysTrayReplayBuffer.data(), &QAction::triggered, this, &OBSBasic::ReplayBufferClicked);
 	connect(exit, SIGNAL(triggered()), this, SLOT(close()));
+
+	trayMenu = new QMenu;
 }
 
 void OBSBasic::IconActivated(QSystemTrayIcon::ActivationReason reason)
@@ -7622,8 +7660,17 @@ void OBSBasic::IconActivated(QSystemTrayIcon::ActivationReason reason)
 	//AddProjectorMenuMonitors(previewProjector, this, SLOT(OpenPreviewProjector()));
 	//AddProjectorMenuMonitors(studioProgramProjector, this, SLOT(OpenStudioProgramProjector()));
 
-	if (reason == QSystemTrayIcon::Trigger)
+	if (reason == QSystemTrayIcon::Trigger) {
 		ToggleShowHide();
+	} else if (reason == QSystemTrayIcon::Context) {
+		trayMenu->clear();
+		trayMenu->addAction(showHide);
+		trayMenu->addAction(sysTrayStream);
+		trayMenu->addAction(sysTrayRecord);
+		trayMenu->addAction(sysTrayReplayBuffer);
+		trayMenu->addAction(exit);
+		trayMenu->popup(QCursor::pos());
+	}
 }
 
 void OBSBasic::SysTrayNotify(const QString &text, QSystemTrayIcon::MessageIcon n)

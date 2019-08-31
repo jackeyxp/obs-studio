@@ -34,7 +34,6 @@
 #include "window-basic-adv-audio.hpp"
 #include "window-basic-filters.hpp"
 #include "window-projector.hpp"
-#include "auth-base.hpp"
 
 #include <obs-frontend-internal.hpp>
 
@@ -132,14 +131,11 @@ class OBSBasic : public OBSMainWindow {
 private:
 	obs_frontend_callbacks *api = nullptr;
 
-	std::shared_ptr<Auth> auth;
-
 	std::vector<VolControl *> volumes;
-
 	std::vector<OBSSignal> signalHandlers;
-
 	QList<QPointer<QDockWidget>> extraDocks;
 
+	QString m_strSavePath;
 	bool m_bIsSlientClose = false;
 	bool m_bIsLoaded = false;
 
@@ -538,7 +534,6 @@ private slots:
 	void ScenePasteFilters();
 
 	void CheckDiskSpaceRemaining();
-
 private:
 	/* OBS Callbacks */
 	static void SceneReordered(void *data, calldata_t *params);
@@ -630,8 +625,6 @@ public:
 
 	void SaveService();
 	bool LoadService();
-
-	inline Auth *GetAuth() { return auth.get(); }
 
 	inline void EnableOutputs(bool enable)
 	{
@@ -828,12 +821,11 @@ private slots:
 	void OpenMultiviewWindow();
 	void OpenSceneWindow();
 
-	void DeferredSysTrayLoad(int requeueCount);
-
+	void DeferredLoad(const QString &file, int requeueCount);
 	void StackedMixerAreaContextMenuRequested();
-
 	void ResizeOutputSizeOfSource();
-
+	void OnFirstSystemTray();
+	void OnFinishedLoad();
 public slots:
 	void onPagePrevClicked();
 	void onPageNextClicked();

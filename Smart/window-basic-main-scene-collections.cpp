@@ -230,8 +230,8 @@ void OBSBasic::RefreshSceneCollections()
 
 	EnumSceneCollections(addCollection);
 
-	/* force saving of first scene collection on first run, otherwise
-	 * no scene collections will show up */
+	// force saving of first scene collection on first run, otherwise
+	// no scene collections will show up
 	if (!count) {
 		long prevDisableVal = disableSaving;
 
@@ -431,8 +431,7 @@ void OBSBasic::on_actionImportSceneCollection_triggered()
 			return;
 		}
 
-		obs_data_save_json_safe(scenedata, filePath.c_str(), "tmp",
-					"bak");
+		obs_data_save_json_safe(scenedata, filePath.c_str(), "tmp", "bak");
 		RefreshSceneCollections();
 	}
 }

@@ -682,9 +682,8 @@ bool SimpleOutput::StartStreaming(obs_service_t *service)
 	if (!Active())
 		SetupOutputs();
 
-	Auth *auth = main->GetAuth();
-	if (auth)
-		auth->OnStreamConfig();
+	/*Auth *auth = main->GetAuth();
+	if (auth) auth->OnStreamConfig();*/
 
 	/* --------------------- */
 
@@ -1503,9 +1502,8 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 	if (!Active())
 		SetupOutputs();
 
-	Auth *auth = main->GetAuth();
-	if (auth)
-		auth->OnStreamConfig();
+	//Auth *auth = main->GetAuth();
+	//if (auth) auth->OnStreamConfig();
 
 	/* --------------------- */
 
