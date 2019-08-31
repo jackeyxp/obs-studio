@@ -4115,8 +4115,7 @@ void OBSBasic::on_action_Settings_triggered()
 	 * because we could be inside of an Auth::LoadUI call.  Keep trying
 	 * once per second until we've exit any known sub-loops. */
 	if (os_atomic_load_long(&insideEventLoop) != 0) {
-		QTimer::singleShot(1000, this,
-				   SLOT(on_action_Settings_triggered()));
+		QTimer::singleShot(1000, this, SLOT(on_action_Settings_triggered()));
 		return;
 	}
 
