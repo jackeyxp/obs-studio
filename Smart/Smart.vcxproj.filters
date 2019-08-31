@@ -92,9 +92,6 @@
     <ClCompile Include="window-basic-settings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="window-basic-settings-stream.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="window-basic-stats.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -192,6 +189,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="md5.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="window-basic-settings-stream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
