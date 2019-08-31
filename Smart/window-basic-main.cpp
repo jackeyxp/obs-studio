@@ -4107,6 +4107,19 @@ void OBSBasic::on_actionRemux_triggered()
 	remux = remuxDlg;*/
 }
 
+void OBSBasic::on_stats_triggered()
+{
+	/*if (!stats.isNull()) {
+		stats->show();
+		stats->raise();
+		return;
+	}
+	OBSBasicStats *statsDlg;
+	statsDlg = new OBSBasicStats(nullptr);
+	statsDlg->show();
+	stats = statsDlg;*/
+}
+
 void OBSBasic::on_action_Settings_triggered()
 {
 	static bool settings_already_executing = false;
@@ -4119,12 +4132,11 @@ void OBSBasic::on_action_Settings_triggered()
 		return;
 	}
 
-	if (settings_already_executing) {
+	if (settings_already_executing)
 		return;
-	}
 
 	settings_already_executing = true;
-
+	if (trayIcon) trayIcon->hide();
 	OBSBasicSettings settings(this);
 	settings.exec();
 	SystemTray(false);
@@ -8015,20 +8027,6 @@ void OBSBasic::on_autoConfigure_triggered()
 	test.setModal(true);
 	test.show();
 	test.exec();*/
-}
-
-void OBSBasic::on_stats_triggered()
-{
-	if (!stats.isNull()) {
-		stats->show();
-		stats->raise();
-		return;
-	}
-
-	OBSBasicStats *statsDlg;
-	statsDlg = new OBSBasicStats(nullptr);
-	statsDlg->show();
-	stats = statsDlg;
 }
 
 void OBSBasic::on_actionShowAbout_triggered()
