@@ -194,6 +194,9 @@
     <ClCompile Include="window-basic-settings-stream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="window-basic-setting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="obs-app.hpp">
@@ -251,9 +254,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="window-basic-properties.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="window-basic-settings.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="window-basic-stats.hpp">
@@ -331,6 +331,12 @@
     <QtMoc Include="window-wait-ppt.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="window-basic-setting.hpp">
+      <Filter>Source Files</Filter>
+    </QtMoc>
+    <QtMoc Include="window-basic-settings.hpp">
+      <Filter>Source Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="forms\OBSBasicSettings.ui">
@@ -358,6 +364,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="forms\PPTWait.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="forms\OBSBasicSetting.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

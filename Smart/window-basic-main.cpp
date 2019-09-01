@@ -40,6 +40,7 @@
 #include "visibility-item-widget.hpp"
 #include "item-widget-helpers.hpp"
 #include "window-basic-settings.hpp"
+#include "window-basic-setting.hpp"
 #include "window-namedialog.hpp"
 //#include "window-basic-auto-config.hpp"
 #include "window-basic-source-select.hpp"
@@ -4118,6 +4119,9 @@ void OBSBasic::on_stats_triggered()
 	statsDlg = new OBSBasicStats(nullptr);
 	statsDlg->show();
 	stats = statsDlg;*/
+
+	OBSBasicSetting setting(this);
+	setting.exec();
 }
 
 void OBSBasic::on_action_Settings_triggered()
