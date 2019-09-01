@@ -358,7 +358,9 @@ static void do_log(int log_level, const char *msg, va_list args, void *param)
 #endif
 }
 
-#define DEFAULT_LANG "en-US"
+// 修改默认语言 => zh-CN，不修改第一次也会默认用本地语言...
+//#define DEFAULT_LANG "en-US"
+#define DEFAULT_LANG "zh-CN"
 
 bool OBSApp::InitGlobalConfigDefaults()
 {
@@ -716,8 +718,7 @@ bool OBSApp::InitGlobalConfig()
 bool OBSApp::InitLocale()
 {
 	ProfileScope("OBSApp::InitLocale");
-	const char *lang =
-		config_get_string(globalConfig, "General", "Language");
+	const char *lang = config_get_string(globalConfig, "General", "Language");
 
 	locale = lang;
 
@@ -734,8 +735,7 @@ bool OBSApp::InitLocale()
 		return false;
 	}
 
-	bool userLocale =
-		config_has_user_value(globalConfig, "General", "Language");
+	bool userLocale = config_has_user_value(globalConfig, "General", "Language");
 	bool defaultLang = astrcmpi(lang, DEFAULT_LANG) == 0;
 
 	if (userLocale && defaultLang)
