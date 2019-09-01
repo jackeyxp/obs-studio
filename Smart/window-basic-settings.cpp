@@ -47,8 +47,9 @@
 #include "window-basic-main-outputs.hpp"
 #include "window-projector.hpp"
 
-#include <util/platform.h>
 #include "ui-config.h"
+#include <util/platform.h>
+#include <util/profiler.hpp>
 
 using namespace std;
 
@@ -282,15 +283,37 @@ OBSBasicSettings::OBSBasicSettings(QWidget *parent)
 	  main(qobject_cast<OBSBasic *>(parent)),
 	  ui(new Ui::OBSBasicSettings)
 {
-	string path;
+	ProfileScope("OBSBasicSettings::OBSBasicSettings");
 
-	EnableThreadedMessageBoxes(true);
-
-	ui->setupUi(this);
-
-	setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+	// 直接拉伸居中显示...
+	this->resize(981, 748);
 
 	main->EnableOutputs(false);
+	EnableThreadedMessageBoxes(true);
+
+	// 去掉右侧关闭按钮旁边的帮助按钮...
+	setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+
+	// 利用时钟进行延迟加载，可以获得更好的用户体验...
+	QTimer::singleShot(20, this, SLOT(OnSetupLoad()));
+}
+
+OBSBasicSettings::~OBSBasicSettings()
+{
+	delete ui->filenameFormatting->completer();
+	main->EnableOutputs(true);
+
+	App()->UpdateHotkeyFocusSetting();
+
+	EnableThreadedMessageBoxes(false);
+}
+
+void OBSBasicSettings::OnSetupLoad()
+{
+	ProfileScope("OBSBasicSettings::OnSetupLoad");
+
+	// 元素非常多时会比较慢...
+	ui->setupUi(this);
 
 	PopulateAACBitrates({ui->simpleOutputABitrate, ui->advOutTrack1Bitrate,
 			     ui->advOutTrack2Bitrate, ui->advOutTrack3Bitrate,
@@ -299,9 +322,18 @@ OBSBasicSettings::OBSBasicSettings(QWidget *parent)
 
 	ui->listWidget->setAttribute(Qt::WA_MacShowFocusRect, false);
 
+	// 由于延迟加载，需要在这里更新左侧列表栏对应图标...
+	ui->listWidget->item(0)->setIcon(generalIcon);
+	ui->listWidget->item(1)->setIcon(streamIcon);
+	ui->listWidget->item(2)->setIcon(outputIcon);
+	ui->listWidget->item(3)->setIcon(audioIcon);
+	ui->listWidget->item(4)->setIcon(videoIcon);
+	ui->listWidget->item(5)->setIcon(hotkeysIcon);
+	ui->listWidget->item(6)->setIcon(advancedIcon);
+
 	/* clang-format off */
 	HookWidget(ui->language,             COMBO_CHANGED,  GENERAL_CHANGED);
-	HookWidget(ui->theme, 		     COMBO_CHANGED,  GENERAL_CHANGED);
+	HookWidget(ui->theme, 		         COMBO_CHANGED,  GENERAL_CHANGED);
 	HookWidget(ui->enableAutoUpdates,    CHECK_CHANGED,  GENERAL_CHANGED);
 	HookWidget(ui->openStatsOnStartup,   CHECK_CHANGED,  GENERAL_CHANGED);
 	HookWidget(ui->warnBeforeStreamStart,CHECK_CHANGED,  GENERAL_CHANGED);
@@ -754,16 +786,6 @@ OBSBasicSettings::OBSBasicSettings(QWidget *parent)
 	UpdateAutomaticReplayBufferCheckboxes();
 
 	App()->DisableHotkeys();
-}
-
-OBSBasicSettings::~OBSBasicSettings()
-{
-	delete ui->filenameFormatting->completer();
-	main->EnableOutputs(true);
-
-	App()->UpdateHotkeyFocusSetting();
-
-	EnableThreadedMessageBoxes(false);
 }
 
 void OBSBasicSettings::SaveCombo(QComboBox *widget, const char *section,
@@ -4538,74 +4560,4 @@ void OBSBasicSettings::on_disableOSXVSync_clicked()
 		ui->resetOSXVSync->setEnabled(disable);
 	}
 #endif
-}
-
-QIcon OBSBasicSettings::GetGeneralIcon() const
-{
-	return generalIcon;
-}
-
-QIcon OBSBasicSettings::GetStreamIcon() const
-{
-	return streamIcon;
-}
-
-QIcon OBSBasicSettings::GetOutputIcon() const
-{
-	return outputIcon;
-}
-
-QIcon OBSBasicSettings::GetAudioIcon() const
-{
-	return audioIcon;
-}
-
-QIcon OBSBasicSettings::GetVideoIcon() const
-{
-	return videoIcon;
-}
-
-QIcon OBSBasicSettings::GetHotkeysIcon() const
-{
-	return hotkeysIcon;
-}
-
-QIcon OBSBasicSettings::GetAdvancedIcon() const
-{
-	return advancedIcon;
-}
-
-void OBSBasicSettings::SetGeneralIcon(const QIcon &icon)
-{
-	ui->listWidget->item(0)->setIcon(icon);
-}
-
-void OBSBasicSettings::SetStreamIcon(const QIcon &icon)
-{
-	ui->listWidget->item(1)->setIcon(icon);
-}
-
-void OBSBasicSettings::SetOutputIcon(const QIcon &icon)
-{
-	ui->listWidget->item(2)->setIcon(icon);
-}
-
-void OBSBasicSettings::SetAudioIcon(const QIcon &icon)
-{
-	ui->listWidget->item(3)->setIcon(icon);
-}
-
-void OBSBasicSettings::SetVideoIcon(const QIcon &icon)
-{
-	ui->listWidget->item(4)->setIcon(icon);
-}
-
-void OBSBasicSettings::SetHotkeysIcon(const QIcon &icon)
-{
-	ui->listWidget->item(5)->setIcon(icon);
-}
-
-void OBSBasicSettings::SetAdvancedIcon(const QIcon &icon)
-{
-	ui->listWidget->item(6)->setIcon(icon);
 }

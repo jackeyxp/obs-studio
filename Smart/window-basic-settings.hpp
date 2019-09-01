@@ -82,20 +82,13 @@ using OBSFFFormatDesc = std::unique_ptr<const ff_format_desc, OBSFFDeleter>;
 
 class OBSBasicSettings : public QDialog {
 	Q_OBJECT
-	Q_PROPERTY(QIcon generalIcon READ GetGeneralIcon WRITE SetGeneralIcon
-			   DESIGNABLE true)
-	Q_PROPERTY(QIcon streamIcon READ GetStreamIcon WRITE SetStreamIcon
-			   DESIGNABLE true)
-	Q_PROPERTY(QIcon outputIcon READ GetOutputIcon WRITE SetOutputIcon
-			   DESIGNABLE true)
-	Q_PROPERTY(QIcon audioIcon READ GetAudioIcon WRITE SetAudioIcon
-			   DESIGNABLE true)
-	Q_PROPERTY(QIcon videoIcon READ GetVideoIcon WRITE SetVideoIcon
-			   DESIGNABLE true)
-	Q_PROPERTY(QIcon hotkeysIcon READ GetHotkeysIcon WRITE SetHotkeysIcon
-			   DESIGNABLE true)
-	Q_PROPERTY(QIcon advancedIcon READ GetAdvancedIcon WRITE SetAdvancedIcon
-			   DESIGNABLE true)
+	Q_PROPERTY(QIcon generalIcon READ GetGeneralIcon WRITE SetGeneralIcon DESIGNABLE true)
+	Q_PROPERTY(QIcon streamIcon READ GetStreamIcon WRITE SetStreamIcon DESIGNABLE true)
+	Q_PROPERTY(QIcon outputIcon READ GetOutputIcon WRITE SetOutputIcon DESIGNABLE true)
+	Q_PROPERTY(QIcon audioIcon READ GetAudioIcon WRITE SetAudioIcon DESIGNABLE true)
+	Q_PROPERTY(QIcon videoIcon READ GetVideoIcon WRITE SetVideoIcon DESIGNABLE true)
+	Q_PROPERTY(QIcon hotkeysIcon READ GetHotkeysIcon WRITE SetHotkeysIcon DESIGNABLE true)
+	Q_PROPERTY(QIcon advancedIcon READ GetAdvancedIcon WRITE SetAdvancedIcon DESIGNABLE true)
 
 private:
 	OBSBasic *main;
@@ -228,6 +221,7 @@ private:
 	void OnAuthConnected();
 	QString lastService;
 private slots:
+    void OnSetupLoad();
 	void UpdateServerList();
 	void UpdateKeyLink();
 	void on_show_clicked();
@@ -288,13 +282,13 @@ private:
 	QIcon hotkeysIcon;
 	QIcon advancedIcon;
 
-	QIcon GetGeneralIcon() const;
-	QIcon GetStreamIcon() const;
-	QIcon GetOutputIcon() const;
-	QIcon GetAudioIcon() const;
-	QIcon GetVideoIcon() const;
-	QIcon GetHotkeysIcon() const;
-	QIcon GetAdvancedIcon() const;
+	QIcon GetGeneralIcon() const { return generalIcon; }
+	QIcon GetStreamIcon() const { return streamIcon; }
+	QIcon GetOutputIcon() const { return outputIcon; }
+	QIcon GetAudioIcon() const { return audioIcon; }
+	QIcon GetVideoIcon() const { return videoIcon;  }
+	QIcon GetHotkeysIcon() const { return hotkeysIcon; }
+	QIcon GetAdvancedIcon() const { return advancedIcon; }
 
 private slots:
 	void on_theme_activated(int idx);
@@ -355,13 +349,13 @@ private slots:
 
 	OBSService SpawnTempService();
 
-	void SetGeneralIcon(const QIcon &icon);
-	void SetStreamIcon(const QIcon &icon);
-	void SetOutputIcon(const QIcon &icon);
-	void SetAudioIcon(const QIcon &icon);
-	void SetVideoIcon(const QIcon &icon);
-	void SetHotkeysIcon(const QIcon &icon);
-	void SetAdvancedIcon(const QIcon &icon);
+	void SetGeneralIcon(const QIcon &icon) { generalIcon = icon; }
+	void SetStreamIcon(const QIcon &icon) { streamIcon = icon; }
+	void SetOutputIcon(const QIcon &icon) { outputIcon = icon; }
+	void SetAudioIcon(const QIcon &icon) { audioIcon = icon; }
+	void SetVideoIcon(const QIcon &icon) { videoIcon = icon; }
+	void SetHotkeysIcon(const QIcon &icon) { hotkeysIcon = icon; }
+	void SetAdvancedIcon(const QIcon &icon) { advancedIcon = icon; }
 
 protected:
 	virtual void closeEvent(QCloseEvent *event);

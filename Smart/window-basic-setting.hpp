@@ -37,6 +37,10 @@ class QLabel;
 
 class OBSBasicSetting : public QDialog {
 	Q_OBJECT
+	// 需要修改 UI/data/themes 下面的 .qss 文件，只能分开写样式...
+	Q_PROPERTY(QIcon generalIcon READ GetGeneralIcon WRITE SetGeneralIcon DESIGNABLE true)
+	Q_PROPERTY(QIcon audioIcon READ GetAudioIcon WRITE SetAudioIcon DESIGNABLE true)
+	Q_PROPERTY(QIcon videoIcon READ GetVideoIcon WRITE SetVideoIcon DESIGNABLE true)
 private:
 	OBSBasic * main;
 	std::unique_ptr<Ui::OBSBasicSetting> ui;
@@ -47,16 +51,60 @@ private:
 	int  pageIndex = 0;
 	bool loading = true;
 
+	inline bool Changed() const {
+		return generalChanged || audioChanged || videoChanged;
+	}
 	inline void EnableApplyButton(bool en) {
 		ui->buttonBox->button(QDialogButtonBox::Apply)->setEnabled(en);
 	}
+	inline void ClearChanged() {
+		generalChanged = false;
+		audioChanged = false;
+		videoChanged = false;
+		EnableApplyButton(false);
+	}
+
+#ifdef _WIN32
+	bool aeroWasDisabled = false;
+	QCheckBox *toggleAero = nullptr;
+	void ToggleDisableAero(bool checked);
+#endif
+
+	void HookWidget(QWidget *widget, const char *signal, const char *slot);
+	bool QueryChanges();
+
 	void LoadSettings(bool changedOnly);
 	void LoadGeneralSettings();
 	void LoadAudioSettings();
 	void LoadVideoSettings();
+
+	/* general */
+	void LoadLanguageList();
+private:
+	void SaveGeneralSettings();
+	void SaveAudioSettings();
+	void SaveVideoSettings();
+	void SaveSettings();
+
+	QIcon generalIcon;
+	QIcon audioIcon;
+	QIcon videoIcon;
+
+	QIcon GetGeneralIcon() const { return generalIcon; }
+	QIcon GetAudioIcon() const { return audioIcon; }
+	QIcon GetVideoIcon() const { return videoIcon; }
 private slots:
+    void OnSetupLoad();
+	void GeneralChanged();
+	void AudioChanged();
+	void VideoChanged();
 	void on_listWidget_itemSelectionChanged();
 	void on_buttonBox_clicked(QAbstractButton *button);
+	void SetGeneralIcon(const QIcon &icon) { generalIcon = icon; }
+	void SetAudioIcon(const QIcon &icon) { audioIcon = icon; }
+	void SetVideoIcon(const QIcon &icon) { videoIcon = icon; }
+protected:
+	virtual void closeEvent(QCloseEvent *event);
 public:
 	OBSBasicSetting(QWidget *parent);
 	~OBSBasicSetting();
