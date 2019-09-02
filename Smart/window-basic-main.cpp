@@ -6797,11 +6797,6 @@ OBSProjector *OBSBasic::OpenProjector(obs_source_t *source, int monitor,
 
 		if (projector) {
 			windowProjectors.push_back(projector);
-		} else {
-			// 将现有的窗口赋给显示对象...
-			if (windowProjectors.length() > 0) {
-				projector = static_cast<OBSProjector *>(windowProjectors.front().data());
-			}
 		}
 	} else {
 		delete projectors[monitor];
@@ -6809,11 +6804,43 @@ OBSProjector *OBSBasic::OpenProjector(obs_source_t *source, int monitor,
 
 		projectors[monitor] = projector;
 	}
-	// 需要进行有效性判断...
-	//if( projector != NULL ) {
-	//	projector->Init();
-	//}
+	// 注意：新版已修复之前崩溃的问题...
 	return projector;
+}
+
+// mixerIdx => 指的是轨道编号，0~5总共有6个音频轨道，通过32位整型数字的比特位来记录是否进行混音标志...
+static inline void setAudioMixer(obs_sceneitem_t *scene_item, const int mixerIdx, bool enabled)
+{
+	obs_source_t *source = obs_sceneitem_get_source(scene_item);
+	uint32_t mixers = obs_source_get_audio_mixers(source);
+	uint32_t new_mixers = mixers;
+
+	// 没有音频属性，或资源为空，直接返回...
+	if (mixers <= 0 || source == NULL)
+		return;
+
+	/*// 如果是第一个轨道，需要将混音标志存入配置，wasapi-output.c当中会用到...
+	// 采用了新的第三轨道混音输出模式，不用第一轨道输出模式了...
+	obs_data_t * lpSettings = obs_source_get_settings(source);
+	obs_data_set_bool(lpSettings, "focus_mix", enabled);
+	obs_data_release(lpSettings);*/
+
+	const char * lpSrcID = obs_source_get_id(source);
+	bool bIsRtpSource = ((astrcmpi(lpSrcID, App()->InteractRtpSource()) == 0) ? true : false);
+
+	// 注意：如果是互动教室资源、第二个轨道，用来录像的音频，不用处理，默认始终录像...
+	if (bIsRtpSource && (mixerIdx == 1))
+		return;
+
+	// 注意：如果是互动教室资源、第一个轨道、投递数据，三个条件都满足，就进行强制屏蔽...
+	if (bIsRtpSource && enabled && (mixerIdx == 0)) {
+		enabled = false;
+	}
+
+	if (enabled) new_mixers |= (1 << mixerIdx);
+	else         new_mixers &= ~(1 << mixerIdx);
+
+	obs_source_set_audio_mixers(source, new_mixers);
 }
 
 // 响应鼠标双击事件 => 交换0点位置的场景资源...
@@ -6849,11 +6876,11 @@ void OBSBasic::doSceneItemExchangePos(obs_sceneitem_t * select_item)
 	//obs_sceneitem_set_info(lpFirstSceneItem, &selectInfo);
 	//obs_sceneitem_set_info(select_item, &firstInfo);
 	// 轨道1|轨道2 => 屏蔽旧的第一个窗口音频输出...
-	//setAudioMixer(lpFirstSceneItem, 0, false);
-	//setAudioMixer(lpFirstSceneItem, 1, false);
+	setAudioMixer(lpFirstSceneItem, 0, false);
+	setAudioMixer(lpFirstSceneItem, 1, false);
 	// 轨道1|轨道2 => 强制新的第一个窗口音频输出...
-	//setAudioMixer(select_item, 0, true);
-	//setAudioMixer(select_item, 1, true);
+	setAudioMixer(select_item, 0, true);
+	setAudioMixer(select_item, 1, true);
 	// 强制新的数据源置于0点位置的最底层，避免遮挡浮动窗口...
 	obs_sceneitem_set_order(select_item, OBS_ORDER_MOVE_BOTTOM);
 	// 由于set_order会重选焦点，需要只保留当前数据源焦点...
@@ -6935,8 +6962,8 @@ void OBSBasic::doSceneItemLayout(obs_sceneitem_t * scene_item)
 			vec2_set(&itemInfo.bounds, float(other_width), float(other_height));
 			obs_sceneitem_set_info(scene_item, &itemInfo);
 			// 轨道1|轨道2 => 屏蔽非第一个窗口资源的音频输出，只保留全局音频资源和第一个窗口的音频资源输出...
-			//setAudioMixer(scene_item, 0, false);
-			//setAudioMixer(scene_item, 1, false);
+			setAudioMixer(scene_item, 0, false);
+			setAudioMixer(scene_item, 1, false);
 			nItemStep = nCurStep;
 		} else {
 			vec2 vPos = { 0.0f, 0.0f };
@@ -7178,8 +7205,8 @@ void OBSBasic::doSceneItemToFirst(obs_sceneitem_t * select_item)
 	//obs_sceneitem_crop crop = { 0 };
 	//obs_sceneitem_set_crop(select_item, &crop);
 	// 轨道1|轨道2 => 强制第一个窗口资源的音频输出，只保留全局音频资源和第一个窗口的音频资源输出...
-	//setAudioMixer(select_item, 0, true);
-	//setAudioMixer(select_item, 1, true);
+	setAudioMixer(select_item, 0, true);
+	setAudioMixer(select_item, 1, true);
 	// 注意：doSendCameraPusherID 会在外层调用...
 	// 0点位置如果是幻灯片数据源，需要显示上下页按钮...
 	obs_source_t * lpSource = obs_sceneitem_get_source(select_item);
