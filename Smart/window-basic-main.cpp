@@ -3743,6 +3743,7 @@ int OBSBasic::ResetVideo()
 	ovi.range = astrcmpi(colorRange, "Full") == 0 ? VIDEO_RANGE_FULL : VIDEO_RANGE_PARTIAL;
 	ovi.adapter = config_get_uint(App()->GlobalConfig(), "Video", "AdapterIdx");
 	ovi.gpu_conversion = true;
+	ovi.screen_mode = false;
 	ovi.scale_type = GetScaleType(basicConfig);
 
 	if (ovi.base_width == 0 || ovi.base_height == 0) {
