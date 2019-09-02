@@ -124,7 +124,7 @@
               <number>9</number>
              </property>
              <item alignment="Qt::AlignTop">
-              <widget class="QWidget" name="widget_2" native="true">
+              <widget class="QWidget" name="generalWidget" native="true">
                <layout class="QVBoxLayout" name="verticalLayout_20">
                 <item>
                  <widget class="QGroupBox" name="groupBox_15">
@@ -184,7 +184,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QGroupBox" name="groupBox_16">
+                 <widget class="QGroupBox" name="groupOutput">
                   <property name="title">
                    <string>Basic.Settings.Output</string>
                   </property>
@@ -192,9 +192,51 @@
                    <property name="fieldGrowthPolicy">
                     <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
                    </property>
+                   <property name="labelAlignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
                    <property name="topMargin">
                     <number>2</number>
                    </property>
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="advOutEncLabel">
+                     <property name="text">
+                      <string>Basic.Settings.Output.Encoder</string>
+                     </property>
+                     <property name="buddy">
+                      <cstring>advOutEncoder</cstring>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QComboBox" name="advOutEncoder"/>
+                   </item>
+                   <item row="1" column="0">
+                    <spacer name="horizontalSpacer_4">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Fixed</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>170</width>
+                       <height>5</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QCheckBox" name="advOutApplyService">
+                     <property name="text">
+                      <string>Basic.Settings.Output.Adv.ApplyServiceSettings</string>
+                     </property>
+                     <property name="checked">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
                   </layout>
                  </widget>
                 </item>

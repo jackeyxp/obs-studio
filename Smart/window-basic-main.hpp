@@ -683,6 +683,7 @@ private slots:
 	void on_actionUploadLastLog_triggered();
 	void on_actionViewCurrentLog_triggered();
 	void on_actionCheckForUpdates_triggered();
+	void on_actionAdvanceSettings_triggered();
 
 	void on_actionShowCrashLogs_triggered();
 	void on_actionUploadLastCrashLog_triggered();
@@ -824,8 +825,11 @@ private slots:
 	void DeferredLoad(const QString &file, int requeueCount);
 	void StackedMixerAreaContextMenuRequested();
 	void ResizeOutputSizeOfSource();
+
 	void OnFirstSystemTray();
 	void OnFinishedLoad();
+
+	void OnShowSettings(bool bIsAdvance = false);
 public slots:
 	void onPagePrevClicked();
 	void onPageNextClicked();

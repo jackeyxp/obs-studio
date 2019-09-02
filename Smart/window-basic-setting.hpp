@@ -27,11 +27,12 @@
 
 #include <obs.hpp>
 
+class QLabel;
 class OBSBasic;
-class QAbstractButton;
 class QComboBox;
 class QCheckBox;
-class QLabel;
+class QAbstractButton;
+class OBSPropertiesView;
 
 #include "ui_OBSBasicSetting.h"
 
@@ -51,6 +52,9 @@ private:
 
 	uint32_t outputCX = 0;
 	uint32_t outputCY = 0;
+
+	OBSPropertiesView *streamEncoderProps = nullptr;
+	QString curAdvStreamEncoder;
 
 	void SaveCombo(QComboBox *widget, const char *section, const char *value);
 	void SaveEdit(QLineEdit *widget, const char *section, const char *value);
@@ -79,9 +83,15 @@ private:
 	void HookWidget(QWidget *widget, const char *signal, const char *slot);
 	bool QueryChanges();
 
+	void LoadEncoderTypes();
+	void LoadAdvOutputStreamingEncoderProperties();
+
 	void LoadSettings(bool changedOnly);
 	void LoadGeneralSettings();
+	void LoadGeneralExtern();
 	void LoadVideoSettings();
+
+	OBSPropertiesView * CreateEncoderPropertyView(const char *encoder, const char *path, bool changed = false);
 
 	/* general */
 	void LoadLanguageList();
@@ -96,6 +106,7 @@ private:
 	void RecalcOutputResPixels(const char *resText);
 
 private:
+	void SaveGeneralExtern();
 	void SaveGeneralSettings();
 	void SaveVideoSettings();
 	void SaveSettings();
@@ -112,6 +123,7 @@ private slots:
 	void VideoChangedRestart();
 	void VideoChangedResolution();
 	void on_listWidget_itemSelectionChanged();
+	void on_advOutEncoder_currentIndexChanged(int idx);
 	void on_outputResolution_editTextChanged(const QString &text);
 	void on_baseResolution_editTextChanged(const QString &text);
 	void on_buttonBox_clicked(QAbstractButton *button);

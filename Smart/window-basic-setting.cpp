@@ -41,6 +41,23 @@
 
 using namespace std;
 
+static inline void SetComboByName(QComboBox *combo, const char *name)
+{
+	int idx = combo->findText(QT_UTF8(name));
+	if (idx != -1)
+		combo->setCurrentIndex(idx);
+}
+
+static inline bool SetComboByValue(QComboBox *combo, const char *name)
+{
+	int idx = combo->findData(QT_UTF8(name));
+	if (idx != -1) {
+		combo->setCurrentIndex(idx);
+		return true;
+	}
+	return false;
+}
+
 static inline QString GetComboData(QComboBox *combo)
 {
 	int idx = combo->currentIndex();
@@ -52,6 +69,20 @@ static inline QString GetComboData(QComboBox *combo)
 static inline bool WidgetChanged(QWidget *widget)
 {
 	return widget->property("changed").toBool();
+}
+
+static void WriteJsonData(OBSPropertiesView *view, const char *path)
+{
+	char full_path[512] = { 0 };
+	if (!view || !WidgetChanged(view))
+		return;
+	int ret = GetProfilePath(full_path, sizeof(full_path), path);
+	if (ret > 0) {
+		obs_data_t *settings = view->GetSettings();
+		if (settings) {
+			obs_data_save_json_safe(settings, full_path, "tmp", "bak");
+		}
+	}
 }
 
 /* parses "[width]x[height]", string, i.e. 1024x768 */
@@ -154,6 +185,9 @@ void OBSBasicSetting::OnSetupLoad()
 	HookWidget(ui->fpsNumerator, SCROLL_CHANGED, VIDEO_CHANGED);
 	HookWidget(ui->fpsDenominator, SCROLL_CHANGED, VIDEO_CHANGED);
 
+	HookWidget(ui->advOutEncoder, COMBO_CHANGED, GENERAL_CHANGED);
+	HookWidget(ui->advOutApplyService, CHECK_CHANGED, GENERAL_CHANGED);
+
 #ifdef _WIN32
 	uint32_t winVer = GetWindowsVersion();
 	if (winVer > 0 && winVer < 0x602) {
@@ -169,7 +203,44 @@ void OBSBasicSetting::OnSetupLoad()
 	//Apply button disabled until change.
 	EnableApplyButton(false);
 
+	LoadEncoderTypes();
+
 	LoadSettings(false);
+}
+
+void OBSBasicSetting::LoadEncoderTypes()
+{
+	const char *type;
+	size_t idx = 0;
+
+	while (obs_enum_encoder_types(idx++, &type)) {
+		const char *name = obs_encoder_get_display_name(type);
+		const char *codec = obs_get_encoder_codec(type);
+		uint32_t caps = obs_get_encoder_caps(type);
+
+		if (obs_get_encoder_type(type) != OBS_ENCODER_VIDEO)
+			continue;
+
+		const char *streaming_codecs[] = {
+			"h264", //"hevc",
+		};
+		bool is_streaming_codec = false;
+		for (const char *test_codec : streaming_codecs) {
+			if (strcmp(codec, test_codec) == 0) {
+				is_streaming_codec = true;
+				break;
+			}
+		}
+		if ((caps & OBS_ENCODER_CAP_DEPRECATED) != 0)
+			continue;
+
+		QString qName = QT_UTF8(name);
+		QString qType = QT_UTF8(type);
+
+		if (is_streaming_codec) {
+			ui->advOutEncoder->addItem(qName, qType);
+		}
+	}
 }
 
 void OBSBasicSetting::LoadSettings(bool changedOnly)
@@ -192,6 +263,21 @@ void OBSBasicSetting::SaveGeneralSettings()
 	if (WidgetChanged(ui->enableAutoUpdates)) {
 		config_set_bool(GetGlobalConfig(), "General", "EnableAutoUpdates", ui->enableAutoUpdates->isChecked());
 	}
+
+	// 保存扩展配置信息...
+	this->SaveGeneralExtern();
+}
+
+// 保存扩展配置信息到配置脚本当中...
+void OBSBasicSetting::SaveGeneralExtern()
+{
+	curAdvStreamEncoder = GetComboData(ui->advOutEncoder);
+
+	SaveComboData(ui->advOutEncoder, "AdvOut", "Encoder");
+	SaveCheckBox(ui->advOutApplyService, "AdvOut", "ApplyServiceSettings");
+
+	WriteJsonData(streamEncoderProps, "streamEncoder.json");
+	main->ResetOutputs();
 }
 
 void OBSBasicSetting::SaveVideoSettings()
@@ -277,12 +363,21 @@ void OBSBasicSetting::LoadGeneralSettings()
 	loading = true;
 
 	LoadLanguageList();
-	//LoadThemeList();
+	LoadGeneralExtern();
 
 	bool enableAutoUpdates = config_get_bool(GetGlobalConfig(), "General", "EnableAutoUpdates");
 	ui->enableAutoUpdates->setChecked(enableAutoUpdates);
 
 	loading = false;
+}
+
+// 加载扩展配置到通用配置当中...
+void OBSBasicSetting::LoadGeneralExtern()
+{
+	bool applyServiceSettings = config_get_bool(main->Config(), "AdvOut", "ApplyServiceSettings");
+	ui->advOutApplyService->setChecked(applyServiceSettings);
+
+	this->LoadAdvOutputStreamingEncoderProperties();
 }
 
 void OBSBasicSetting::LoadLanguageList()
@@ -722,4 +817,80 @@ void OBSBasicSetting::VideoChangedRestart()
 		sender()->setProperty("changed", QVariant(true));
 		EnableApplyButton(true);
 	}
+}
+
+void OBSBasicSetting::LoadAdvOutputStreamingEncoderProperties()
+{
+	const char *type = config_get_string(main->Config(), "AdvOut", "Encoder");
+	if (streamEncoderProps != NULL) {
+		delete streamEncoderProps;
+		streamEncoderProps = NULL;
+	}
+	streamEncoderProps = CreateEncoderPropertyView(type, "streamEncoder.json");
+	ui->groupOutput->layout()->addWidget(streamEncoderProps);
+
+	//connect(streamEncoderProps, SIGNAL(Changed()), this, SLOT(UpdateStreamDelayEstimate()));
+	//connect(streamEncoderProps, SIGNAL(Changed()), this, SLOT(AdvReplayBufferChanged()));
+
+	curAdvStreamEncoder = type;
+
+	if (!SetComboByValue(ui->advOutEncoder, type)) {
+		uint32_t caps = obs_get_encoder_caps(type);
+		if ((caps & OBS_ENCODER_CAP_DEPRECATED) != 0) {
+			const char *name = obs_encoder_get_display_name(type);
+			ui->advOutEncoder->insertItem(0, QT_UTF8(name),	QT_UTF8(type));
+			SetComboByValue(ui->advOutEncoder, type);
+		}
+	}
+	//UpdateStreamDelayEstimate();
+}
+
+void OBSBasicSetting::on_advOutEncoder_currentIndexChanged(int idx)
+{
+	QString encoder = GetComboData(ui->advOutEncoder);
+	if (!loading) {
+		bool loadSettings = (encoder == curAdvStreamEncoder);
+		if (streamEncoderProps != NULL) {
+			delete streamEncoderProps;
+			streamEncoderProps = NULL;
+		}
+		streamEncoderProps = CreateEncoderPropertyView(QT_TO_UTF8(encoder),
+			loadSettings ? "streamEncoder.json" : nullptr, true);
+		ui->groupOutput->layout()->addWidget(streamEncoderProps);
+	}
+
+	/*uint32_t caps = obs_get_encoder_caps(QT_TO_UTF8(encoder));
+	if (caps & OBS_ENCODER_CAP_PASS_TEXTURE) {
+		ui->advOutUseRescale->setChecked(false);
+		ui->advOutUseRescale->setVisible(false);
+		ui->advOutRescale->setVisible(false);
+	} else {
+		ui->advOutUseRescale->setVisible(true);
+		ui->advOutRescale->setVisible(true);
+	}*/
+	UNUSED_PARAMETER(idx);
+}
+
+OBSPropertiesView * OBSBasicSetting::CreateEncoderPropertyView(const char *encoder, const char *path, bool changed)
+{
+	obs_data_t *settings = obs_encoder_defaults(encoder);
+	OBSPropertiesView *view = NULL;
+
+	if (path != NULL) {
+		char encoderJsonPath[512] = { 0 };
+		int ret = GetProfilePath(encoderJsonPath, sizeof(encoderJsonPath), path);
+		if (ret > 0) {
+			obs_data_t *data = obs_data_create_from_json_file_safe(encoderJsonPath, "bak");
+			obs_data_apply(settings, data);
+			obs_data_release(data);
+		}
+	}
+
+	view = new OBSPropertiesView(settings, encoder, (PropertiesReloadCallback)obs_get_encoder_properties, 170);
+	view->setFrameShape(QFrame::StyledPanel);
+	view->setProperty("changed", QVariant(changed));
+	QObject::connect(view, SIGNAL(Changed()), this, SLOT(GeneralChanged()));
+
+	obs_data_release(settings);
+	return view;
 }

@@ -4110,7 +4110,7 @@ void OBSBasic::on_actionRemux_triggered()
 
 void OBSBasic::on_stats_triggered()
 {
-	/*if (!stats.isNull()) {
+	if (!stats.isNull()) {
 		stats->show();
 		stats->raise();
 		return;
@@ -4118,13 +4118,20 @@ void OBSBasic::on_stats_triggered()
 	OBSBasicStats *statsDlg;
 	statsDlg = new OBSBasicStats(nullptr);
 	statsDlg->show();
-	stats = statsDlg;*/
+	stats = statsDlg;
+}
 
-	OBSBasicSetting setting(this);
-	setting.exec();
+void OBSBasic::on_actionAdvanceSettings_triggered()
+{
+	this->OnShowSettings(true);
 }
 
 void OBSBasic::on_action_Settings_triggered()
+{
+	this->OnShowSettings(false);
+}
+
+void OBSBasic::OnShowSettings(bool bIsAdvance/* = false*/)
 {
 	static bool settings_already_executing = false;
 
@@ -4141,8 +4148,15 @@ void OBSBasic::on_action_Settings_triggered()
 
 	settings_already_executing = true;
 	if (trayIcon) trayIcon->hide();
-	OBSBasicSettings settings(this);
-	settings.exec();
+
+	if (bIsAdvance) {
+		OBSBasicSettings settingAdvance(this);
+		settingAdvance.exec();
+	} else {
+		OBSBasicSetting settingSimple(this);
+		settingSimple.exec();
+	}
+
 	SystemTray(false);
 
 	settings_already_executing = false;
@@ -4818,12 +4832,17 @@ void OBSBasic::CreateSourcePopupMenu(int idx, bool preview)
 		//ui->actionPasteFilters->setEnabled(false);
 	}
 
-	// 始终自动追加一个“检查升级”的菜单...
+	// 始终自动追加一个 检查升级 的菜单...
 	if (ui->actionCheckForUpdates != NULL) {
 		popup.addSeparator();
 		popup.addAction(ui->actionCheckForUpdates);
 	}
-
+	// 始终自动追加一个 高级设置 的菜单...
+	if (ui->actionAdvanceSettings != NULL) {
+		popup.addSeparator();
+		popup.addAction(ui->actionAdvanceSettings);
+	}
+	// 在鼠标位置弹出菜单...
 	popup.exec(QCursor::pos());
 }
 
