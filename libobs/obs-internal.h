@@ -36,7 +36,9 @@
 
 #include "obs.h"
 
-#define NUM_TEXTURES 2
+// 注意：只用单面缓存，极大降低延时，达到500毫秒...
+// 注意：之前是双面缓存，造成延时至少在1秒以上...
+#define NUM_TEXTURES 1
 #define NUM_CHANNELS 3
 #define MICROSECOND_DEN 1000000
 #define NUM_ENCODE_TEXTURES 3
@@ -238,9 +240,11 @@ struct obs_core_video {
 	graphics_t *graphics;
 	gs_stagesurf_t *copy_surfaces[NUM_TEXTURES][NUM_CHANNELS];
 	gs_texture_t *render_texture;
+	gs_texture_t *export_texture;
 	gs_texture_t *output_texture;
 	gs_texture_t *convert_textures[NUM_CHANNELS];
 	bool texture_rendered;
+	bool texture_exported;
 	bool textures_copied[NUM_TEXTURES];
 	bool texture_converted;
 	bool using_nv12_tex;
@@ -408,6 +412,9 @@ struct obs_core {
 
 	signal_handler_t *signals;
 	proc_handler_t *procs;
+
+	// 2018.10.17 - by jackey => add room_id...
+	int room_id;
 
 	char *locale;
 	char *module_config_path;

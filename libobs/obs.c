@@ -39,7 +39,8 @@ static inline void make_video_info(struct video_output_info *vi,
 	vi->height = ovi->output_height;
 	vi->range = ovi->range;
 	vi->colorspace = ovi->colorspace;
-	vi->cache_size = 6;
+	// 注意：之前设置的是6个缓存，现在改为2个，似乎并没有有效降低延时，还需进一步测试...
+	vi->cache_size = 2;
 }
 
 static inline void calc_gpu_conversion_sizes(const struct obs_video_info *ovi)
@@ -229,13 +230,19 @@ static bool obs_init_textures(struct obs_video_info *ovi)
 	video->render_texture = gs_texture_create(ovi->base_width,
 						  ovi->base_height, GS_RGBA, 1,
 						  NULL, GS_RENDER_TARGET);
-
 	if (!video->render_texture)
 		return false;
 
+	// 为了输出第一个数据源准备的输出纹理对象...
+	video->export_texture = gs_texture_create(ovi->base_width,
+                          ovi->base_height, GS_RGBA, 1,
+                          NULL, GS_RENDER_TARGET);
+	if (!video->export_texture)
+		return false;
+
 	video->output_texture = gs_texture_create(ovi->output_width,
-						  ovi->output_height, GS_RGBA,
-						  1, NULL, GS_RENDER_TARGET);
+						  ovi->output_height, GS_RGBA, 1,
+                          NULL, GS_RENDER_TARGET);
 
 	if (!video->output_texture)
 		return false;
@@ -497,9 +504,11 @@ static void obs_free_video(void)
 			}
 		}
 
+		gs_texture_destroy(video->export_texture);
 		gs_texture_destroy(video->output_texture);
 		video->render_texture = NULL;
 		video->output_texture = NULL;
+		video->export_texture = NULL;
 
 		gs_leave_context();
 
@@ -507,11 +516,10 @@ static void obs_free_video(void)
 		circlebuf_free(&video->vframe_info_buffer_gpu);
 
 		video->texture_rendered = false;
-		;
-		memset(video->textures_copied, 0,
-		       sizeof(video->textures_copied));
+		video->texture_exported = false;
+
+		memset(video->textures_copied, 0, sizeof(video->textures_copied));
 		video->texture_converted = false;
-		;
 
 		pthread_mutex_destroy(&video->gpu_encoder_mutex);
 		pthread_mutex_init_value(&video->gpu_encoder_mutex);
@@ -871,6 +879,17 @@ static bool obs_init(const char *locale, const char *module_config_path,
 extern void initialize_com(void);
 extern void uninitialize_com(void);
 #endif
+
+int obs_get_room_id()
+{
+	if (!obs) return -1;
+	return obs->room_id;
+}
+
+void obs_set_room_id(int nRoomID)
+{
+	if (obs) { obs->room_id = nRoomID; }
+}
 
 /* Separate from actual context initialization
  * since this can be set before startup and persist

@@ -137,6 +137,10 @@ static inline bool video_output_cur_frame(struct video_output *video)
 		struct video_input *input = video->inputs.array + i;
 		struct video_data frame = frame_info->frame;
 
+		// 注意：改成了更规范的obs_add_raw_video_callback模式...
+		// 注意：交给上层去将原始数据存盘成JPEG文件的模式...
+		//DoProcSaveJpeg(video, &frame);
+
 		if (scale_video_output(input, &frame))
 			input->callback(input->param, &frame);
 	}

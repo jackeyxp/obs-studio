@@ -19,6 +19,7 @@
 #include <stdlib.h>
 
 #include "obs.h"
+#include "obs-scene.h"
 #include "obs-internal.h"
 #include "graphics/vec4.h"
 #include "media-io/format-conversion.h"
@@ -121,8 +122,7 @@ static const char *render_main_texture_name = "render_main_texture";
 static inline void render_main_texture(struct obs_core_video *video)
 {
 	profile_start(render_main_texture_name);
-	GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_MAIN_TEXTURE,
-			      render_main_texture_name);
+	GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_MAIN_TEXTURE, render_main_texture_name);
 
 	struct vec4 clear_color;
 	vec4_set(&clear_color, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -138,8 +138,7 @@ static inline void render_main_texture(struct obs_core_video *video)
 		struct draw_callback *callback;
 		callback = obs->data.draw_callbacks.array + (i - 1);
 
-		callback->draw(callback->param, video->base_width,
-			       video->base_height);
+		callback->draw(callback->param, video->base_width, video->base_height);
 	}
 
 	pthread_mutex_unlock(&obs->data.draw_callbacks_mutex);
@@ -152,8 +151,305 @@ static inline void render_main_texture(struct obs_core_video *video)
 	profile_end(render_main_texture_name);
 }
 
-static inline gs_effect_t *
-get_scale_effect_internal(struct obs_core_video *video)
+// 枚举所有的数据源对象，找到第一个场景数据源对象...
+static inline obs_scene_t * doFindSceneSource()
+{
+	pthread_mutex_lock(&obs->data.sources_mutex);
+	obs_source_t * source = obs->data.first_source;
+	obs_scene_t * scence = NULL;
+	while (source) {
+		obs_source_t *next_source = (obs_source_t*)source->context.next;
+		if (source->info.type == OBS_SOURCE_TYPE_SCENE) {
+			scence = obs_scene_from_source(source);
+			break;
+		}
+		source = next_source;
+	}
+	pthread_mutex_unlock(&obs->data.sources_mutex);
+	return scence;
+}
+
+// 遍历场景数据源列表，找到第一个0点位置的数据源...
+static inline bool doEnumZeroSource(obs_scene_t *scence, obs_sceneitem_t *item, void *param)
+{
+	struct vec2 posDisp = { 0 };
+	obs_sceneitem_get_pos(item, &posDisp);
+	bool bIsFloated = obs_sceneitem_floated(item);
+	obs_sceneitem_t ** out_item = (obs_sceneitem_t**)(param);
+	if (posDisp.x <= 0.0f && posDisp.y <= 0.0f && !bIsFloated) {
+		*out_item = item;
+		return false;
+	}
+	return true;
+}
+
+struct float_item_info {
+	DARRAY(obs_sceneitem_t*) arrFloatItem;
+};
+typedef struct float_item_info float_item_info_t;
+
+// 遍历场景数据源列表，找到所有的浮动数据源对象...
+static inline bool doEnumFloatSource(obs_scene_t *scence, obs_sceneitem_t *item, void *param)
+{
+	float_item_info_t * out_info = (float_item_info_t*)(param);
+	if (obs_sceneitem_floated(item)) {
+		da_push_back(out_info->arrFloatItem, &item);
+	}
+	return true;
+}
+
+static void calculate_bounds_data(struct obs_scene_item *item,
+	struct vec2 *bounds, struct vec2 *origin,
+	struct vec2 *scale, uint32_t *cx, uint32_t *cy)
+{
+	float    width = (float)(*cx) * fabsf(scale->x);
+	float    height = (float)(*cy) * fabsf(scale->y);
+	float    item_aspect = width / height;
+	float    bounds_aspect = bounds->x / bounds->y;
+	uint32_t bounds_type = item->bounds_type;
+	float    width_diff, height_diff;
+
+	if (item->bounds_type == OBS_BOUNDS_MAX_ONLY)
+		if (width > bounds->x || height > bounds->y)
+			bounds_type = OBS_BOUNDS_SCALE_INNER;
+
+	if (bounds_type == OBS_BOUNDS_SCALE_INNER ||
+		bounds_type == OBS_BOUNDS_SCALE_OUTER) {
+		bool  use_width = (bounds_aspect < item_aspect);
+		float mul;
+
+		if (item->bounds_type == OBS_BOUNDS_SCALE_OUTER)
+			use_width = !use_width;
+
+		mul = use_width ?
+			bounds->x / width :
+			bounds->y / height;
+
+		vec2_mulf(scale, scale, mul);
+	}
+	else if (bounds_type == OBS_BOUNDS_SCALE_TO_WIDTH) {
+		vec2_mulf(scale, scale, bounds->x / width);
+	}
+	else if (bounds_type == OBS_BOUNDS_SCALE_TO_HEIGHT) {
+		vec2_mulf(scale, scale, bounds->y / height);
+	}
+	else if (bounds_type == OBS_BOUNDS_STRETCH) {
+		scale->x = bounds->x / (float)(*cx);
+		scale->y = bounds->y / (float)(*cy);
+	}
+
+	width = (float)(*cx) * scale->x;
+	height = (float)(*cy) * scale->y;
+	width_diff = bounds->x - width;
+	height_diff = bounds->y - height;
+	*cx = (uint32_t)bounds->x;
+	*cy = (uint32_t)bounds->y;
+
+	add_alignment(origin, item->bounds_align, (int)-width_diff, (int)-height_diff);
+}
+
+static inline uint32_t calc_cx(const struct obs_scene_item *item, uint32_t width)
+{
+	uint32_t crop_cx = item->crop.left + item->crop.right;
+	return (crop_cx > width) ? 2 : (width - crop_cx);
+}
+
+static inline uint32_t calc_cy(const struct obs_scene_item *item, uint32_t height)
+{
+	uint32_t crop_cy = item->crop.top + item->crop.bottom;
+	return (crop_cy > height) ? 2 : (height - crop_cy);
+}
+
+// 计算第一个0点位置的数据源临时变换矩阵...
+static inline void doCalcDrawTransform(obs_sceneitem_t * item, struct vec2 *pos, struct vec2 * bounds, struct matrix4 * out_transform)
+{
+	uint32_t        width = obs_source_get_width(item->source);
+	uint32_t        height = obs_source_get_height(item->source);
+	uint32_t        cx = calc_cx(item, width);
+	uint32_t        cy = calc_cy(item, height);
+	struct vec2     base_origin;
+	struct vec2     origin;
+	struct vec2     scale = item->scale;
+
+	width = cx;
+	height = cy;
+
+	vec2_zero(&base_origin);
+	vec2_zero(&origin);
+
+	if (item->bounds_type != OBS_BOUNDS_NONE) {
+		calculate_bounds_data(item, bounds, &origin, &scale, &cx, &cy);
+	}
+	else {
+		cx = (uint32_t)((float)cx * scale.x);
+		cy = (uint32_t)((float)cy * scale.y);
+	}
+
+	add_alignment(&origin, item->align, (int)cx, (int)cy);
+
+	matrix4_identity(out_transform);
+	matrix4_scale3f(out_transform, out_transform, scale.x, scale.y, 1.0f);
+	matrix4_translate3f(out_transform, out_transform, -origin.x, -origin.y, 0.0f);
+	matrix4_rotate_aa4f(out_transform, out_transform, 0.0f, 0.0f, 1.0f, RAD(item->rot));
+	matrix4_translate3f(out_transform, out_transform, pos->x, pos->y, 0.0f);
+}
+
+static inline void render_item_texture(struct obs_scene_item *item)
+{
+	gs_texture_t *tex = gs_texrender_get_texture(item->item_render);
+	gs_effect_t *effect = obs->video.default_effect;
+	enum obs_scale_type type = item->scale_filter;
+	uint32_t cx = gs_texture_get_width(tex);
+	uint32_t cy = gs_texture_get_height(tex);
+
+	if (type != OBS_SCALE_DISABLE) {
+		if (type == OBS_SCALE_POINT) {
+			gs_eparam_t *image = gs_effect_get_param_by_name(effect, "image");
+			gs_effect_set_next_sampler(image, obs->video.point_sampler);
+
+		}
+		else if (!close_float(item->output_scale.x, 1.0f, EPSILON) ||
+			!close_float(item->output_scale.y, 1.0f, EPSILON)) {
+			gs_eparam_t *scale_param;
+
+			if (item->output_scale.x < 0.5f || item->output_scale.y < 0.5f) {
+				effect = obs->video.bilinear_lowres_effect;
+			}
+			else if (type == OBS_SCALE_BICUBIC) {
+				effect = obs->video.bicubic_effect;
+			}
+			else if (type == OBS_SCALE_LANCZOS) {
+				effect = obs->video.lanczos_effect;
+			}
+
+			scale_param = gs_effect_get_param_by_name(effect, "base_dimension_i");
+			if (scale_param) {
+				struct vec2 base_res_i = { 1.0f / (float)cx, 1.0f / (float)cy };
+				gs_effect_set_vec2(scale_param, &base_res_i);
+			}
+		}
+	}
+
+	while (gs_effect_loop(effect, "Draw")) {
+		obs_source_draw(tex, 0, 0, 0, 0, 0);
+	}
+}
+
+static inline void render_export_source(struct vec2 *pos, struct vec2 *bounds, obs_sceneitem_t *item)
+{
+	// 如果输入对象无效，或者，没有找到对应的数据源对象，直接返回...
+	obs_source_t * source = obs_sceneitem_get_source(item);
+	if (bounds == NULL || source == NULL)
+		return;
+	// 计算数据源在绘制画布上的缩放矩阵...
+	struct matrix4 draw_transform = { 0 };
+	doCalcDrawTransform(item, pos, bounds, &draw_transform);
+	// 这里解决裁剪问题 => obs-scene.c:render_item()...
+	if (item->item_render) {
+		uint32_t width = obs_source_get_width(item->source);
+		uint32_t height = obs_source_get_height(item->source);
+		uint32_t cx = calc_cx(item, width);
+		uint32_t cy = calc_cy(item, height);
+
+		if (cx && cy && gs_texrender_begin(item->item_render, cx, cy)) {
+			float cx_scale = (float)width / (float)cx;
+			float cy_scale = (float)height / (float)cy;
+			struct vec4 clear_color;
+
+			vec4_zero(&clear_color);
+			gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
+			gs_ortho(0.0f, (float)width, 0.0f, (float)height, -100.0f, 100.0f);
+
+			gs_matrix_scale3f(cx_scale, cy_scale, 1.0f);
+			gs_matrix_translate3f(-(float)item->crop.left, -(float)item->crop.top, 0.0f);
+
+			// 新版本去掉了状态保护...
+			//gs_blend_state_push();
+			//gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+			obs_source_video_render(item->source);
+			//gs_blend_state_pop();
+			gs_texrender_end(item->item_render);
+		}
+	}
+
+	// 保存并更新变换矩阵...
+	gs_matrix_push();
+	gs_matrix_mul(&draw_transform);
+	// 将数据源渲染到设定的渲染画布上面...
+	if (item->item_render) {
+		render_item_texture(item);
+	} else {
+		obs_source_video_render(source);
+	}
+	// 恢复变换矩阵...
+	gs_matrix_pop();
+}
+
+// 将第一个0点位置的数据源渲染到特定的输出纹理对象当中...
+static const char *render_export_texture_name = "render_export_texture";
+static inline void render_export_texture(struct obs_core_video *video)
+{
+	// 如果是屏幕模式，直接返回...
+	if (video->ovi.screen_mode)
+		return;
+	// 开始记录执行函数的名称...
+	profile_start(render_export_texture_name);
+	// 找到第一个0点数据源和第一个浮动数据源...
+	obs_sceneitem_t * lpZeroSceneItem = NULL;
+	obs_scene_t * lpCurScene = doFindSceneSource();
+	obs_scene_enum_items(lpCurScene, doEnumZeroSource, &lpZeroSceneItem);
+	// 遍历场景数据源列表，找到所有的浮动数据源对象...
+	float_item_info_t info; da_init(info.arrFloatItem);
+	obs_scene_enum_items(lpCurScene, doEnumFloatSource, &info);
+	// 设置背景色...
+	struct vec4 clear_color;
+	vec4_set(&clear_color, 0.0f, 0.0f, 0.0f, 0.0f);
+	// 设置渲染目标纹理对象...
+	gs_set_render_target(video->export_texture, NULL);
+	gs_clear(GS_CLEAR_COLOR, &clear_color, 1.0f, 0);
+	// 设定并初始化渲染画布大小...
+	set_render_size(video->base_width, video->base_height);
+	// 保存并初始化当前变换状态...
+	gs_blend_state_push();
+	gs_reset_blend_state();
+	// 注意：位置和界限都是临时计算...
+	// 绘制0点数据源对象，界限是整个画布...
+	struct vec2 dstPos = { 0 }, srcPos = { 0 };
+	struct vec2 dstBounds = { 0 }, srcBounds = { 0 };
+	vec2_set(&dstBounds, (float)video->base_width, (float)video->base_height);
+	obs_sceneitem_get_bounds(lpZeroSceneItem, &srcBounds);
+	render_export_source(&dstPos, &dstBounds, lpZeroSceneItem);
+	// 计算0点数据源长宽拉升比例，会应用到浮动数据源当中...
+	float xScale = srcBounds.x / dstBounds.x;
+	float yScale = srcBounds.y / dstBounds.y;
+	// 注意：位置和界限都是临时计算，绘制在渲染画布，并不改变场景元素的真实数据...
+	// 绘制浮动数据源对象，界限是场景自身 => 必须是可见状态才绘制...
+	for (size_t i = 0; i < info.arrFloatItem.num; i++) {
+		obs_sceneitem_t * lpFloatSceneItem = info.arrFloatItem.array[i];
+		if (!obs_sceneitem_visible(lpFloatSceneItem))
+			continue;
+		// 获取浮动窗口的当前矩形区域和当前坐标位置...
+		obs_sceneitem_get_bounds(lpFloatSceneItem, &srcBounds);
+		obs_sceneitem_get_pos(lpFloatSceneItem, &srcPos);
+		// 重新计算临时的显示位置和显示界限区域...
+		dstBounds.x = srcBounds.x / xScale;
+		dstBounds.y = srcBounds.y / yScale;
+		dstPos.x = srcPos.x / xScale;
+		dstPos.y = srcPos.y / yScale;
+		// 用临时计算的位置和界限绘制浮动数据源对象...
+		render_export_source(&dstPos, &dstBounds, lpFloatSceneItem);
+	}
+	// 需要释放浮动数组对象...
+	da_free(info.arrFloatItem);
+	// 恢复变换状态...
+	gs_blend_state_pop();
+	// 设定当前渲染纹理状态...
+	video->texture_exported = true;
+	// 结束记录执行函数...
+	profile_end(render_export_texture_name);
+}
+
+static inline gs_effect_t * get_scale_effect_internal(struct obs_core_video *video)
 {
 	/* if the dimension is under half the size of the original image,
 	 * bicubic/lanczos can't sample enough pixels to create an accurate
@@ -206,7 +502,8 @@ static inline gs_effect_t *get_scale_effect(struct obs_core_video *video,
 static const char *render_output_texture_name = "render_output_texture";
 static inline gs_texture_t *render_output_texture(struct obs_core_video *video)
 {
-	gs_texture_t *texture = video->render_texture;
+	// 注意：这里改用了专门特定的输出纹理对象 => 只渲染第一个0点位置的数据源...
+	gs_texture_t *texture = video->ovi.screen_mode ? video->render_texture : video->export_texture;
 	gs_texture_t *target = video->output_texture;
 	uint32_t width = gs_texture_get_width(target);
 	uint32_t height = gs_texture_get_height(target);
@@ -228,10 +525,8 @@ static inline gs_texture_t *render_output_texture(struct obs_core_video *video)
 	profile_start(render_output_texture_name);
 
 	gs_eparam_t *image = gs_effect_get_param_by_name(effect, "image");
-	gs_eparam_t *bres =
-		gs_effect_get_param_by_name(effect, "base_dimension");
-	gs_eparam_t *bres_i =
-		gs_effect_get_param_by_name(effect, "base_dimension_i");
+	gs_eparam_t *bres = gs_effect_get_param_by_name(effect, "base_dimension");
+	gs_eparam_t *bres_i = gs_effect_get_param_by_name(effect, "base_dimension_i");
 	size_t passes, i;
 
 	gs_set_render_target(target, NULL);
@@ -239,15 +534,13 @@ static inline gs_texture_t *render_output_texture(struct obs_core_video *video)
 
 	if (bres) {
 		struct vec2 base;
-		vec2_set(&base, (float)video->base_width,
-			 (float)video->base_height);
+		vec2_set(&base, (float)video->base_width, (float)video->base_height);
 		gs_effect_set_vec2(bres, &base);
 	}
 
 	if (bres_i) {
 		struct vec2 base_i;
-		vec2_set(&base_i, 1.0f / (float)video->base_width,
-			 1.0f / (float)video->base_height);
+		vec2_set(&base_i, 1.0f / (float)video->base_width, 1.0f / (float)video->base_height);
 		gs_effect_set_vec2(bres_i, &base_i);
 	}
 
@@ -295,12 +588,9 @@ static void render_convert_texture(struct obs_core_video *video,
 	profile_start(render_convert_texture_name);
 
 	gs_effect_t *effect = video->conversion_effect;
-	gs_eparam_t *color_vec0 =
-		gs_effect_get_param_by_name(effect, "color_vec0");
-	gs_eparam_t *color_vec1 =
-		gs_effect_get_param_by_name(effect, "color_vec1");
-	gs_eparam_t *color_vec2 =
-		gs_effect_get_param_by_name(effect, "color_vec2");
+	gs_eparam_t *color_vec0 = gs_effect_get_param_by_name(effect, "color_vec0");
+	gs_eparam_t *color_vec1 = gs_effect_get_param_by_name(effect, "color_vec1");
+	gs_eparam_t *color_vec2 = gs_effect_get_param_by_name(effect, "color_vec2");
 	gs_eparam_t *image = gs_effect_get_param_by_name(effect, "image");
 	gs_eparam_t *width_i = gs_effect_get_param_by_name(effect, "width_i");
 
@@ -324,8 +614,9 @@ static void render_convert_texture(struct obs_core_video *video,
 		if (video->convert_textures[1]) {
 			gs_effect_set_texture(image, texture);
 			gs_effect_set_vec4(color_vec1, &vec1);
-			if (!video->convert_textures[2])
+			if (!video->convert_textures[2]) {
 				gs_effect_set_vec4(color_vec2, &vec2);
+			}
 			gs_effect_set_float(width_i, video->conversion_width_i);
 			render_convert_plane(effect, texture,
 					     video->convert_textures[1],
@@ -334,10 +625,8 @@ static void render_convert_texture(struct obs_core_video *video,
 			if (video->convert_textures[2]) {
 				gs_effect_set_texture(image, texture);
 				gs_effect_set_vec4(color_vec2, &vec2);
-				gs_effect_set_float(width_i,
-						    video->conversion_width_i);
-				render_convert_plane(
-					effect, texture,
+				gs_effect_set_float(width_i, video->conversion_width_i);
+				render_convert_plane(effect, texture,
 					video->convert_textures[2],
 					video->conversion_techs[2]);
 			}
@@ -352,8 +641,7 @@ static void render_convert_texture(struct obs_core_video *video,
 }
 
 static const char *stage_output_texture_name = "stage_output_texture";
-static inline void stage_output_texture(struct obs_core_video *video,
-					int cur_texture)
+static inline void stage_output_texture(struct obs_core_video *video, int cur_texture)
 {
 	profile_start(stage_output_texture_name);
 
@@ -367,11 +655,9 @@ static inline void stage_output_texture(struct obs_core_video *video,
 		video->textures_copied[cur_texture] = true;
 	} else if (video->texture_converted) {
 		for (int i = 0; i < NUM_CHANNELS; i++) {
-			gs_stagesurf_t *copy =
-				video->copy_surfaces[cur_texture][i];
+			gs_stagesurf_t *copy = video->copy_surfaces[cur_texture][i];
 			if (copy)
-				gs_stage_texture(copy,
-						 video->convert_textures[i]);
+				gs_stage_texture(copy, video->convert_textures[i]);
 		}
 
 		video->textures_copied[cur_texture] = true;
@@ -484,6 +770,7 @@ static inline void render_video(struct obs_core_video *video, bool raw_active,
 	render_main_texture(video);
 
 	if (raw_active || gpu_active) {
+		render_export_texture(video);
 		gs_texture_t *texture = render_output_texture(video);
 
 #ifdef _WIN32
@@ -687,8 +974,7 @@ static inline void output_video_data(struct obs_core_video *video,
 }
 
 static inline void video_sleep(struct obs_core_video *video, bool raw_active,
-			       const bool gpu_active, uint64_t *p_time,
-			       uint64_t interval_ns)
+			       const bool gpu_active, uint64_t *p_time, uint64_t interval_ns)
 {
 	struct obs_vframe_info vframe_info;
 	uint64_t cur_time = *p_time;
@@ -709,7 +995,7 @@ static inline void video_sleep(struct obs_core_video *video, bool raw_active,
 	vframe_info.timestamp = cur_time;
 	vframe_info.count = count;
 
-	if (raw_active)
+	if (raw_active && !video->ovi.screen_mode)
 		circlebuf_push_back(&video->vframe_info_buffer, &vframe_info,
 				    sizeof(vframe_info));
 	if (gpu_active)
@@ -726,8 +1012,7 @@ static inline void output_frame(bool raw_active, const bool gpu_active)
 {
 	struct obs_core_video *video = &obs->video;
 	int cur_texture = video->cur_texture;
-	int prev_texture = cur_texture == 0 ? NUM_TEXTURES - 1
-					    : cur_texture - 1;
+	int prev_texture = cur_texture == 0 ? NUM_TEXTURES - 1 : cur_texture - 1;
 	struct video_data frame;
 	bool frame_ready = 0;
 
@@ -737,8 +1022,7 @@ static inline void output_frame(bool raw_active, const bool gpu_active)
 	gs_enter_context(video->graphics);
 
 	profile_start(output_frame_render_video_name);
-	GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_RENDER_VIDEO,
-			      output_frame_render_video_name);
+	GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_RENDER_VIDEO, output_frame_render_video_name);
 	render_video(video, raw_active, gpu_active, cur_texture);
 	GS_DEBUG_MARKER_END();
 	profile_end(output_frame_render_video_name);
@@ -758,8 +1042,12 @@ static inline void output_frame(bool raw_active, const bool gpu_active)
 
 	if (raw_active && frame_ready) {
 		struct obs_vframe_info vframe_info;
-		circlebuf_pop_front(&video->vframe_info_buffer, &vframe_info,
-				    sizeof(vframe_info));
+		if (video->vframe_info_buffer.size > 0) {
+			circlebuf_pop_front(&video->vframe_info_buffer, &vframe_info, sizeof(vframe_info));
+		} else {
+			vframe_info.timestamp = video->video_time;
+			vframe_info.count = 1;
+		}
 
 		frame.timestamp = vframe_info.timestamp;
 		profile_start(output_frame_output_video_data_name);
@@ -777,6 +1065,7 @@ static void clear_base_frame_data(void)
 {
 	struct obs_core_video *video = &obs->video;
 	video->texture_rendered = false;
+	video->texture_exported = false;
 	video->texture_converted = false;
 	circlebuf_free(&video->vframe_info_buffer);
 	video->cur_texture = 0;
@@ -818,8 +1107,8 @@ void *obs_graphics_thread(void *param)
 
 	os_set_thread_name("libobs: graphics thread");
 
-	const char *video_thread_name = profile_store_name(
-		obs_get_profiler_name_store(),
+	const char *video_thread_name =
+		profile_store_name(obs_get_profiler_name_store(),
 		"obs_graphics_thread(%g" NBSP "ms)", interval / 1000000.);
 	profile_register_root(video_thread_name, interval);
 
@@ -878,12 +1167,10 @@ void *obs_graphics_thread(void *param)
 		fps_total_frames++;
 
 		if (fps_total_ns >= 1000000000ULL) {
-			obs->video.video_fps =
-				(double)fps_total_frames /
+			obs->video.video_fps = (double)fps_total_frames /
 				((double)fps_total_ns / 1000000000.0);
 			obs->video.video_avg_frame_time_ns =
-				frame_time_total_ns /
-				(uint64_t)fps_total_frames;
+				frame_time_total_ns / (uint64_t)fps_total_frames;
 
 			frame_time_total_ns = 0;
 			fps_total_ns = 0;

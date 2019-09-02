@@ -172,6 +172,7 @@ struct obs_video_info {
 
 	/** Use shaders to convert to different color formats */
 	bool gpu_conversion;
+	bool screen_mode;
 
 	enum video_colorspace colorspace; /**< YUV type (if YUV) */
 	enum video_range_type range;      /**< YUV range (if YUV) */
@@ -303,6 +304,9 @@ EXPORT bool obs_remove_data_path(const char *path);
  */
 EXPORT bool obs_startup(const char *locale, const char *module_config_path,
 			profiler_name_store_t *store);
+
+EXPORT int  obs_get_room_id();
+EXPORT void obs_set_room_id(int nRoomID);
 
 /** Releases all data associated with OBS and terminates the OBS context */
 EXPORT void obs_shutdown(void);
@@ -1128,6 +1132,12 @@ EXPORT void obs_source_set_monitoring_type(obs_source_t *source,
 					   enum obs_monitoring_type type);
 EXPORT enum obs_monitoring_type
 obs_source_get_monitoring_type(const obs_source_t *source);
+
+/** Create the scene's monitor object */
+EXPORT bool obs_scene_create_monitor(const obs_scene_t *scene, int mix_idx);
+
+/** Destory the scene's monitor object */
+EXPORT bool obs_scene_destory_monitor(const obs_scene_t *scene, int mix_idx);
 
 /** Gets private front-end settings data.  This data is saved/loaded
  * automatically.  Returns an incremented reference. */

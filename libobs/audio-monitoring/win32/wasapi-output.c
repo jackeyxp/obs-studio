@@ -31,6 +31,7 @@ struct audio_monitor {
 	audio_resampler_t *resampler;
 	uint32_t sample_rate;
 	uint32_t channels;
+	enum speaker_layout speakers;
 	bool source_has_video;
 	bool ignore;
 
@@ -124,11 +125,47 @@ static bool process_audio_delay(struct audio_monitor *monitor, float **data,
 			continue;
 		}
 
+		// 注意：这种直接丢帧方式需要优化，应该采用加速播放或减速播放的方式，而不是直接丢帧...
+		// 播放内部遗留缓存超过 75 毫秒，就不能继续投递数据，直接丢弃，继续使用已投递播放缓存里面的数据...
+		int64_t pad_ns_buff = (uint64_t)pad * 1000000000ULL / (uint64_t)monitor->sample_rate;
+		if (pad_ns_buff >= 75 * 1000000) {
+#ifdef DEBUG_AUDIO
+			blog(LOG_DEBUG, "audio delay, diff: %lld, delay buffer size: %lu,"
+				"v: %llu : a : %llu : pad_ns_buff: %llu, pad: %lu",
+				diff, (int)monitor->delay_buffer.size, last_frame_ts,
+				front_ts, pad_ns_buff, pad);
+#endif
+			return false;
+		}
+
 		*data = monitor->buf.array;
 		return true;
 	}
 
 	return false;
+}
+
+// 枚举所有的音频数据源对象，找到麦克风对象，投递数据，进行回音消除...
+// 注意：不要用obs_enum_sources，互斥data.sources_mutex会跟rtp-source发生互锁...
+void doPushEchoDataToMic(struct obs_source_audio * lpObsAudio)
+{
+	struct obs_source *source;
+	struct obs_core_data *data = &obs->data;
+	pthread_mutex_lock(&data->audio_sources_mutex);
+	source = data->first_audio_source;
+	while (source) {
+		// 如果找到数据源是麦克风输入对象，投递数据，退出...
+		if (astrcmpi(obs_source_get_id(source), "wasapi_input_capture") == 0) {
+			// 如果找到的数据源是麦克风输入对象，查看投递接口是否有效，有效进行数据投递...
+			if (source->context.data && source->info.filter_audio) {
+				source->info.filter_audio(source->context.data, (struct obs_audio_data*)lpObsAudio);
+				break;
+			}
+		}
+		// 继续寻找麦克风数据源对象...
+		source = (struct obs_source*)source->next_audio_source;
+	}
+	pthread_mutex_unlock(&data->audio_sources_mutex);
 }
 
 static void on_audio_playback(void *param, obs_source_t *source,
@@ -173,8 +210,7 @@ static void on_audio_playback(void *param, obs_source_t *source,
 		}
 	}
 
-	HRESULT hr =
-		render->lpVtbl->GetBuffer(render, resample_frames, &output);
+	HRESULT hr = render->lpVtbl->GetBuffer(render, resample_frames, &output);
 	if (FAILED(hr)) {
 		goto unlock;
 	}
@@ -183,14 +219,32 @@ static void on_audio_playback(void *param, obs_source_t *source,
 		/* apply volume */
 		if (!close_float(vol, 1.0f, EPSILON)) {
 			register float *cur = (float *)resample_data[0];
-			register float *end =
-				cur + resample_frames * monitor->channels;
+			register float *end = cur + resample_frames * monitor->channels;
 
 			while (cur < end)
 				*(cur++) *= vol;
 		}
-		memcpy(output, resample_data[0],
-		       resample_frames * monitor->channels * sizeof(float));
+
+		// 将转换后的音频数据投递到监视器(扬声器)的缓冲区当中...
+		memcpy(output, resample_data[0], resample_frames * monitor->channels * sizeof(float));
+
+		// (思路错误)注意：目前进行了全新升级 => 所有播放音频混合到轨道3，进行统一的播放，都放到scene场景下面的source当中...
+		// (思路错误)注意：不能用obs自带的直接多路监视音频，再进行多路单独输入回音消除，这种方式回音消除效果很不好...
+		// (思路错误)注意：新的归一化之后，就不用进行焦点处理了，所有音频数据直接投递进行回音消除就可以了...
+		// (最新思路)注意：暂时不能用scene播放音频，只能用数据源混音模式，而不是输出音频混音模式...
+		//assert(astrcmpi(source->info.id, "scene") == 0);
+		if (astrcmpi(source->info.id, "rtp_source") == 0) {
+			// 构造需要投递给麦克风数据源的结构体 => 样本总是float格式...
+			struct obs_source_audio theEchoData = { 0 };
+			theEchoData.data[0] = resample_data[0];
+			theEchoData.frames = resample_frames;
+			theEchoData.format = AUDIO_FORMAT_FLOAT;
+			theEchoData.speakers = monitor->speakers;
+			theEchoData.samples_per_sec = monitor->sample_rate;
+			theEchoData.timestamp = audio_data->timestamp;
+			// 枚举所有的音频数据源对象，找到麦克风，进行回音消除...
+			doPushEchoDataToMic(&theEchoData);
+		}
 	}
 
 	render->lpVtbl->ReleaseBuffer(render, resample_frames,
@@ -330,11 +384,11 @@ static bool audio_monitor_init(struct audio_monitor *monitor,
 	from.format = AUDIO_FORMAT_FLOAT_PLANAR;
 
 	to.samples_per_sec = (uint32_t)wfex->nSamplesPerSec;
-	to.speakers =
-		convert_speaker_layout(ext->dwChannelMask, wfex->nChannels);
+	to.speakers = convert_speaker_layout(ext->dwChannelMask, wfex->nChannels);
 	to.format = AUDIO_FORMAT_FLOAT;
 
 	monitor->sample_rate = (uint32_t)wfex->nSamplesPerSec;
+	monitor->speakers = to.speakers;
 	monitor->channels = wfex->nChannels;
 	monitor->resampler = audio_resampler_create(&to, &from);
 	if (!monitor->resampler) {
@@ -378,11 +432,14 @@ static void audio_monitor_init_final(struct audio_monitor *monitor)
 {
 	if (monitor->ignore)
 		return;
+	// 判断是否是 obs_scene_t 的接口 => obs_scene_from_source(monitor->source);
+	// 注意：这里保持原样，如果是scene下面的source，必然包含视频标志，仍然需要以视频为基础对音频进行同步处理...
+	monitor->source_has_video = (monitor->source->info.output_flags & OBS_SOURCE_VIDEO) != 0;
 
-	monitor->source_has_video =
-		(monitor->source->info.output_flags & OBS_SOURCE_VIDEO) != 0;
-	obs_source_add_audio_capture_callback(monitor->source,
-					      on_audio_playback, monitor);
+	//bool source_has_video = (monitor->source->info.output_flags & OBS_SOURCE_VIDEO) != 0;
+	//monitor->source_has_video = (obs_scene_from_source(monitor->source) ? false : source_has_video);
+
+	obs_source_add_audio_capture_callback(monitor->source, on_audio_playback, monitor);
 }
 
 struct audio_monitor *audio_monitor_create(obs_source_t *source)

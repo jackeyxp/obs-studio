@@ -63,6 +63,7 @@ static inline void mix_audio(struct audio_output_data *mixes,
 		total_floats -= start_point;
 	}
 
+	// 混合全部轨道，每个轨道混合有效声道 => source已经做了有效轨道处理，无效轨道数据重置为0
 	for (size_t mix_idx = 0; mix_idx < MAX_AUDIO_MIXES; mix_idx++) {
 		for (size_t ch = 0; ch < channels; ch++) {
 			register float *mix = mixes[mix_idx].data[ch];
