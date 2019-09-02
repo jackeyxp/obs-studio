@@ -685,11 +685,15 @@ bool SimpleOutput::StartStreaming(obs_service_t *service)
 	/*Auth *auth = main->GetAuth();
 	if (auth) auth->OnStreamConfig();*/
 
-	/* --------------------- */
+	// 注意：这里直接指定使用rtp输出流...
+	const char * type = "rtp_output";
 
+	////////////////////////////////////////////////////////////////////
+	/*// obs采用默认的rtmp输出流...
 	const char *type = obs_service_get_output_type(service);
 	if (!type)
-		type = "rtmp_output";
+		type = "rtmp_output";*/
+	////////////////////////////////////////////////////////////////////
 
 	/* XXX: this is messy and disgusting and should be refactored */
 	if (outputType != type) {
@@ -698,13 +702,9 @@ bool SimpleOutput::StartStreaming(obs_service_t *service)
 		startStreaming.Disconnect();
 		stopStreaming.Disconnect();
 
-		streamOutput = obs_output_create(type, "simple_stream", nullptr,
-						 nullptr);
+		streamOutput = obs_output_create(type, "simple_stream", nullptr, nullptr);
 		if (!streamOutput) {
-			blog(LOG_WARNING,
-			     "Creation of stream output type '%s' "
-			     "failed!",
-			     type);
+			blog(LOG_WARNING, "Creation of stream output type '%s' failed!", type);
 			return false;
 		}
 		obs_output_release(streamOutput);
@@ -723,36 +723,29 @@ bool SimpleOutput::StartStreaming(obs_service_t *service)
 			obs_output_get_signal_handler(streamOutput), "stop",
 			OBSStopStreaming, this);
 
-		bool isEncoded = obs_output_get_flags(streamOutput) &
-				 OBS_OUTPUT_ENCODED;
+		bool isEncoded = obs_output_get_flags(streamOutput) & OBS_OUTPUT_ENCODED;
 
 		if (isEncoded) {
-			const char *codec =
-				obs_output_get_supported_audio_codecs(
-					streamOutput);
+			const char *codec = obs_output_get_supported_audio_codecs(streamOutput);
 			if (!codec) {
 				blog(LOG_WARNING, "Failed to load audio codec");
 				return false;
 			}
 
 			if (strcmp(codec, "aac") != 0) {
-				const char *id =
-					FindAudioEncoderFromCodec(codec);
+				const char *id = FindAudioEncoderFromCodec(codec);
 				int audioBitrate = GetAudioBitrate();
 				obs_data_t *settings = obs_data_create();
-				obs_data_set_int(settings, "bitrate",
-						 audioBitrate);
+				obs_data_set_int(settings, "bitrate", audioBitrate);
 
 				aacStreaming = obs_audio_encoder_create(
-					id, "alt_audio_enc", nullptr, 0,
-					nullptr);
+					id, "alt_audio_enc", nullptr, 0, nullptr);
 				obs_encoder_release(aacStreaming);
 				if (!aacStreaming)
 					return false;
 
 				obs_encoder_update(aacStreaming, settings);
-				obs_encoder_set_audio(aacStreaming,
-						      obs_get_audio());
+				obs_encoder_set_audio(aacStreaming, obs_get_audio());
 
 				obs_data_release(settings);
 			}
@@ -768,32 +761,32 @@ bool SimpleOutput::StartStreaming(obs_service_t *service)
 	/* --------------------- */
 
 	bool reconnect = config_get_bool(main->Config(), "Output", "Reconnect");
-	int retryDelay =
-		config_get_uint(main->Config(), "Output", "RetryDelay");
-	int maxRetries =
-		config_get_uint(main->Config(), "Output", "MaxRetries");
-	bool useDelay =
-		config_get_bool(main->Config(), "Output", "DelayEnable");
+	int retryDelay = config_get_uint(main->Config(), "Output", "RetryDelay");
+	int maxRetries = config_get_uint(main->Config(), "Output", "MaxRetries");
+	bool useDelay = config_get_bool(main->Config(), "Output", "DelayEnable");
 	int delaySec = config_get_int(main->Config(), "Output", "DelaySec");
-	bool preserveDelay =
-		config_get_bool(main->Config(), "Output", "DelayPreserve");
-	const char *bindIP =
-		config_get_string(main->Config(), "Output", "BindIP");
-	bool enableNewSocketLoop = config_get_bool(main->Config(), "Output",
-						   "NewSocketLoopEnable");
-	bool enableLowLatencyMode =
-		config_get_bool(main->Config(), "Output", "LowLatencyEnable");
-	bool enableDynBitrate =
-		config_get_bool(main->Config(), "Output", "DynamicBitrate");
+	bool preserveDelay = config_get_bool(main->Config(), "Output", "DelayPreserve");
+	const char *bindIP = config_get_string(main->Config(), "Output", "BindIP");
+	bool enableNewSocketLoop = config_get_bool(main->Config(), "Output", "NewSocketLoopEnable");
+	bool enableLowLatencyMode = config_get_bool(main->Config(), "Output", "LowLatencyEnable");
+	bool enableDynBitrate = config_get_bool(main->Config(), "Output", "DynamicBitrate");
 
+	// 创建输出配置结构体对象...
 	obs_data_t *settings = obs_data_create();
 	obs_data_set_string(settings, "bind_ip", bindIP);
-	obs_data_set_bool(settings, "new_socket_loop_enabled",
-			  enableNewSocketLoop);
-	obs_data_set_bool(settings, "low_latency_mode_enabled",
-			  enableLowLatencyMode);
-	obs_data_set_bool(settings, "dyn_bitrate", enableDynBitrate);
+	obs_data_set_bool(settings, "new_socket_loop_enabled", enableNewSocketLoop);
+	obs_data_set_bool(settings, "low_latency_mode_enabled", enableLowLatencyMode);
+	// 设置rtp推流输出需要的特殊变量 => room_id | udp_addr | udp_port | tcp_socket
+	/*int nLiveRoomID = atoi(App()->GetRoomIDStr().c_str());
+	obs_data_set_int(settings, "room_id", nLiveRoomID);
+	obs_data_set_int(settings, "udp_port", App()->GetUdpPort());
+	obs_data_set_int(settings, "tcp_socket", App()->GetRtpTCPSockFD());
+	obs_data_set_string(settings, "udp_addr", App()->GetUdpAddr().c_str());*/
+	// rtp模式下阻止重连，重连次数修改为0...
+	reconnect = false; maxRetries = 0;
+	// 将新的输出配置应用到当前输出对象当中...
 	obs_output_update(streamOutput, settings);
+	// 释放输出配置结构体对象...
 	obs_data_release(settings);
 
 	if (!reconnect)
@@ -810,10 +803,8 @@ bool SimpleOutput::StartStreaming(obs_service_t *service)
 
 	const char *error = obs_output_get_last_error(streamOutput);
 	bool hasLastError = error && *error;
-	if (hasLastError)
-		lastError = error;
-	else
-		lastError = string();
+	if (hasLastError) lastError = error;
+	else lastError = string();
 
 	blog(LOG_WARNING, "Stream output type '%s' failed to start!%s%s", type,
 	     hasLastError ? "  Last Error: " : "", hasLastError ? error : "");
@@ -874,26 +865,16 @@ void SimpleOutput::UpdateRecording()
 
 bool SimpleOutput::ConfigureRecording(bool updateReplayBuffer)
 {
-	const char *path =
-		config_get_string(main->Config(), "SimpleOutput", "FilePath");
-	const char *format =
-		config_get_string(main->Config(), "SimpleOutput", "RecFormat");
-	const char *mux = config_get_string(main->Config(), "SimpleOutput",
-					    "MuxerCustom");
-	bool noSpace = config_get_bool(main->Config(), "SimpleOutput",
-				       "FileNameWithoutSpace");
-	const char *filenameFormat = config_get_string(main->Config(), "Output",
-						       "FilenameFormatting");
-	bool overwriteIfExists =
-		config_get_bool(main->Config(), "Output", "OverwriteIfExists");
-	const char *rbPrefix = config_get_string(main->Config(), "SimpleOutput",
-						 "RecRBPrefix");
-	const char *rbSuffix = config_get_string(main->Config(), "SimpleOutput",
-						 "RecRBSuffix");
-	int rbTime =
-		config_get_int(main->Config(), "SimpleOutput", "RecRBTime");
-	int rbSize =
-		config_get_int(main->Config(), "SimpleOutput", "RecRBSize");
+	const char *path = config_get_string(main->Config(), "SimpleOutput", "FilePath");
+	const char *format = config_get_string(main->Config(), "SimpleOutput", "RecFormat");
+	const char *mux = config_get_string(main->Config(), "SimpleOutput", "MuxerCustom");
+	bool noSpace = config_get_bool(main->Config(), "SimpleOutput", "FileNameWithoutSpace");
+	const char *filenameFormat = config_get_string(main->Config(), "Output", "FilenameFormatting");
+	bool overwriteIfExists = config_get_bool(main->Config(), "Output", "OverwriteIfExists");
+	const char *rbPrefix = config_get_string(main->Config(), "SimpleOutput", "RecRBPrefix");
+	const char *rbSuffix = config_get_string(main->Config(), "SimpleOutput", "RecRBSuffix");
+	int rbTime = config_get_int(main->Config(), "SimpleOutput", "RecRBTime");
+	int rbSize = config_get_int(main->Config(), "SimpleOutput", "RecRBSize");
 
 	os_dir_t *dir = path && path[0] ? os_opendir(path) : nullptr;
 
@@ -1092,41 +1073,85 @@ static OBSData GetDataFromJsonFile(const char *jsonFile)
 		}
 	}
 
-	if (!data)
+	if (!data) {
 		data = obs_data_create();
+	}
 	OBSData dataRet(data);
 	obs_data_release(data);
 	return dataRet;
 }
 
-static void ApplyEncoderDefaults(OBSData &settings,
-				 const obs_encoder_t *encoder)
+static void ApplyEncoderDefaults(OBSData &settings, const obs_encoder_t *encoder)
 {
 	OBSData dataRet = obs_encoder_get_defaults(encoder);
 	obs_data_release(dataRet);
 
-	if (!!settings)
+	if (!!settings) {
 		obs_data_apply(dataRet, settings);
+	}
 	settings = std::move(dataRet);
+}
+
+static void WriteJsonFromData(obs_data_t * settings)
+{
+	char full_path[512] = { 0 };
+	int ret = GetProfilePath(full_path, sizeof(full_path), "streamEncoder.json");
+	if (ret > 0 && settings != NULL) {
+		obs_data_save_json_safe(settings, full_path, "tmp", "bak");
+	}
 }
 
 AdvancedOutput::AdvancedOutput(OBSBasic *main_) : BasicOutputHandler(main_)
 {
-	const char *recType =
-		config_get_string(main->Config(), "AdvOut", "RecType");
-	const char *streamEncoder =
-		config_get_string(main->Config(), "AdvOut", "Encoder");
-	const char *recordEncoder =
-		config_get_string(main->Config(), "AdvOut", "RecEncoder");
+	const char *recType = config_get_string(main->Config(), "AdvOut", "RecType");
+	const char *streamEncoder = config_get_string(main->Config(), "AdvOut", "Encoder");
+	const char *recordEncoder = config_get_string(main->Config(), "AdvOut", "RecEncoder");
 
 	ffmpegOutput = astrcmpi(recType, "FFmpeg") == 0;
-	ffmpegRecording =
-		ffmpegOutput &&
-		config_get_bool(main->Config(), "AdvOut", "FFOutputToFile");
+	ffmpegRecording = ffmpegOutput && config_get_bool(main->Config(), "AdvOut", "FFOutputToFile");
+
+	// 录像压缩器是否使用跟网络流一样的压缩器 => 默认使用相同压缩器...
 	useStreamEncoder = astrcmpi(recordEncoder, "none") == 0;
 
 	OBSData streamEncSettings = GetDataFromJsonFile("streamEncoder.json");
 	OBSData recordEncSettings = GetDataFromJsonFile("recordEncoder.json");
+
+	// 如果.json文件不存在，创建新的文件，注意释放引用计数...
+	if (streamEncSettings == NULL) {
+		obs_data_t * lpNewData = obs_data_create();
+		streamEncSettings = lpNewData;
+		obs_data_release(lpNewData);
+	}
+	// 从配置当中获取压缩码率、压缩方式、缓存模式...
+	bool bEncSetChanged = false;
+	int nVBitrate = obs_data_get_int(streamEncSettings, "bitrate");
+	const char * lpTune = obs_data_get_string(streamEncSettings, "tune");
+	const char * lpProfile = obs_data_get_string(streamEncSettings, "profile");
+	// 压缩方式为空，设置默认压缩模式...
+	if (lpProfile == NULL || strlen(lpProfile) <= 0) {
+		obs_data_set_string(streamEncSettings, "profile", "baseline");
+		bEncSetChanged = true;
+	}
+	// 缓存模式为空，设置默认缓存模式...
+	if (lpTune == NULL || strlen(lpTune) <= 0) {
+		obs_data_set_string(streamEncSettings, "tune", "zerolatency");
+		bEncSetChanged = true;
+	}
+	// 压缩码率为空，设置模式压缩码率...
+	if (nVBitrate <= 0) {
+		obs_data_set_int(streamEncSettings, "bitrate", 1024);
+		bEncSetChanged = true;
+	}
+	// 关键帧间隔为空，设置默认关键帧间隔 => 通过配置页面，手动配置...
+	/*int nKeyIntSec = obs_data_get_int(streamEncSettings, "keyint_sec");
+	if (nKeyIntSec <= 0) {
+		obs_data_set_int(streamEncSettings, "keyint_sec", 2);
+		bEncSetChanged = true;
+	}*/
+	// 配置放生变化，进行存盘操作...
+	if (bEncSetChanged) {
+		WriteJsonFromData(streamEncSettings);
+	}
 
 	const char *rate_control = obs_data_get_string(
 		useStreamEncoder ? streamEncSettings : recordEncSettings,
@@ -1138,110 +1163,90 @@ AdvancedOutput::AdvancedOutput(OBSBasic *main_) : BasicOutputHandler(main_)
 		      astrcmpi(rate_control, "ABR") == 0;
 
 	if (ffmpegOutput) {
-		fileOutput = obs_output_create(
-			"ffmpeg_output", "adv_ffmpeg_output", nullptr, nullptr);
-		if (!fileOutput)
-			throw "Failed to create recording FFmpeg output "
-			      "(advanced output)";
+		fileOutput = obs_output_create("ffmpeg_output", "adv_ffmpeg_output", nullptr, nullptr);
+		if (!fileOutput) {
+			throw "Failed to create recording FFmpeg output (advanced output)";
+		}
 		obs_output_release(fileOutput);
 	} else {
-		bool useReplayBuffer =
-			config_get_bool(main->Config(), "AdvOut", "RecRB");
+		bool useReplayBuffer = config_get_bool(main->Config(), "AdvOut", "RecRB");
 		if (useReplayBuffer) {
-			const char *str = config_get_string(
-				main->Config(), "Hotkeys", "ReplayBuffer");
+			const char *str = config_get_string(main->Config(), "Hotkeys", "ReplayBuffer");
 			obs_data_t *hotkey = obs_data_create_from_json(str);
 			replayBuffer = obs_output_create("replay_buffer",
-							 Str("ReplayBuffer"),
-							 nullptr, hotkey);
+							 Str("ReplayBuffer"), nullptr, hotkey);
 
 			obs_data_release(hotkey);
-			if (!replayBuffer)
-				throw "Failed to create replay buffer output "
-				      "(simple output)";
+			if (!replayBuffer) {
+				throw "Failed to create replay buffer output (simple output)";
+			}
 			obs_output_release(replayBuffer);
 
-			signal_handler_t *signal =
-				obs_output_get_signal_handler(replayBuffer);
+			signal_handler_t *signal = obs_output_get_signal_handler(replayBuffer);
 
-			startReplayBuffer.Connect(signal, "start",
-						  OBSStartReplayBuffer, this);
-			stopReplayBuffer.Connect(signal, "stop",
-						 OBSStopReplayBuffer, this);
+			startReplayBuffer.Connect(signal, "start", OBSStartReplayBuffer, this);
+			stopReplayBuffer.Connect(signal, "stop", OBSStopReplayBuffer, this);
 			replayBufferStopping.Connect(signal, "stopping",
-						     OBSReplayBufferStopping,
-						     this);
+						     OBSReplayBufferStopping, this);
 		}
 
-		fileOutput = obs_output_create(
-			"ffmpeg_muxer", "adv_file_output", nullptr, nullptr);
-		if (!fileOutput)
-			throw "Failed to create recording output "
-			      "(advanced output)";
+		fileOutput = obs_output_create("ffmpeg_muxer", "adv_file_output", nullptr, nullptr);
+		if (!fileOutput) {
+			throw "Failed to create recording output (advanced output)";
+		}
 		obs_output_release(fileOutput);
 
 		if (!useStreamEncoder) {
 			h264Recording = obs_video_encoder_create(
 				recordEncoder, "recording_h264",
 				recordEncSettings, nullptr);
-			if (!h264Recording)
-				throw "Failed to create recording h264 "
-				      "encoder (advanced output)";
+			if (!h264Recording) {
+				throw "Failed to create recording h264 encoder (advanced output)";
+			}
 			obs_encoder_release(h264Recording);
 		}
 	}
 
-	h264Streaming = obs_video_encoder_create(
-		streamEncoder, "streaming_h264", streamEncSettings, nullptr);
-	if (!h264Streaming)
-		throw "Failed to create streaming h264 encoder "
-		      "(advanced output)";
+	h264Streaming = obs_video_encoder_create(streamEncoder, "streaming_h264", streamEncSettings, nullptr);
+	if (!h264Streaming) {
+		throw "Failed to create streaming h264 encoder (advanced output)";
+	}
 	obs_encoder_release(h264Streaming);
 
 	for (int i = 0; i < MAX_AUDIO_MIXES; i++) {
-		char name[9];
+		char name[9] = { 0 };
 		sprintf(name, "adv_aac%d", i);
 
-		if (!CreateAACEncoder(aacTrack[i], aacEncoderID[i],
-				      GetAudioBitrate(i), name, i))
-			throw "Failed to create audio encoder "
-			      "(advanced output)";
+		if (!CreateAACEncoder(aacTrack[i], aacEncoderID[i], GetAudioBitrate(i), name, i))
+			throw "Failed to create audio encoder (advanced output)";
 	}
 
 	std::string id;
-	int streamTrack =
-		config_get_int(main->Config(), "AdvOut", "TrackIndex") - 1;
-	if (!CreateAACEncoder(streamAudioEnc, id, GetAudioBitrate(streamTrack),
-			      "avc_aac_stream", streamTrack))
-		throw "Failed to create streaming audio encoder "
-		      "(advanced output)";
+	// 注意：之前版本没有主动创建音频流压缩对象，是从 aacTrack 当中赋值...
+	int streamTrack = config_get_int(main->Config(), "AdvOut", "TrackIndex") - 1;
+	if (!CreateAACEncoder(streamAudioEnc, id, GetAudioBitrate(streamTrack), "avc_aac_stream", streamTrack))
+		throw "Failed to create streaming audio encoder (advanced output)";
 
-	startRecording.Connect(obs_output_get_signal_handler(fileOutput),
-			       "start", OBSStartRecording, this);
-	stopRecording.Connect(obs_output_get_signal_handler(fileOutput), "stop",
-			      OBSStopRecording, this);
-	recordStopping.Connect(obs_output_get_signal_handler(fileOutput),
-			       "stopping", OBSRecordStopping, this);
+	startRecording.Connect(obs_output_get_signal_handler(fileOutput), "start", OBSStartRecording, this);
+	stopRecording.Connect(obs_output_get_signal_handler(fileOutput), "stop", OBSStopRecording, this);
+	recordStopping.Connect(obs_output_get_signal_handler(fileOutput), "stopping", OBSRecordStopping, this);
 }
 
 void AdvancedOutput::UpdateStreamSettings()
 {
-	bool applyServiceSettings = config_get_bool(main->Config(), "AdvOut",
-						    "ApplyServiceSettings");
+	bool applyServiceSettings = config_get_bool(main->Config(), "AdvOut", "ApplyServiceSettings");
 
 	OBSData settings = GetDataFromJsonFile("streamEncoder.json");
 	ApplyEncoderDefaults(settings, h264Streaming);
 
 	if (applyServiceSettings)
-		obs_service_apply_encoder_settings(main->GetService(), settings,
-						   nullptr);
+		obs_service_apply_encoder_settings(main->GetService(), settings, nullptr);
 
 	video_t *video = obs_get_video();
 	enum video_format format = video_output_get_format(video);
 
 	if (format != VIDEO_FORMAT_NV12 && format != VIDEO_FORMAT_I420)
-		obs_encoder_set_preferred_video_format(h264Streaming,
-						       VIDEO_FORMAT_NV12);
+		obs_encoder_set_preferred_video_format(h264Streaming, VIDEO_FORMAT_NV12);
 
 	obs_encoder_update(h264Streaming, settings);
 }
@@ -1263,10 +1268,8 @@ void AdvancedOutput::Update()
 inline void AdvancedOutput::SetupStreaming()
 {
 	bool rescale = config_get_bool(main->Config(), "AdvOut", "Rescale");
-	const char *rescaleRes =
-		config_get_string(main->Config(), "AdvOut", "RescaleRes");
-	int streamTrack =
-		config_get_int(main->Config(), "AdvOut", "TrackIndex") - 1;
+	const char *rescaleRes = config_get_string(main->Config(), "AdvOut", "RescaleRes");
+	int streamTrack = config_get_int(main->Config(), "AdvOut", "TrackIndex") - 1;
 	uint32_t caps = obs_encoder_get_caps(h264Streaming);
 	unsigned int cx = 0;
 	unsigned int cy = 0;
@@ -1277,8 +1280,7 @@ inline void AdvancedOutput::SetupStreaming()
 
 	if (rescale && rescaleRes && *rescaleRes) {
 		if (sscanf(rescaleRes, "%ux%u", &cx, &cy) != 2) {
-			cx = 0;
-			cy = 0;
+			cx = 0; cy = 0;
 		}
 	}
 
@@ -1289,13 +1291,10 @@ inline void AdvancedOutput::SetupStreaming()
 
 inline void AdvancedOutput::SetupRecording()
 {
-	const char *path =
-		config_get_string(main->Config(), "AdvOut", "RecFilePath");
-	const char *mux =
-		config_get_string(main->Config(), "AdvOut", "RecMuxerCustom");
+	const char *path = config_get_string(main->Config(), "AdvOut", "RecFilePath");
+	const char *mux = config_get_string(main->Config(), "AdvOut", "RecMuxerCustom");
 	bool rescale = config_get_bool(main->Config(), "AdvOut", "RecRescale");
-	const char *rescaleRes =
-		config_get_string(main->Config(), "AdvOut", "RecRescaleRes");
+	const char *rescaleRes = config_get_string(main->Config(), "AdvOut", "RecRescaleRes");
 	int tracks = config_get_int(main->Config(), "AdvOut", "RecTracks");
 	obs_data_t *settings = obs_data_create();
 	unsigned int cx = 0;
@@ -1308,8 +1307,7 @@ inline void AdvancedOutput::SetupRecording()
 	if (useStreamEncoder) {
 		obs_output_set_video_encoder(fileOutput, h264Streaming);
 		if (replayBuffer)
-			obs_output_set_video_encoder(replayBuffer,
-						     h264Streaming);
+			obs_output_set_video_encoder(replayBuffer, h264Streaming);
 	} else {
 		uint32_t caps = obs_encoder_get_caps(h264Recording);
 		if ((caps & OBS_ENCODER_CAP_PASS_TEXTURE) != 0) {
@@ -1327,17 +1325,14 @@ inline void AdvancedOutput::SetupRecording()
 		obs_encoder_set_video(h264Recording, obs_get_video());
 		obs_output_set_video_encoder(fileOutput, h264Recording);
 		if (replayBuffer)
-			obs_output_set_video_encoder(replayBuffer,
-						     h264Recording);
+			obs_output_set_video_encoder(replayBuffer, h264Recording);
 	}
 
 	for (int i = 0; i < MAX_AUDIO_MIXES; i++) {
 		if ((tracks & (1 << i)) != 0) {
-			obs_output_set_audio_encoder(fileOutput, aacTrack[i],
-						     idx);
+			obs_output_set_audio_encoder(fileOutput, aacTrack[i], idx);
 			if (replayBuffer)
-				obs_output_set_audio_encoder(replayBuffer,
-							     aacTrack[i], idx);
+				obs_output_set_audio_encoder(replayBuffer, aacTrack[i], idx);
 			idx++;
 		}
 	}
@@ -1443,6 +1438,7 @@ inline void AdvancedOutput::UpdateAudioSettings()
 		SetEncoderName(aacTrack[i], name, def_name.c_str());
 	}
 
+	// 这里设定rtmp特有的service配置，因使用了rtp输出，这段就失去意义了...
 	for (size_t i = 0; i < MAX_AUDIO_MIXES; i++) {
 		obs_encoder_update(aacTrack[i], settings[i]);
 
@@ -1489,8 +1485,7 @@ int AdvancedOutput::GetAudioBitrate(size_t i) const
 
 bool AdvancedOutput::StartStreaming(obs_service_t *service)
 {
-	int streamTrack =
-		config_get_int(main->Config(), "AdvOut", "TrackIndex") - 1;
+	int streamTrack = config_get_int(main->Config(), "AdvOut", "TrackIndex") - 1;
 
 	if (!useStreamEncoder ||
 	    (!ffmpegOutput && !obs_output_active(fileOutput))) {
@@ -1505,11 +1500,17 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 	//Auth *auth = main->GetAuth();
 	//if (auth) auth->OnStreamConfig();
 
-	/* --------------------- */
+	// 获得当前配置的声音轨道编号 => 始终默认选择 轨道1 和 轨道2 进行音频流压缩输出...
+	int trackIndex = config_get_int(main->Config(), "AdvOut", "TrackIndex");
 
+	// 注意：这里直接指定使用rtp输出流...
+	const char * type = "rtp_output";
+
+	////////////////////////////////////////////////////////////////////
+	/*// obs采用默认的rtmp输出流...
 	const char *type = obs_service_get_output_type(service);
-	if (!type)
-		type = "rtmp_output";
+	if (!type) type = "rtmp_output";
+	////////////////////////////////////////////////////////////////////
 
 	/* XXX: this is messy and disgusting and should be refactored */
 	if (outputType != type) {
@@ -1518,13 +1519,9 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 		startStreaming.Disconnect();
 		stopStreaming.Disconnect();
 
-		streamOutput =
-			obs_output_create(type, "adv_stream", nullptr, nullptr);
+		streamOutput = obs_output_create(type, "adv_stream", nullptr, nullptr);
 		if (!streamOutput) {
-			blog(LOG_WARNING,
-			     "Creation of stream output type '%s' "
-			     "failed!",
-			     type);
+			blog(LOG_WARNING, "Creation of stream output type '%s' failed!", type);
 			return false;
 		}
 		obs_output_release(streamOutput);
@@ -1543,25 +1540,20 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 			obs_output_get_signal_handler(streamOutput), "stop",
 			OBSStopStreaming, this);
 
-		bool isEncoded = obs_output_get_flags(streamOutput) &
-				 OBS_OUTPUT_ENCODED;
+		bool isEncoded = obs_output_get_flags(streamOutput) & OBS_OUTPUT_ENCODED;
 
 		if (isEncoded) {
-			const char *codec =
-				obs_output_get_supported_audio_codecs(
-					streamOutput);
+			const char *codec = obs_output_get_supported_audio_codecs(streamOutput);
 			if (!codec) {
 				blog(LOG_WARNING, "Failed to load audio codec");
 				return false;
 			}
 
 			if (strcmp(codec, "aac") != 0) {
-				OBSData settings = obs_encoder_get_settings(
-					streamAudioEnc);
+				OBSData settings = obs_encoder_get_settings(streamAudioEnc);
 				obs_data_release(settings);
 
-				const char *id =
-					FindAudioEncoderFromCodec(codec);
+				const char *id = FindAudioEncoderFromCodec(codec);
 
 				streamAudioEnc = obs_audio_encoder_create(
 					id, "alt_audio_enc", nullptr,
@@ -1572,8 +1564,7 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 
 				obs_encoder_release(streamAudioEnc);
 				obs_encoder_update(streamAudioEnc, settings);
-				obs_encoder_set_audio(streamAudioEnc,
-						      obs_get_audio());
+				obs_encoder_set_audio(streamAudioEnc, obs_get_audio());
 			}
 		}
 
@@ -1590,28 +1581,31 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 	bool reconnect = config_get_bool(main->Config(), "Output", "Reconnect");
 	int retryDelay = config_get_int(main->Config(), "Output", "RetryDelay");
 	int maxRetries = config_get_int(main->Config(), "Output", "MaxRetries");
-	bool useDelay =
-		config_get_bool(main->Config(), "Output", "DelayEnable");
+	bool useDelay = config_get_bool(main->Config(), "Output", "DelayEnable");
 	int delaySec = config_get_int(main->Config(), "Output", "DelaySec");
-	bool preserveDelay =
-		config_get_bool(main->Config(), "Output", "DelayPreserve");
-	const char *bindIP =
-		config_get_string(main->Config(), "Output", "BindIP");
-	bool enableNewSocketLoop = config_get_bool(main->Config(), "Output",
-						   "NewSocketLoopEnable");
-	bool enableLowLatencyMode =
-		config_get_bool(main->Config(), "Output", "LowLatencyEnable");
-	bool enableDynBitrate =
-		config_get_bool(main->Config(), "Output", "DynamicBitrate");
+	bool preserveDelay = config_get_bool(main->Config(), "Output", "DelayPreserve");
+	const char *bindIP = config_get_string(main->Config(), "Output", "BindIP");
+	bool enableNewSocketLoop = config_get_bool(main->Config(), "Output", "NewSocketLoopEnable");
+	bool enableLowLatencyMode = config_get_bool(main->Config(), "Output", "LowLatencyEnable");
+	bool enableDynBitrate = config_get_bool(main->Config(), "Output", "DynamicBitrate");
 
+	// 创建输出配置结构体对象...
 	obs_data_t *settings = obs_data_create();
 	obs_data_set_string(settings, "bind_ip", bindIP);
-	obs_data_set_bool(settings, "new_socket_loop_enabled",
-			  enableNewSocketLoop);
-	obs_data_set_bool(settings, "low_latency_mode_enabled",
-			  enableLowLatencyMode);
+	obs_data_set_bool(settings, "new_socket_loop_enabled", enableNewSocketLoop);
+	obs_data_set_bool(settings, "low_latency_mode_enabled", enableLowLatencyMode);
 	obs_data_set_bool(settings, "dyn_bitrate", enableDynBitrate);
+	/*// 设置rtp推流输出需要的特殊变量 => room_id | udp_addr | udp_port | tcp_socket
+	int nLiveRoomID = atoi(App()->GetRoomIDStr().c_str());
+	obs_data_set_int(settings, "room_id", nLiveRoomID);
+	obs_data_set_int(settings, "udp_port", App()->GetUdpPort());
+	obs_data_set_int(settings, "tcp_socket", App()->GetRtpTCPSockFD());
+	obs_data_set_string(settings, "udp_addr", App()->GetUdpAddr().c_str());*/
+	// rtp模式下阻止重连，重连次数修改为0...
+	reconnect = false; maxRetries = 0;
+	// 将新的输出配置应用到当前输出对象当中...
 	obs_output_update(streamOutput, settings);
+	// 释放输出配置结构体对象...
 	obs_data_release(settings);
 
 	if (!reconnect)
@@ -1628,10 +1622,8 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 
 	const char *error = obs_output_get_last_error(streamOutput);
 	bool hasLastError = error && *error;
-	if (hasLastError)
-		lastError = error;
-	else
-		lastError = string();
+	if (hasLastError) lastError = error;
+	else lastError = string();
 
 	blog(LOG_WARNING, "Stream output type '%s' failed to start!%s%s", type,
 	     hasLastError ? "  Last Error: " : "", hasLastError ? error : "");
