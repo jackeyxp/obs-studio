@@ -278,3 +278,13 @@ void obs_extract_avc_headers(const uint8_t *packet, size_t size,
 	*sei_data = sei.array;
 	*sei_size = sei.num;
 }
+
+bool obs_get_sps_pps(const uint8_t *data, size_t size,
+	uint8_t **sps, size_t *sps_size,
+	uint8_t **pps, size_t *pps_size)
+{
+	if (!has_start_code(data))
+		return false;
+	get_sps_pps(data, size, sps, sps_size, pps, pps_size);
+	return ((!(*sps) || !(*pps) || (*sps_size) < 4) ? false : true);
+}
