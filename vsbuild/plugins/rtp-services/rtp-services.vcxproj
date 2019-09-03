@@ -1,0 +1,220 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\plugins\rtp-services\OSThread.cpp" />
+    <ClCompile Include="..\..\..\plugins\rtp-services\Socket.cpp" />
+    <ClCompile Include="..\..\..\plugins\rtp-services\SocketUtils.cpp" />
+    <ClCompile Include="..\..\..\plugins\rtp-services\StrPtrLen.cpp" />
+    <ClCompile Include="..\..\..\plugins\rtp-services\UDPSocket.cpp" />
+    <ClCompile Include="..\..\..\plugins\rtp-services\rtp-services.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\plugins\rtp-services\HYDefine.h" />
+    <ClInclude Include="..\..\..\plugins\rtp-services\OSThread.h" />
+    <ClInclude Include="..\..\..\plugins\rtp-services\Socket.h" />
+    <ClInclude Include="..\..\..\plugins\rtp-services\SocketUtils.h" />
+    <ClInclude Include="..\..\..\plugins\rtp-services\StrPtrLen.h" />
+    <ClInclude Include="..\..\..\plugins\rtp-services\UDPSocket.h" />
+    <ClInclude Include="..\..\config\GMError.h" />
+    <ClInclude Include="..\..\config\rtp.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A6CE7CA6-B97C-4BF6-A59A-BF1F8682F898}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>rtprecv</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>F:\obs-studio\vsbuild\plugins\rtp-services\Debug\</OutDir>
+    <IntDir>rtp-services.dir\Debug\</IntDir>
+    <TargetName>rtp-services</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>F:\obs-studio\vsbuild\plugins\rtp-services\Release\</OutDir>
+    <IntDir>rtp-services.dir\Release\</IntDir>
+    <TargetName>rtp-services</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;HAVE_OBSCONFIG_H;CMAKE_INTDIR="Debug";win_rtp_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\obs-deps\win32\include;F:\obs-studio\libobs;F:\obs-studio\vsbuild\config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DisableSpecificWarnings>4127;4201;4456;4457;4458;4459;4595;4819</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Ws2_32.lib;..\..\libobs\Debug\obs.lib;..\..\deps\w32-pthreads\Debug\w32-pthreads.lib;F:\obs-deps\win32\bin\avcodec.lib;F:\obs-deps\win32\bin\avfilter.lib;F:\obs-deps\win32\bin\avdevice.lib;F:\obs-deps\win32\bin\avutil.lib;F:\obs-deps\win32\bin\swscale.lib;F:\obs-deps\win32\bin\avformat.lib;F:\obs-deps\win32\bin\swresample.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ProgramDatabaseFile>F:/obs-studio/vsbuild/plugins/rtp-services/Debug/rtp-services.pdb</ProgramDatabaseFile>
+      <ImportLibrary>F:/obs-studio/vsbuild/plugins/rtp-services/Debug/rtp-services.lib</ImportLibrary>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+    <PostBuildEvent>
+      <Command>setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/plugins/rtp-services/Debug/rtp-services.dll F:/obs-studio/vsbuild/rundir/Debug/obs-plugins/32bit/rtp-services.dll
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -DCONFIG=Debug -DFNAME=rtp-services.dll -DINPUT=F:/obs-studio/vsbuild/plugins/rtp-services/Debug -DOUTPUT=F:/obs-studio/vsbuild/plugins/rtp-services/pdbs -P F:/obs-studio/cmake/copy_on_debug_helper.cmake
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -DCONFIG=Debug -DFNAME=rtp-services.dll -DINPUT=F:/obs-studio/vsbuild/plugins/rtp-services/Debug -DOUTPUT=F:/obs-studio/vsbuild/rundir/Debug/obs-plugins/32bit -P F:/obs-studio/cmake/copy_on_debug_helper.cmake
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy_directory F:/obs-studio/plugins/rtp-services/data F:/obs-studio/vsbuild/rundir/Debug/data/obs-plugins/rtp-services
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;HAVE_OBSCONFIG_H;CMAKE_INTDIR="Release";win_rtp_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\obs-deps\win32\include;F:\obs-studio\libobs;F:\obs-studio\vsbuild\config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <AssemblerListingLocation>Release/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DisableSpecificWarnings>4127;4201;4456;4457;4458;4459;4595;4819</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>No</GenerateDebugInformation>
+      <EnableCOMDATFolding>
+      </EnableCOMDATFolding>
+      <OptimizeReferences>
+      </OptimizeReferences>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Ws2_32.lib;..\..\libobs\Release\obs.lib;..\..\deps\w32-pthreads\Release\w32-pthreads.lib;F:\obs-deps\win32\bin\avcodec.lib;F:\obs-deps\win32\bin\avfilter.lib;F:\obs-deps\win32\bin\avdevice.lib;F:\obs-deps\win32\bin\avutil.lib;F:\obs-deps\win32\bin\swscale.lib;F:\obs-deps\win32\bin\avformat.lib;F:\obs-deps\win32\bin\swresample.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ProgramDatabaseFile>F:/obs-studio/vsbuild/plugins/rtp-services/Release/rtp-services.pdb</ProgramDatabaseFile>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <ImportLibrary>F:/obs-studio/vsbuild/plugins/rtp-services/Release/rtp-services.lib</ImportLibrary>
+      <LinkTimeCodeGeneration />
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+    <PostBuildEvent>
+      <Command>setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/plugins/rtp-services/Release/rtp-services.dll F:/obs-studio/vsbuild/rundir/Release/obs-plugins/32bit/rtp-services.dll
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -DCONFIG=Release -DFNAME=rtp-services.dll -DINPUT=F:/obs-studio/vsbuild/plugins/rtp-services/Release -DOUTPUT=F:/obs-studio/vsbuild/plugins/rtp-services/pdbs -P F:/obs-studio/cmake/copy_on_debug_helper.cmake
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -DCONFIG=Release -DFNAME=rtp-services.dll -DINPUT=F:/obs-studio/vsbuild/plugins/rtp-services/Release -DOUTPUT=F:/obs-studio/vsbuild/rundir/Release/obs-plugins/32bit -P F:/obs-studio/cmake/copy_on_debug_helper.cmake
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy_directory F:/obs-studio/plugins/rtp-services/data F:/obs-studio/vsbuild/rundir/Release/data/obs-plugins/rtp-services
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
