@@ -143,6 +143,33 @@ static inline void circlebuf_place(struct circlebuf *cb, size_t position,
 	}
 }
 
+/** Read data at a specific point in the buffer (relative). */
+static inline void circlebuf_read(struct circlebuf *cb, size_t position,
+	void *data, size_t size)
+{
+	size_t end_point = position + size;
+	size_t data_end_pos;
+
+	if (end_point > cb->size)
+		return;
+
+	position += cb->start_pos;
+	if (position >= cb->capacity)
+		position -= cb->capacity;
+
+	data_end_pos = position + size;
+	if (data_end_pos > cb->capacity) {
+		size_t back_size = data_end_pos - cb->capacity;
+		size_t loop_size = size - back_size;
+		if (back_size)
+			memcpy(data, (uint8_t*)cb->data + position, loop_size);
+		memcpy((uint8_t*)data + loop_size, cb->data, back_size);
+	}
+	else {
+		memcpy(data, (uint8_t*)cb->data + position, size);
+	}
+}
+
 static inline void circlebuf_push_back(struct circlebuf *cb, const void *data,
 				       size_t size)
 {
