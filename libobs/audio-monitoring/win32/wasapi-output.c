@@ -147,7 +147,7 @@ static bool process_audio_delay(struct audio_monitor *monitor, float **data,
 
 // 枚举所有的音频数据源对象，找到麦克风对象，投递数据，进行回音消除...
 // 注意：不要用obs_enum_sources，互斥data.sources_mutex会跟rtp-source发生互锁...
-void doPushEchoDataToMic(struct obs_source_audio * lpObsAudio)
+/*void doPushEchoDataToMic(struct obs_source_audio * lpObsAudio)
 {
 	struct obs_source *source;
 	struct obs_core_data *data = &obs->data;
@@ -166,7 +166,7 @@ void doPushEchoDataToMic(struct obs_source_audio * lpObsAudio)
 		source = (struct obs_source*)source->next_audio_source;
 	}
 	pthread_mutex_unlock(&data->audio_sources_mutex);
-}
+}*/
 
 static void on_audio_playback(void *param, obs_source_t *source,
 			      const struct audio_data *audio_data, bool muted)
@@ -233,7 +233,7 @@ static void on_audio_playback(void *param, obs_source_t *source,
 		// (思路错误)注意：新的归一化之后，就不用进行焦点处理了，所有音频数据直接投递进行回音消除就可以了...
 		// (最新思路)注意：暂时不能用scene播放音频，只能用数据源混音模式，而不是输出音频混音模式...
 		//assert(astrcmpi(source->info.id, "scene") == 0);
-		if (astrcmpi(source->info.id, "rtp_source") == 0) {
+		/*if (astrcmpi(source->info.id, "rtp_source") == 0) {
 			// 构造需要投递给麦克风数据源的结构体 => 样本总是float格式...
 			struct obs_source_audio theEchoData = { 0 };
 			theEchoData.data[0] = resample_data[0];
@@ -244,7 +244,7 @@ static void on_audio_playback(void *param, obs_source_t *source,
 			theEchoData.timestamp = audio_data->timestamp;
 			// 枚举所有的音频数据源对象，找到麦克风，进行回音消除...
 			doPushEchoDataToMic(&theEchoData);
-		}
+		}*/
 	}
 
 	render->lpVtbl->ReleaseBuffer(render, resample_frames,
