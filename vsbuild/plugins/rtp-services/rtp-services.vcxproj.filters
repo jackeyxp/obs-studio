@@ -28,6 +28,12 @@
     <ClCompile Include="..\..\..\plugins\rtp-services\UDPSocket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\plugins\rtp-services\teacher-output.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\plugins\rtp-services\teacher-send-thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\plugins\rtp-services\OSThread.h">
@@ -53,6 +59,9 @@
     </ClInclude>
     <ClInclude Include="..\..\config\GMError.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\plugins\rtp-services\teacher-send-thread.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

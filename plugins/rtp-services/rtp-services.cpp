@@ -15,7 +15,7 @@ void InitModule();
 void UnInitModule();
 
 //void RegisterTeacherSource();
-//void RegisterTeacherOutput();
+void RegisterTeacherOutput();
 //void RegisterStudentSource();
 //void RegisterStudentOutput();
 
@@ -25,7 +25,7 @@ bool obs_module_load(void)
 	InitModule();
 	// 注册数据源和输出...
 	//RegisterTeacherSource();
-	//RegisterTeacherOutput();
+	RegisterTeacherOutput();
 	//RegisterStudentSource();
 	//RegisterStudentOutput();
 	return true;
