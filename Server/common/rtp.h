@@ -1,6 +1,54 @@
 
 #pragma once
 
+// define student role type...
+enum ROLE_TYPE
+{
+	kRoleWanRecv   = 0,      // 外网接收者角色
+	kRoleMultiRecv = 1,      // 组播接收者角色
+	kRoleMultiSend = 2,      // 组播发送者角色
+};
+
+// define client type...
+enum {
+  kClientPHP       = 1,       // 网站端链接...
+  kClientStudent   = 2,       // 学生端链接...
+  kClientTeacher   = 3,       // 讲师端链接...
+  kClientUdpServer = 4,       // UDP服务器...
+  kClientScreen    = 5,       // 屏幕终端...
+};
+
+// 注意：定义与服务器交互命令编号...
+// 注意：PHP 代码中也可以使用 __LINE__
+const long CMD_LINE_START   = __LINE__ + 2;
+enum {
+  kCmd_Student_Login        = __LINE__ - CMD_LINE_START,
+  kCmd_Student_OnLine	      = __LINE__ - CMD_LINE_START,
+  kCmd_Teacher_Login        = __LINE__ - CMD_LINE_START,
+  kCmd_Teacher_OnLine       = __LINE__ - CMD_LINE_START,
+  kCmd_UdpServer_Login      = __LINE__ - CMD_LINE_START,
+  kCmd_UdpServer_OnLine     = __LINE__ - CMD_LINE_START,
+  kCmd_UdpServer_AddTeacher = __LINE__ - CMD_LINE_START,
+  kCmd_UdpServer_DelTeacher = __LINE__ - CMD_LINE_START,
+  kCmd_UdpServer_AddStudent = __LINE__ - CMD_LINE_START,
+  kCmd_UdpServer_DelStudent = __LINE__ - CMD_LINE_START,
+  kCmd_PHP_GetUdpServer     = __LINE__ - CMD_LINE_START,
+  kCmd_PHP_GetAllServer     = __LINE__ - CMD_LINE_START,
+  kCmd_PHP_GetAllClient     = __LINE__ - CMD_LINE_START,
+  kCmd_PHP_GetRoomList      = __LINE__ - CMD_LINE_START,
+  kCmd_PHP_GetPlayerList    = __LINE__ - CMD_LINE_START,
+  kCmd_PHP_Bind_Mini        = __LINE__ - CMD_LINE_START,
+  kCmd_PHP_GetRoomFlow      = __LINE__ - CMD_LINE_START,
+};
+
+// 定义与服务器交互命令结构体...
+typedef struct {
+  int   m_pkg_len;    // body size...
+  int   m_type;       // client type...
+  int   m_cmd;        // command id...
+  int   m_sock;       // php sock in transmit...
+} Cmd_Header;
+
 //
 // 定义交互终端类型...
 enum
@@ -136,6 +184,3 @@ typedef struct {
   unsigned char   lose_type;     // 丢包类型 => 0x08(音频)0x09(视频)0x0B(扩展音频)
   unsigned char   noset;         // 保留 => 字节对齐
 }rtp_lose_t;
-
-// 定义检测到的丢包队列 => 序列号 : 丢包结构体...
-typedef map<uint32_t, rtp_lose_t>  GM_MapLose;

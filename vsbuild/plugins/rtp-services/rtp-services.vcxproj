@@ -28,8 +28,8 @@
     <ClInclude Include="..\..\..\plugins\rtp-services\StrPtrLen.h" />
     <ClInclude Include="..\..\..\plugins\rtp-services\teacher-send-thread.h" />
     <ClInclude Include="..\..\..\plugins\rtp-services\UDPSocket.h" />
+    <ClInclude Include="..\..\..\Server\common\rtp.h" />
     <ClInclude Include="..\..\config\GMError.h" />
-    <ClInclude Include="..\..\config\rtp.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A6CE7CA6-B97C-4BF6-A59A-BF1F8682F898}</ProjectGuid>
@@ -81,7 +81,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;HAVE_OBSCONFIG_H;CMAKE_INTDIR="Debug";win_rtp_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>F:\obs-deps\win32\include;F:\obs-studio\libobs;F:\obs-studio\vsbuild\config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\obs-deps\win32\include;F:\obs-studio\libobs;F:\obs-studio\vsbuild\config;F:\obs-studio\Server\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <MinimalRebuild>false</MinimalRebuild>
