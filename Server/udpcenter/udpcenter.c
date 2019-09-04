@@ -139,3 +139,8 @@ bool do_trace(const char * inFile, int inLine, bool bIsDebug, const char *msg, .
   fprintf(stderr, log_data);
   return true;
 }
+
+const char * get_abs_path()
+{
+  return g_absolute_path;
+}

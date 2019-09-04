@@ -88,6 +88,30 @@ int os_sem_timedwait(os_sem_t *sem, unsigned long milliseconds)
   return sem_timedwait(&sem->sem, &ts);
 }
 
+// 获取交互终端类型...
+const char * get_tm_tag(int tmTag)
+{
+  switch(tmTag)
+  {
+    case TM_TAG_STUDENT: return "Student";
+    case TM_TAG_TEACHER: return "Teacher";
+    case TM_TAG_SERVER:  return "Server";
+  }
+  return "unknown";
+}
+
+// 获取交互终端身份...
+const char * get_id_tag(int idTag)
+{
+  switch(idTag)
+  {
+    case ID_TAG_PUSHER: return "Pusher";
+    case ID_TAG_LOOKER: return "Looker";
+    case ID_TAG_SERVER: return "Server";
+  }
+  return "unknown";
+}
+
 // 获取用户类型...
 const char * get_client_type(int inType)
 {

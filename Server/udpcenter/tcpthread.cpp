@@ -32,8 +32,11 @@ CTCPThread::~CTCPThread()
 bool CTCPThread::InitThread()
 {
   // 创建tcp服务器套接字...
-  if( this->doCreateSocket(DEF_CENTER_PORT) < 0 )
+  int nHostPort = DEF_CENTER_PORT;
+  if( this->doCreateSocket(nHostPort) < 0 )
     return false;
+  // 打印中心服务器正在监听的端口信息...
+  log_trace("[UDPCenter] tcp listen port => %d", nHostPort);
   // 启动tcp服务器监听线程...
   this->Start();
   return true;

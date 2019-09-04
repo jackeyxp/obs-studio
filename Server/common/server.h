@@ -69,6 +69,9 @@ int       os_sem_timedwait(os_sem_t *sem, unsigned long milliseconds);
 
 const char * get_client_type(int inType);
 const char * get_command_name(int inCmd);
+const char * get_tm_tag(int tmTag);
+const char * get_id_tag(int idTag);
+const char * get_abs_path();
 
 int64_t buff2long(const char *buff);
 void long2buff(int64_t n, char *buff);
