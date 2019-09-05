@@ -2,19 +2,19 @@
 #include "app.h"
 #include "tcpclient.h"
 #include "tcpthread.h"
+#include "tcpcenter.h"
 
 #define WAIT_TIME_OUT     10 * 1000   // 全局超时检测10秒...
 
 CTCPThread::CTCPThread()
-  : m_accept_count(0)
+  : m_lpTCPCenter(NULL)
+  , m_accept_count(0)
   , m_max_event(0)
   , m_listen_fd(0)
   , m_epoll_fd(0)
 {
   // 重置epoll事件队列列表...
   memset(m_events, 0, sizeof(epoll_event) * MAX_EPOLL_SIZE);
-  // 创建TCP中心套接字管理对象...
-  //m_lpTCPCenter = new CTCPCenter(this);
 }
 
 CTCPThread::~CTCPThread()
@@ -31,13 +31,11 @@ CTCPThread::~CTCPThread()
     close(m_epoll_fd);
     m_epoll_fd = 0;
   }
-
   // 关闭TCP中心套接字对象...
-  /*if( m_lpTCPCenter != NULL ) {
+  if( m_lpTCPCenter != NULL ) {
     delete m_lpTCPCenter;
     m_lpTCPCenter = NULL;
-  }*/
-
+  }
   // 先删终端，再删房间 => 终端有房间指针引用...
   this->clearAllClient();
 }
@@ -48,15 +46,24 @@ bool CTCPThread::InitThread()
   int nHostPort = GetApp()->GetTcpListenPort();
   if( this->doCreateListenSocket(nHostPort) < 0 )
     return false;
+  
   // 打印中心服务器正在监听的端口信息...
   log_trace("[UDPServer] tcp listen port => %d", nHostPort);
   
-  /*// 注意：为了保证正常工作，失败之后，仍然继续运行...
-  // 创建连接UDP中心服务器的套接字，并加入到epoll队列当中...
-  m_lpTCPCenter->InitTCPCenter(m_epoll_fd);
-  // 累加进入epoll队列套接字个数...
-  ++m_max_event;*/
+  // 重新创建TCP中心套接字管理对象...
+  if( m_lpTCPCenter != NULL ) {
+    delete m_lpTCPCenter;
+    m_lpTCPCenter = NULL;
+  }
   
+  // 创建新的TCP中心套接字管理对象...
+  m_lpTCPCenter = new CTCPCenter(this);
+
+  // 注意：为了保证正常工作，失败之后，仍然继续运行...
+  // 创建连接UDP中心服务器的套接字，并加入到epoll队列当中...
+  m_lpTCPCenter->InitTCPCenter();
+  // 累加进入epoll队列套接字个数...
+  ++m_max_event;
   // 启动tcp服务器监听线程...
   this->Start();
   return true;
@@ -152,7 +159,7 @@ int CTCPThread::SetNonBlocking(int sockfd)
 	return 0;
 }
 
-/*void CTCPThread::doTCPCenterEvent(int nEvent)
+void CTCPThread::doTCPCenterEvent(int nEvent)
 {
   // 响应中心套接字事件，成功，直接返回...
   if( m_lpTCPCenter->doEpollEvent(nEvent) >= 0 )
@@ -160,7 +167,7 @@ int CTCPThread::SetNonBlocking(int sockfd)
   // 删除对象，等待重建...
   delete m_lpTCPCenter;
   m_lpTCPCenter = NULL;
-}*/
+}
 
 void CTCPThread::doTCPListenEvent()
 {
@@ -260,10 +267,10 @@ void CTCPThread::Entry()
         continue;
       }
       // 响应中心套接字事件的处理过程...
-      /*if( m_lpTCPCenter != NULL && nCurEventFD == m_lpTCPCenter->GetConnFD() ) {
+      if( m_lpTCPCenter != NULL && nCurEventFD == m_lpTCPCenter->GetConnFD() ) {
         this->doTCPCenterEvent(m_events[n].events);
         continue;
-      }*/
+      }
       // 注意：套接字的读写命令，没有用线程保护...
       // 注意：目的是为了防止UDP删除命令先到达造成的互锁问题...
       int nRetValue = -1;
@@ -339,15 +346,15 @@ int CTCPThread::doHandleWrite(int connfd)
 void CTCPThread::doHandleTimeout()
 {
   // 打印信息，提示重建中心对象完毕...
-  /*if( m_lpTCPCenter == NULL ) {
+  if( m_lpTCPCenter == NULL ) {
     m_lpTCPCenter = new CTCPCenter(this);
-    m_lpTCPCenter->InitTCPCenter(m_epoll_fd);
+    m_lpTCPCenter->InitTCPCenter();
     log_trace("TCP-Center has been rebuild.");
   }
   // 查看中心套接字的连接超时状态...
   if( m_lpTCPCenter != NULL ) {
     m_lpTCPCenter->doHandleTimeout();
-  }*/
+  }
   // 2017.07.26 - by jackey => 根据连接状态删除客户端...
   // 2017.12.16 - by jackey => 去掉gettcpstate，使用超时机制...
   // 遍历所有的连接，判断连接是否超时，超时直接删除...

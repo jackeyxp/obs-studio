@@ -212,13 +212,13 @@ void CApp::clearAllSource()
 {
   // 删除TCP线程对象...
   if (m_lpTCPThread != NULL) {
-    delete m_lpTCPThread;
-    m_lpTCPThread = NULL;
+    delete m_lpTCPThread; m_lpTCPThread = NULL;
+    log_trace("tcp-thread has been deleted.");
   }
   // 删除UDP线程对象...
   if (m_lpUDPThread != NULL) {
-    delete m_lpUDPThread;
-    m_lpUDPThread = NULL;
+    delete m_lpUDPThread; m_lpUDPThread = NULL;
+    log_trace("udp-thread has been deleted.");
   }
   // 释放辅助线程信号量...
   if (m_sem_t != NULL) {

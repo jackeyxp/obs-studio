@@ -9,10 +9,10 @@ CUDPThread::CUDPThread()
 
 CUDPThread::~CUDPThread()
 {
-  // 必须先设置标志，确保套接字关闭后，线程必然退出...
-  this->SendStopRequest();
-  // 先关闭套接字，迫使阻塞线程退出...
+  // 注意：调用close只能关闭写通道，释放套接字资源，不能唤醒阻塞中的recvfrom函数...
+  // 注意：必须用shutdown关闭读写通道，才能唤醒阻塞中的recvfrom函数...
   if( m_udp_listen_fd > 0 ) {
+    shutdown(m_udp_listen_fd, SHUT_RDWR);
     close(m_udp_listen_fd);
     m_udp_listen_fd = 0;
   }
@@ -90,8 +90,6 @@ int CUDPThread::doCreateListenSocket(int nHostPort)
     close(listen_fd);
     return -1;
   }
-  // 打印服务器正在监听的UDP端口信息...
-  log_trace("[UDPServer] udp listen port => %d", nHostPort);
   // 返回已经绑定完毕的UDP套接字...
   m_udp_listen_fd = listen_fd;
   return m_udp_listen_fd;
@@ -106,7 +104,7 @@ void CUDPThread::Entry()
   char recvBuff[MAX_BUFF_LEN] = {0};
   int nAddrLen = 0, nRecvCount = 0;
   // 判断线程是否退出，最终是通过套接字的有效性来判断的...
-  while( !this->IsStopRequested() ) {
+  while( m_udp_listen_fd > 0 && !this->IsStopRequested() ) {
     // 从网络层阻塞接收UDP数据报文...
     bzero(recvBuff, MAX_BUFF_LEN);
     nAddrLen = sizeof(recvAddr);
