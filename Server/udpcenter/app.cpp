@@ -1,6 +1,7 @@
 
 #include "app.h"
 #include "tcpthread.h"
+#include "../common/bmem.h"
 
 CApp::CApp()
   : m_sem_t(NULL)
@@ -29,7 +30,12 @@ CApp::~CApp()
     delete itorRoom->second;
   }
   // 释放辅助线程信号量...
-  os_sem_destroy(m_sem_t);
+  if (m_sem_t != NULL) {
+    os_sem_destroy(m_sem_t);
+    m_sem_t = NULL;
+  }
+  // 打印最终通过bmem分配的内存是否完全释放...
+  log_trace("Number of memory leaks: %ld", bnum_allocs());
 }
 
 bool CApp::doStartThread()

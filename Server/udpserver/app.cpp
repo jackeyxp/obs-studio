@@ -2,24 +2,30 @@
 #include "app.h"
 #include "getopt.h"
 #include <signal.h>
+#include "tcpthread.h"
+#include "../common/bmem.h"
 
 CApp::CApp()
-  : m_udp_listen_fd(0)
-  , m_lpTCPThread(NULL)
+  : m_lpTCPThread(NULL)
   , m_lpUDPThread(NULL)
   , m_signal_quit(false)
   , m_bIsDebugMode(false)
+  , m_sem_t(NULL)
 {
   m_strTCPCenterAddr = DEF_CENTER_ADDR;
   m_nTCPCenterPort = DEF_CENTER_PORT;
   m_nUDPListenPort = DEF_UDP_PORT;
   m_nTCPListenPort = DEF_TCP_PORT;
+  // 初始化辅助线程信号量...
+  os_sem_init(&m_sem_t, 0);
 }
 
 CApp::~CApp()
 {
   // 释放所有的资源对象...
   this->clearAllSource();
+  // 打印最终通过bmem分配的内存是否完全释放...
+  log_trace("Number of memory leaks: %ld", bnum_allocs());
 }
 
 // 调用位置，详见 udpserver.c::main() 函数，只调用一次...
@@ -201,9 +207,27 @@ bool CApp::acquire_pid_file()
   return true;
 }
 
-void CApp::doWaitUdpSocket()
+void CApp::doWaitForExit()
 {
-  /*struct sockaddr_in recvAddr = {0};
+  // 设定默认的信号超时时间 => APP_SLEEP_MS 毫秒...
+  unsigned long next_wait_ms = APP_SLEEP_MS;
+  // 判断是否有信号退出标志...
+  while ( !this->IsSignalQuit() ) {
+    // 注意：这里用信号量代替sleep的目的是为了避免等待时的命令延时...
+    // 注意：无论信号量是超时还是被触发，都要执行下面的操作...
+    os_sem_timedwait(m_sem_t, next_wait_ms);
+  }  
+  // 预先释放所有分配的线程和资源...
+  this->clearAllSource();
+  // 删除相关联的pid文件...
+  this->destory_pid_file();
+  // 打印已经成功退出信息...
+  log_trace("cleanup for gracefully terminate.");
+}
+
+/*void CApp::doWaitUdpSocket()
+{
+  struct sockaddr_in recvAddr = {0};
   char recvBuff[MAX_BUFF_LEN] = {0};
   int nAddrLen = 0, nRecvCount = 0;
   // 判断是否有信号退出标志...
@@ -243,50 +267,57 @@ void CApp::doWaitUdpSocket()
   // 删除相关联的pid文件...
   this->destory_pid_file();
   // 打印已经成功退出信息...
-  log_trace("cleanup for gracefully terminate.");*/
-}
+  log_trace("cleanup for gracefully terminate.");
+}*/
 
 void CApp::clearAllSource()
 {
   // 删除TCP线程对象...
-  /*if (m_lpTCPThread != NULL) {
+  if (m_lpTCPThread != NULL) {
     delete m_lpTCPThread;
     m_lpTCPThread = NULL;
   }
   // 删除UDP线程对象...
-  if (m_lpUDPThread != NULL) {
+  /*if (m_lpUDPThread != NULL) {
     delete m_lpUDPThread;
     m_lpUDPThread = NULL;
   }*/
+  // 释放辅助线程信号量...
+  if (m_sem_t != NULL) {
+    os_sem_destroy(m_sem_t);
+    m_sem_t = NULL;
+  }
   // 先关闭套接字，阻止网络数据到达...
-  if( m_udp_listen_fd > 0 ) {
+  /*if( m_udp_listen_fd > 0 ) {
     close(m_udp_listen_fd);
     m_udp_listen_fd = 0;
-  }  
+  }*/ 
 }
 
 void CApp::onSignalQuit()
 {
   // 先关闭套接字，迫使线程退出...
-  if( m_udp_listen_fd > 0 ) {
+  /*if( m_udp_listen_fd > 0 ) {
     close(m_udp_listen_fd);
     m_udp_listen_fd = 0;
-  }
-  // 再设置退出标志...
+  }*/
+  // 设置退出标志...
   m_signal_quit = true;
+  // 触发信号量，快速退出...
+  os_sem_post(m_sem_t);
 }
 
 bool CApp::doStartThread()
 {
   // 创建TCP监听对象，并启动线程...
-  /*assert(m_lpTCPThread == NULL);
+  assert(m_lpTCPThread == NULL);
   m_lpTCPThread = new CTCPThread();
   if (!m_lpTCPThread->InitThread()) {
     log_trace("Init TCPThread failed!");
     return false;
   }
   // 创建UDP数据线程，并启动线程...
-  assert(m_lpUDPThread == NULL);
+  /*assert(m_lpUDPThread == NULL);
   m_lpUDPThread = new CUDPThread();
   if (!m_lpUDPThread->InitThread()) {
     log_trace("Init UDPThread failed!");
@@ -307,7 +338,7 @@ bool CApp::doInitRLimit()
   return true;
 }
 
-int CApp::doCreateUdpSocket()
+/*int CApp::doCreateUdpSocket()
 {
   // 获取UDP监听端口配置...
   int nUdpPort = this->GetUdpListenPort();
@@ -369,7 +400,7 @@ int CApp::doCreateUdpSocket()
   // 返回已经绑定完毕的UDP套接字...
   m_udp_listen_fd = listen_fd;
   return m_udp_listen_fd;
-}
+}*/
 
 // 注意：阿里云专有网络无法获取外网地址，中心服务器可以同链接获取外网地址...
 // 因此，这个接口作废了，不会被调用，而是让中心服务器通过链接地址自动获取...

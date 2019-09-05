@@ -30,3 +30,10 @@ typedef map<uint32_t, rtp_lose_t> GM_MapLose;     // ¶¨Òå¼ì²âµ½µÄ¶ª°ü¶ÓÁĞ => ĞòÁ
 
 // »ñÈ¡È«¾ÖµÄApp¶ÔÏó...
 CApp * GetApp();
+
+//////////////////////////////////////////////////////////////////////////
+// ÒÔÏÂÊÇÓĞ¹ØTCPÖĞ×ª·şÎñÆ÷µÄÏà¹Ø±äÁ¿ºÍÀàĞÍ¶¨Òå...
+//////////////////////////////////////////////////////////////////////////
+class CTCPClient;
+typedef map<int, CTCPClient*>   GM_MapTCPConn;    // connfd     => CTCPClient*
+typedef map<string, string>     GM_MapJson;       // key        => value => JSON map object...

@@ -5,7 +5,7 @@
 
 // STL must use g++...
 // g++ -g udpserver.c ../common/bmem.c ../common/server.c ../common/thread.cpp app.cpp tcpcamera.cpp tcproom.cpp tcpcenter.cpp tcpclient.cpp tcpthread.cpp udpthread.cpp room.cpp network.cpp student.cpp teacher.cpp -o udpserver -lrt -lpthread -ljson
-// g++ -g udpserver.c ../common/bmem.c ../common/server.c ../common/thread.cpp app.cpp -o udpserver -lrt -lpthread -ljson
+// g++ -g udpserver.c ../common/bmem.c ../common/server.c ../common/thread.cpp app.cpp tcpclient.cpp tcpthread.cpp -o udpserver -lrt -lpthread -ljson
 // valgrind --tool=helgrind --tool=memcheck --leak-check=full --show-reachable=yes ./udpserver
 
 CApp theApp;
@@ -51,15 +51,18 @@ int main(int argc, char **argv)
   //if( !theApp.doInitWanAddr() )
   //  return -1;
   
-  // 创建udp服务器套接字...
-  if( theApp.doCreateUdpSocket() < 0 )
-    return -1;
-  // 启动超时检测线程对象...
+  // 创建udp服务器套接字 => 转移到UDP线程当中...
+  //if( theApp.doCreateUdpSocket() < 0 )
+  //  return -1;
+
+  // 分别启动TCP|UDP线程对象...
   if( !theApp.doStartThread() )
     return -1;
   // 注意：主线程退出时会删除pid文件...
+  // 循环进行超时检测...
+  theApp.doWaitForExit();
   // 阻塞循环等待UDP网络数据到达...
-  theApp.doWaitUdpSocket();
+  //theApp.doWaitUdpSocket();
   // 阻塞终止，退出进程...
   return 0;
 }

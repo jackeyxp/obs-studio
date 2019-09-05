@@ -148,6 +148,10 @@ const char * get_command_name(int inCmd)
     case kCmd_PHP_GetPlayerList:    return "PHP_GetPlayerList";
     case kCmd_PHP_Bind_Mini:        return "PHP_Bind_Mini";
     case kCmd_PHP_GetRoomFlow:      return "PHP_GetRoomFlow";
+    case kCmd_Screen_Login:         return "Screen_Login";
+    case kCmd_Screen_OnLine:        return "Screen_OnLine";
+    case kCmd_Screen_Packet:        return "Screen_Packet";
+    case kCmd_Screen_Finish:        return "Screen_Finish";
   }
   return "unknown";
 }

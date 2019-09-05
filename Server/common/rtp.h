@@ -39,6 +39,10 @@ enum {
   kCmd_PHP_GetPlayerList    = __LINE__ - CMD_LINE_START,
   kCmd_PHP_Bind_Mini        = __LINE__ - CMD_LINE_START,
   kCmd_PHP_GetRoomFlow      = __LINE__ - CMD_LINE_START,
+  kCmd_Screen_Login         = __LINE__ - CMD_LINE_START,
+  kCmd_Screen_OnLine        = __LINE__ - CMD_LINE_START,
+  kCmd_Screen_Packet        = __LINE__ - CMD_LINE_START,
+  kCmd_Screen_Finish        = __LINE__ - CMD_LINE_START,
 };
 
 // 定义与服务器交互命令结构体...
