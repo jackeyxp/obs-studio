@@ -18,8 +18,6 @@ public:
   bool        doStartThread();
   bool        doInitRLimit();
   void        doWaitForExit();
-//void        doWaitUdpSocket();
-//int         doCreateUdpSocket();
   bool        doProcessCmdLine(int argc, char * argv[]);
 public:
   string  &   GetTcpCenterAddr() { return m_strTCPCenterAddr; }
@@ -33,7 +31,6 @@ private:
   void        doStopSignal();
   void        clearAllSource();
 private:
-//int               m_udp_listen_fd;     // UDP监听套接字...
   string            m_strTCPCenterAddr;  // 中心服务器的IP地址...
   int               m_nTCPCenterPort;    // 中心服务器的访问端口...
   int               m_nUDPListenPort;    // UDP监听端口...

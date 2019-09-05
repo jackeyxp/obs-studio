@@ -220,7 +220,7 @@ void CTCPThread::doDecreaseClient(int inSinPort, string & strSinAddr)
 void CTCPThread::Entry()
 {
   // 打印TCP监听线程正常启动提示信息...
-  log_trace("TCPThread startup, port %d, max-connection is %d, backlog is %d", DEF_TCP_PORT, MAX_EPOLL_SIZE, MAX_LISTEN_SIZE);
+  log_trace("tcp-thread startup, tcp-port %d, max-connection is %d, backlog is %d", GetApp()->GetTcpListenPort(), MAX_EPOLL_SIZE, MAX_LISTEN_SIZE);
   // 进入epoll线程循环过程...
   time_t myStartTime = time(NULL);
   while( !this->IsStopRequested() ) {
