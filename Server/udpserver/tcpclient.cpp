@@ -9,7 +9,9 @@
 #define CLIENT_TIME_OUT      1 * 60   // 客户端超时断开时间1分钟(汇报频率30秒)...
 
 CTCPClient::CTCPClient(CTCPThread * lpTCPThread, int connfd, int nHostPort, string & strSinAddr)
-  : m_nClientType(0)
+  : m_nRoomID(0)
+  , m_nDBFlowID(0)
+  , m_nClientType(0)
   , m_nConnFD(connfd)
   , m_nHostPort(nHostPort)
   , m_strSinAddr(strSinAddr)
@@ -41,6 +43,8 @@ CTCPClient::~CTCPClient()
     GetApp()->GetUdpThread()->ResetRoomExFlow(m_nRoomID);
     m_lpTCPRoom->doDeleteTeacher(this);
   }*/
+  // 调用接口删除房间里对应的对象...
+  GetApp()->doTcpClientDelete(m_nRoomID, this);
   // 打印终端退出后剩余的链接数量...
   m_lpTCPThread->doDecreaseClient(this->m_nHostPort, this->m_strSinAddr);
 }
@@ -249,8 +253,7 @@ int CTCPClient::doStudentClient(Cmd_Header * lpHeader, const char * lpJsonPtr)
 // 处理Student登录事件...
 int CTCPClient::doCmdStudentLogin()
 {
-  return 0;
-  /*// 处理学生端登录过程 => 判断传递JSON数据有效性...
+  // 处理学生端登录过程 => 判断传递JSON数据有效性...
   if( m_MapJson.find("mac_addr") == m_MapJson.end() ||
     m_MapJson.find("role_type") == m_MapJson.end() ||
     m_MapJson.find("ip_addr") == m_MapJson.end() ||
@@ -265,19 +268,11 @@ int CTCPClient::doCmdStudentLogin()
   m_strPCName  = m_MapJson["pc_name"];
   m_nRoomID = atoi(m_strRoomID.c_str());
   m_nRoleType = (ROLE_TYPE)atoi(m_MapJson["role_type"].c_str());
-  // 创建或更新房间，更新房间里的学生端...
-  m_lpTCPRoom = m_lpTCPThread->doCreateRoom(m_nRoomID);
-  m_lpTCPRoom->doCreateStudent(this);
-  // 当前房间里的TCP讲师端是否在线 和 UDP讲师端是否在线...
-  CTCPClient * lpTCPTeacher = m_lpTCPRoom->GetTCPTeacher();
-  bool bIsTCPTeacherOnLine = ((lpTCPTeacher != NULL) ? true : false);
-  bool bIsUDPTeacherOnLine = GetApp()->IsUDPTeacherPusherOnLine(m_nRoomID);
-  int  nTeacherFlowID = ((lpTCPTeacher != NULL) ? lpTCPTeacher->GetDBFlowID() : 0);
-  // 发送反馈命令信息给学生端...
-  return this->doSendCmdLoginForStudent(bIsTCPTeacherOnLine, bIsUDPTeacherOnLine, nTeacherFlowID);*/
+  // 注意：内部会调用doSendCmdLoginForStudent()...
+  return GetApp()->doTcpClientCreate(m_nRoomID, this);
 }
 
-/*int CTCPClient::doSendCmdLoginForStudent(bool bIsTCPOnLine, bool bIsUDPOnLine, int nTeacherFlowID)
+int CTCPClient::doSendCmdLoginForStudent(bool bIsTCPOnLine, bool bIsUDPOnLine, int nTeacherFlowID)
 {
   // 构造转发JSON数据块 => 返回套接字|TCP讲师|UDP讲师...
   json_object * new_obj = json_object_new_object();
@@ -293,17 +288,15 @@ int CTCPClient::doCmdStudentLogin()
   json_object_put(new_obj);
   // 返回执行结果...
   return nResult;
-}*/
+}
 
 int CTCPClient::doCmdStudentOnLine()
 {
-  return 0;
-  /*// 如果不是学生端对象，直接返回...
+  // 如果不是学生端对象，直接返回...
   if( m_nClientType != kClientStudent )
     return 0;
-  // 当前房间里的TCP讲师端是否在线 和 UDP讲师端是否在线...
-  CTCPClient * lpTCPTeacher = m_lpTCPRoom->GetTCPTeacher();
-  int  nTeacherFlowID = ((lpTCPTeacher != NULL) ? lpTCPTeacher->GetDBFlowID() : 0);
+  // 当前房间里的TCP讲师端的流量编号...
+  int nTeacherFlowID = GetApp()->GetTeacherDBFlowID(m_nRoomID);
   // 构造转发JSON数据块 => 返回套TCP讲师流量编号...
   json_object * new_obj = json_object_new_object();
   json_object_object_add(new_obj, "flow_teacher", json_object_new_int(nTeacherFlowID));
@@ -314,7 +307,7 @@ int CTCPClient::doCmdStudentOnLine()
   // json对象引用计数减少...
   json_object_put(new_obj);
   // 返回执行结果...
-  return nResult;*/
+  return nResult;
 }
 
 // 处理Teacher事件...
@@ -559,9 +552,8 @@ int CTCPClient::doTransferCameraLiveCmdByTeacher(int nCmdID, int nDBCameraID)
 // 处理Teacher登录事件...
 int CTCPClient::doCmdTeacherLogin()
 {
-  return 0;
-  // 处理学生端登录过程 => 判断传递JSON数据有效性...
-  /*if( m_MapJson.find("mac_addr") == m_MapJson.end() ||
+  // 处理讲师端登录过程 => 判断传递JSON数据有效性...
+  if( m_MapJson.find("mac_addr") == m_MapJson.end() ||
     m_MapJson.find("ip_addr") == m_MapJson.end() ||
     m_MapJson.find("room_id") == m_MapJson.end() ||
     m_MapJson.find("flow_id") == m_MapJson.end() ) {
@@ -574,19 +566,10 @@ int CTCPClient::doCmdTeacherLogin()
   m_nRoomID = atoi(m_strRoomID.c_str());
   m_nDBFlowID  = atoi(m_MapJson["flow_id"].c_str());
   // 创建或更新房间，更新房间里的讲师端...
-  m_lpTCPRoom = m_lpTCPThread->doCreateRoom(m_nRoomID);
-  m_lpTCPRoom->doCreateTeacher(this);
-  // 发送反馈命令信息给讲师端 => 设置默认通道和状态...
-  return this->doSendCmdLoginForTeacher(0, false);*/
-}
-
-/*int CTCPClient::doSendCmdLoginForTeacher(int inDBCameraID, bool bIsCameraOnLine)
-{
-  // 构造转发JSON数据块 => 返回套接字|场景资源定位编号|通道编号|通道在线状态...
+  GetApp()->doTcpClientCreate(m_nRoomID, this);
+  // 构造转发JSON数据块，只返回套接字...
   json_object * new_obj = json_object_new_object();
   json_object_object_add(new_obj, "tcp_socket", json_object_new_int(m_nConnFD));
-  json_object_object_add(new_obj, "camera_id", json_object_new_int(inDBCameraID));
-  json_object_object_add(new_obj, "udp_camera", json_object_new_int(bIsCameraOnLine));
   // 转换成json字符串，获取字符串长度...
   char * lpNewJson = (char*)json_object_to_json_string(new_obj);
   // 使用统一的通用命令发送接口函数...
@@ -597,7 +580,13 @@ int CTCPClient::doCmdTeacherLogin()
   return nResult;
 }
 
-// 处理Teacher|Student获取房间里的在线摄像头列表...
+// 处理Teacher在线汇报命令...
+int CTCPClient::doCmdTeacherOnLine()
+{
+  return 0;
+}
+
+/*// 处理Teacher|Student获取房间里的在线摄像头列表...
 int CTCPClient::doCmdCommonCameraOnLineList()
 {
   // 有可能房间对象为空...
@@ -636,12 +625,6 @@ int CTCPClient::doCmdCommonCameraOnLineList()
   // 返回执行结果...
   return nResult;
 }*/
-
-// 处理Teacher在线汇报命令...
-int CTCPClient::doCmdTeacherOnLine()
-{
-  return 0;
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 注意：目前这种通过m_strSend中转发送缓存，存在一定的风险，多个线程同时发送可能就会发生命令丢失的问题...

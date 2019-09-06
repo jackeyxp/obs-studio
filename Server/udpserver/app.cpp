@@ -1,5 +1,6 @@
 
 #include "app.h"
+#include "room.h"
 #include "getopt.h"
 #include <signal.h>
 #include "tcpthread.h"
@@ -19,12 +20,16 @@ CApp::CApp()
   m_nTCPListenPort = DEF_TCP_PORT;
   // 初始化辅助线程信号量...
   os_sem_init(&m_sem_t, 0);
+  // 初始化线程互斥对象 => 互斥房间资源...
+  pthread_mutex_init(&m_room_mutex, NULL);
 }
 
 CApp::~CApp()
 {
   // 释放所有的资源对象...
   this->clearAllSource();
+  // 删除线程互斥对象 => 互斥房间资源...
+  pthread_mutex_destroy(&m_room_mutex);
   // 打印最终通过bmem分配的内存是否完全释放...
   log_trace("Number of memory leaks: %ld", bnum_allocs());
 }
@@ -283,6 +288,124 @@ void CApp::doWaitForExit()
   // 打印已经成功退出信息...
   log_trace("cleanup for gracefully terminate.");
 }
+
+string CApp::GetAllRoomList()
+{
+  string strRoomList;
+  pthread_mutex_lock(&m_room_mutex);
+  GM_MapRoom::iterator itorRoom = m_MapRoom.begin();
+  while( itorRoom != m_MapRoom.end() ) {
+    char szValue[255] = {0};
+    int  nRoomID = itorRoom->first;
+    CRoom * lpRoom = itorRoom->second;
+    int nTeacherCount = lpRoom->GetTcpTeacherCount();
+    int nStudentCount = lpRoom->GetTcpStudentCount();
+    // 构造每个房间的信息 => 房间号-老师数量-学生数量...
+    sprintf(szValue, "%d-%d-%d", nRoomID, nTeacherCount, nStudentCount);
+    // 追加特殊换行符号 => |
+    if (++itorRoom != m_MapRoom.end()) {
+      strcat(szValue, "|");
+    }
+    // 将数据更新到字符串缓存当中...
+    strRoomList.append(szValue, strlen(szValue));
+  }
+  pthread_mutex_unlock(&m_room_mutex);
+  return strRoomList;
+}
+
+int CApp::GetTeacherDBFlowID(int inRoomID)
+{
+  int nTeacherDBFlowID = 0;
+  pthread_mutex_lock(&m_room_mutex);
+  GM_MapRoom::iterator itorRoom = m_MapRoom.find(inRoomID);
+  if (itorRoom != m_MapRoom.end()) {
+    CRoom * lpRoom = itorRoom->second;
+    nTeacherDBFlowID = lpRoom->GetTeacherDBFlowID();
+  }
+  pthread_mutex_unlock(&m_room_mutex);
+  return nTeacherDBFlowID;
+}
+
+int CApp::doTCPRoomCommand(int nCmdID, int nRoomID)
+{
+  if( m_lpTCPThread == NULL || this->IsSignalQuit() )
+    return -1;
+  return m_lpTCPThread->doRoomCommand(nCmdID, nRoomID);
+}
+
+int CApp::doTcpClientCreate(int inRoomID, CTCPClient * lpClient)
+{
+  int nResult = -1;
+  if (inRoomID <= 0 || lpClient == NULL)
+    return nResult;
+  pthread_mutex_lock(&m_room_mutex);
+  CRoom * lpRoom = NULL;
+  // 首先，通过房间号码创建或更新房间对象...
+  GM_MapRoom::iterator itorRoom = m_MapRoom.find(inRoomID);
+  if (itorRoom != m_MapRoom.end()) {
+    lpRoom = itorRoom->second;
+  } else {
+    lpRoom = new CRoom(inRoomID);
+    m_MapRoom[inRoomID] = lpRoom;
+  }
+  // 将终端对象加入到指定的房间当中...
+  nResult = lpRoom->doTcpClientCreate(lpClient);
+  pthread_mutex_unlock(&m_room_mutex);
+  return nResult;
+}
+
+int CApp::doTcpClientDelete(int inRoomID, CTCPClient * lpClient)
+{
+  int nResult = -1;
+  if (inRoomID <= 0 || lpClient == NULL)
+    return nResult;
+  pthread_mutex_lock(&m_room_mutex);
+  CRoom * lpRoom = NULL;
+  GM_MapRoom::iterator itorRoom = m_MapRoom.find(inRoomID);
+  if (itorRoom != m_MapRoom.end()) {
+    lpRoom = itorRoom->second;
+    nResult = lpRoom->doTcpClientDelete(lpClient);
+  }
+  pthread_mutex_unlock(&m_room_mutex);
+  return nResult;
+}
+
+/*int CApp::doUdpClientCreate(int inRoomID, CUDPClient * lpClient)
+{
+  int nResult = -1;
+  if (inRoomID <= 0 || lpClient == NULL)
+    return nResult;
+  pthread_mutex_lock(&m_room_mutex);
+  CRoom * lpRoom = NULL;
+  GM_MapRoom::iterator itorRoom = m_MapRoom.find(inRoomID);
+  // 首先，通过房间号码创建或更新房间对象...
+  if (itorRoom != m_MapRoom.end()) {
+    lpRoom = itorRoom->second;
+  } else {
+    lpRoom = new CRoom(inRoomID);
+    m_MapRoom[inRoomID] = lpRoom;
+  }
+  // 将终端对象加入到指定的房间当中...
+  nResult = lpRoom->doUdpClientCreate(lpClient);
+  pthread_mutex_unlock(&m_room_mutex);
+  return nResult;
+}
+
+int CApp::doUdpClientDelete(int inRoomID, CUDPClient * lpClient)
+{
+  int nResult = -1;
+  if (inRoomID <= 0 || lpClient == NULL)
+    return nResult;
+  pthread_mutex_lock(&m_room_mutex);
+  CRoom * lpRoom = NULL;
+  GM_MapRoom::iterator itorRoom = m_MapRoom.find(inRoomID);
+  if (itorRoom != m_MapRoom.end()) {
+    lpRoom = itorRoom->second;
+    nResult = lpRoom->doUdpClientDelete(lpClient);
+  }
+  pthread_mutex_unlock(&m_room_mutex);
+  return nResult;
+}*/
 
 // 注意：阿里云专有网络无法获取外网地址，中心服务器可以同链接获取外网地址...
 // 因此，这个接口作废了，不会被调用，而是让中心服务器通过链接地址自动获取...

@@ -14,11 +14,13 @@ public:
   int          doHandleTimeout();
   int          doEpollEvent(int nEvent);
   int          GetConnFD() { return m_center_fd; }
+  int          doRoomCommand(int nCmdID, int nRoomID);
 private:
   bool         IsTimeout();
   void         ResetTimeout();
   int          doHandleWrite();
   int          doHandleRead();
+  int          doCmdUdpServerOnLine();
   int          SetNonBlocking(int sockfd);
   int          doCreateTCPSocket(const char * lpInAddr, int nHostPort);
   int          doSendCommonCmd(int nCmdID, const char * lpJsonPtr = NULL, int nJsonSize = 0);

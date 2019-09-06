@@ -34,6 +34,8 @@ CApp * GetApp();
 //////////////////////////////////////////////////////////////////////////
 // 以下是有关TCP中转服务器的相关变量和类型定义...
 //////////////////////////////////////////////////////////////////////////
+class CRoom;
 class CTCPClient;
-typedef map<int, CTCPClient*>   GM_MapTCPConn;    // connfd     => CTCPClient*
+typedef map<int, CRoom*>        GM_MapRoom;       // RoomID     => CRoom*
 typedef map<string, string>     GM_MapJson;       // key        => value => JSON map object...
+typedef map<int, CTCPClient*>   GM_MapTCPConn;    // connfd     => CTCPClient*

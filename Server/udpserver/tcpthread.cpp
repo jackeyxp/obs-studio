@@ -40,6 +40,14 @@ CTCPThread::~CTCPThread()
   this->clearAllClient();
 }
 
+int CTCPThread::doRoomCommand(int inCmdID, int inRoomID)
+{
+  if( m_lpTCPCenter == NULL )
+    return -1;
+  // 中心套接字有效，转发计数器变化通知...
+  return m_lpTCPCenter->doRoomCommand(inCmdID, inRoomID);
+}
+
 bool CTCPThread::InitThread()
 {
   // 创建TCP服务器监听套接字，并加入到epoll队列当中...

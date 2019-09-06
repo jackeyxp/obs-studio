@@ -3,6 +3,7 @@
 
 #include "global.h"
 
+class CTCPClient;
 class CTCPThread;
 class CUDPThread;
 class CApp
@@ -19,6 +20,14 @@ public:
   bool        doInitRLimit();
   void        doWaitForExit();
   bool        doProcessCmdLine(int argc, char * argv[]);
+public:
+  string      GetAllRoomList();
+  int         GetTeacherDBFlowID(int inRoomID);
+  int         doTCPRoomCommand(int nCmdID, int nRoomID);
+  int         doTcpClientCreate(int inRoomID, CTCPClient * lpClient);
+  int         doTcpClientDelete(int inRoomID, CTCPClient * lpClient);
+//int         doUdpClientCreate(int inRoomID, CUDPClient * lpClient);
+//int         doUdpClientDelete(int inRoomID, CUDPClient * lpClient);
 public:
   string  &   GetTcpCenterAddr() { return m_strTCPCenterAddr; }
   int         GetTcpCenterPort() { return m_nTCPCenterPort; }
@@ -40,4 +49,6 @@ private:
   os_sem_t     *    m_sem_t;             // 辅助线程信号量...
   CTCPThread   *    m_lpTCPThread;       // TCP监听线程对象...
   CUDPThread   *    m_lpUDPThread;       // UDP数据线程对象...
+  GM_MapRoom        m_MapRoom;           // 房间集合对象...
+  pthread_mutex_t   m_room_mutex;        // 房间资源互斥对象...
 };

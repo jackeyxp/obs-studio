@@ -16,6 +16,7 @@ public:
   GM_MapTCPConn & GetMapConnect() { return m_MapConnect; }
 public:
   bool    InitThread();
+  int     doRoomCommand(int inCmdID, int inRoomID);
   void    doIncreaseClient(int inSinPort, string & strSinAddr);
   void    doDecreaseClient(int inSinPort, string & strSinAddr);
 private:
