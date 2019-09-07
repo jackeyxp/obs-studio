@@ -12,6 +12,7 @@ public:
   virtual void Entry();
 public:
   bool        InitThread();
+  int         GetUdpListenFD() { return m_udp_listen_fd; }
 private:
   int         doCreateListenSocket(int nHostPort);
 private:

@@ -5,7 +5,7 @@
 #include <signal.h>
 #include "tcpthread.h"
 #include "udpthread.h"
-#include "../common/bmem.h"
+#include "udpclient.h"
 
 CApp::CApp()
   : m_lpTCPThread(NULL)
@@ -18,20 +18,74 @@ CApp::CApp()
   m_nTCPCenterPort = DEF_CENTER_PORT;
   m_nUDPListenPort = DEF_UDP_PORT;
   m_nTCPListenPort = DEF_TCP_PORT;
+  // 初始化网络环形队列...
+  circlebuf_init(&m_circle);
   // 初始化辅助线程信号量...
   os_sem_init(&m_sem_t, 0);
   // 初始化线程互斥对象 => 互斥房间资源...
   pthread_mutex_init(&m_room_mutex, NULL);
+  pthread_mutex_init(&m_buff_mutex, NULL);
 }
 
 CApp::~CApp()
 {
   // 释放所有的资源对象...
   this->clearAllSource();
+  // 释放网络环形队列空间...
+  circlebuf_free(&m_circle);
+  // 释放辅助线程信号量...
+  os_sem_destroy(m_sem_t);
   // 删除线程互斥对象 => 互斥房间资源...
   pthread_mutex_destroy(&m_room_mutex);
+  pthread_mutex_destroy(&m_buff_mutex);
   // 打印最终通过bmem分配的内存是否完全释放...
   log_trace("Number of memory leaks: %ld", bnum_allocs());
+}
+
+void CApp::clearAllSource()
+{
+  // 删除TCP线程对象...
+  if (m_lpTCPThread != NULL) {
+    delete m_lpTCPThread; m_lpTCPThread = NULL;
+    log_trace("tcp-thread has been deleted.");
+  }
+  // 删除UDP线程对象...
+  if (m_lpUDPThread != NULL) {
+    delete m_lpUDPThread; m_lpUDPThread = NULL;
+    log_trace("udp-thread has been deleted.");
+  }
+  // 释放所有的UDP终端对象...
+  this->clearAllUdpClient();
+  // 释放所有的房间对象...
+  this->clearAllRoom();
+}
+
+void CApp::clearAllUdpClient()
+{
+  if (m_MapUdpConn.size() <= 0)
+    return;
+  // 遍历集合并删除UDP对象...
+  GM_MapUDPConn::iterator itorItem;
+  for(itorItem = m_MapUdpConn.begin(); itorItem != m_MapUdpConn.end(); ++itorItem) {
+    CUDPClient * lpClient = itorItem->second;
+    delete lpClient; lpClient = NULL;
+  }
+  // 必须清理，否则会重复删除...
+  m_MapUdpConn.clear();
+}
+
+void CApp::clearAllRoom()
+{
+  if (m_MapRoom.size() <= 0)
+    return;
+  // 遍历集合并删除房间对象...
+  GM_MapRoom::iterator itorRoom;
+  for(itorRoom = m_MapRoom.begin(); itorRoom != m_MapRoom.end(); ++itorRoom) {
+    CRoom * lpRoom = itorRoom->second;
+    delete lpRoom; lpRoom = NULL;
+  }
+  // 必须清理，否则会重复删除...
+  m_MapRoom.clear();
 }
 
 // 调用位置，详见 udpserver.c::main() 函数，只调用一次...
@@ -213,25 +267,6 @@ bool CApp::acquire_pid_file()
   return true;
 }
 
-void CApp::clearAllSource()
-{
-  // 删除TCP线程对象...
-  if (m_lpTCPThread != NULL) {
-    delete m_lpTCPThread; m_lpTCPThread = NULL;
-    log_trace("tcp-thread has been deleted.");
-  }
-  // 删除UDP线程对象...
-  if (m_lpUDPThread != NULL) {
-    delete m_lpUDPThread; m_lpUDPThread = NULL;
-    log_trace("udp-thread has been deleted.");
-  }
-  // 释放辅助线程信号量...
-  if (m_sem_t != NULL) {
-    os_sem_destroy(m_sem_t);
-    m_sem_t = NULL;
-  }
-}
-
 void CApp::onSignalQuit()
 {
   // 设置退出标志...
@@ -271,6 +306,25 @@ bool CApp::doInitRLimit()
   return true;
 }
 
+bool CApp::onRecvEvent(uint32_t inHostAddr, uint16_t inHostPort, char * lpBuffer, int inBufSize)
+{
+  // 如果线程已经处于退出状态，直接返回...
+  if( this->IsSignalQuit() )
+    return true;
+  // 线程进入互斥保护状态...
+  pthread_mutex_lock(&m_buff_mutex);
+  // 环形队列的数据结构 => uint32_t|uint16_t|int|char => HostAddr|HostPort|Size|Data
+  circlebuf_push_back(&m_circle, &inHostAddr, sizeof(uint32_t));
+  circlebuf_push_back(&m_circle, &inHostPort, sizeof(uint16_t));
+  circlebuf_push_back(&m_circle, &inBufSize, sizeof(int));
+  circlebuf_push_back(&m_circle, lpBuffer, inBufSize);
+  // 线程退出互斥保护状态...
+  pthread_mutex_unlock(&m_buff_mutex);
+  // 通知线程信号量状态发生改变...
+  os_sem_post(m_sem_t);
+  return true;
+}
+
 void CApp::doWaitForExit()
 {
   // 设定默认的信号超时时间 => APP_SLEEP_MS 毫秒...
@@ -280,6 +334,18 @@ void CApp::doWaitForExit()
     // 注意：这里用信号量代替sleep的目的是为了避免等待时的命令延时...
     // 注意：无论信号量是超时还是被触发，都要执行下面的操作...
     os_sem_timedwait(m_sem_t, next_wait_ms);
+    // 如果收到退出标志，直接退出循环...
+    if (this->IsSignalQuit()) break;
+    // 每隔 1 秒服务器向所有终端发起探测命令包...
+    this->doSendDetectCmd();
+    // 每隔 10 秒检测一次对象超时...
+    this->doCheckTimeout();
+    // 处理一个到达的UDP数据包...
+    this->doRecvPacket();
+    // 先发送针对推流者的补包命令...
+    this->doSendSupplyCmd();
+    // 再发送针对观看者的丢包命令...
+    this->doSendLoseCmd();
   }
   // 预先释放所有分配的线程和资源...
   this->clearAllSource();
@@ -287,6 +353,133 @@ void CApp::doWaitForExit()
   this->destory_pid_file();
   // 打印已经成功退出信息...
   log_trace("cleanup for gracefully terminate.");
+}
+
+void CApp::doCheckTimeout()
+{
+  
+}
+
+void CApp::doSendDetectCmd()
+{
+  
+}
+
+void CApp::doSendSupplyCmd()
+{
+  
+}
+
+void CApp::doSendLoseCmd()
+{
+  
+}
+
+void CApp::doRecvPacket()
+{
+  // 准备接受数据块变量...
+  uint32_t inHostAddr  = 0;
+  uint16_t inHostPort  = 0;
+  int      inBufSize   = 0;
+  bool     bCanSemPost = false;
+  char     recvBuff[MAX_BUFF_LEN] = {0};
+  // 线程进入互斥保护状态...
+  pthread_mutex_lock(&m_buff_mutex);
+  // 环形队列有数据才处理...
+  if( m_circle.size > 0 ) {
+    // 从环形队列读取一个完整数据块 => uint32_t|uint16_t|int|char => HostAddr|HostPort|Size|Data
+    circlebuf_pop_front(&m_circle, &inHostAddr, sizeof(uint32_t));
+    circlebuf_pop_front(&m_circle, &inHostPort, sizeof(uint16_t));
+    circlebuf_pop_front(&m_circle, &inBufSize, sizeof(int));
+    circlebuf_pop_front(&m_circle, recvBuff, inBufSize);
+    bCanSemPost = ((m_circle.size > 0 ) ? true : false);
+  }
+  // 线程退出互斥保护状态...
+  pthread_mutex_unlock(&m_buff_mutex);
+  // 处理网络数据到达事件 => 不要在这里对房间资源互斥保护...
+  if( inBufSize > 0 && inHostAddr > 0 && inHostPort > 0 ) {
+    this->doProcSocket(inHostAddr, inHostPort, recvBuff, inBufSize);
+  }
+  // 环形队列还有数据，改变信号量，再次触发...
+  bCanSemPost ? os_sem_post(m_sem_t) : NULL;  
+}
+
+bool CApp::doProcSocket(uint32_t nHostSinAddr, uint16_t nHostSinPort, char * lpBuffer, int inBufSize)
+{
+  // 通过第一个字节的低2位，判断终端类型...
+  uint8_t tmTag = lpBuffer[0] & 0x03;
+  // 获取第一个字节的中2位，得到终端身份...
+  uint8_t idTag = (lpBuffer[0] >> 2) & 0x03;
+  // 获取第一个字节的高4位，得到数据包类型...
+  uint8_t ptTag = (lpBuffer[0] >> 4) & 0x0F;
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // 打印调试信息 => 打印所有接收到的数据包内容格式信息...
+  //log_debug("recvfrom, size: %u, tmTag: %d, idTag: %d, ptTag: %d", inBufSize, tmTag, idTag, ptTag);
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // 如果终端既不是Student也不是Teacher或Server，错误终端，直接扔掉数据...
+  if( tmTag != TM_TAG_STUDENT && tmTag != TM_TAG_TEACHER && tmTag != TM_TAG_SERVER ) {
+    log_debug("Error Terminate Type: %d", tmTag);
+    return false;
+  }
+  // 如果终端身份既不是Pusher也不是Looker或Server，错误身份，直接扔掉数据...
+  if( idTag != ID_TAG_PUSHER && idTag != ID_TAG_LOOKER && idTag != ID_TAG_SERVER ) {
+    log_debug("Error Identify Type: %d", idTag);
+    return false;
+  }
+  // 如果是删除指令，需要做特殊处理...
+  if( ptTag == PT_TAG_DELETE ) {
+    this->doTagDelete(nHostSinPort);
+    return false;
+  }
+  // 通过获得的端口，查找CUDPClient对象...
+  CUDPClient * lpClient = NULL;
+  GM_MapUDPConn::iterator itorItem;
+  itorItem = m_MapUdpConn.find(nHostSinPort);
+  // 如果没有找到创建一个新的对象...
+  if( itorItem == m_MapUdpConn.end() ) {
+    // 如果不是创建命令 => 打印错误信息...
+    if( ptTag != PT_TAG_CREATE ) {
+      log_debug("Server Reject for tmTag: %s, idTag: %s, ptTag: %d", get_tm_tag(tmTag), get_id_tag(idTag), ptTag);
+      return false;
+    }
+    assert( ptTag == PT_TAG_CREATE );
+    // 只有创建命令可以被用来创建新对象...
+    int nUdpListenFD = m_lpUDPThread->GetUdpListenFD();
+    lpClient = new CUDPClient(nUdpListenFD, tmTag, idTag, nHostSinAddr, nHostSinPort);
+  } else {
+    // 注意：这里可能会连续收到 PT_TAG_CREATE 命令，不影响...
+    lpClient = itorItem->second;
+    assert( lpClient->GetHostAddr() == nHostSinAddr );
+    assert( lpClient->GetHostPort() == nHostSinPort );
+    // 注意：探测包的tmTag和idTag，可能与对象的tmTag和idTag不一致 => 探测包可能是转发的，身份是相反的...
+  }
+  // 如果网络层对象为空，打印错误...
+  if( lpClient == NULL ) {
+    log_trace("Error CUDPClient is NULL");
+    return false;
+  }
+  // 将网络对象更新到对象集合当中...
+  m_MapUdpConn[nHostSinPort] = lpClient;
+  // 将获取的数据包投递到网络对象当中...
+  return lpClient->doProcessUdpEvent(ptTag, lpBuffer, inBufSize);
+}
+
+void CApp::doTagDelete(int nHostPort)
+{
+  // 通过获得的端口，查找CUDPClient对象...
+  CUDPClient * lpClient = NULL;
+  GM_MapUDPConn::iterator itorItem;
+  itorItem = m_MapUdpConn.find(nHostPort);
+  if( itorItem == m_MapUdpConn.end() ) {
+    log_debug("Delete can't find CUDPClient by host port(%d)", nHostPort);
+    return;
+  }
+  // 将找到的CUDPClient对象删除之...
+  lpClient = itorItem->second;
+  delete lpClient; lpClient = NULL;
+  m_MapUdpConn.erase(itorItem++);  
 }
 
 string CApp::GetAllRoomList()
@@ -326,11 +519,11 @@ int CApp::GetTeacherDBFlowID(int inRoomID)
   return nTeacherDBFlowID;
 }
 
-int CApp::doTCPRoomCommand(int nCmdID, int nRoomID)
+int CApp::doTCPRoomCommand(int inRoomID, int inCmdID)
 {
   if( m_lpTCPThread == NULL || this->IsSignalQuit() )
     return -1;
-  return m_lpTCPThread->doRoomCommand(nCmdID, nRoomID);
+  return m_lpTCPThread->doRoomCommand(inRoomID, inCmdID);
 }
 
 int CApp::doTcpClientCreate(int inRoomID, CTCPClient * lpClient)
@@ -370,7 +563,7 @@ int CApp::doTcpClientDelete(int inRoomID, CTCPClient * lpClient)
   return nResult;
 }
 
-/*int CApp::doUdpClientCreate(int inRoomID, CUDPClient * lpClient)
+int CApp::doUdpClientCreate(int inRoomID, CUDPClient * lpClient, char * lpBuffer, int inBufSize)
 {
   int nResult = -1;
   if (inRoomID <= 0 || lpClient == NULL)
@@ -386,7 +579,7 @@ int CApp::doTcpClientDelete(int inRoomID, CTCPClient * lpClient)
     m_MapRoom[inRoomID] = lpRoom;
   }
   // 将终端对象加入到指定的房间当中...
-  nResult = lpRoom->doUdpClientCreate(lpClient);
+  nResult = lpRoom->doUdpClientCreate(lpClient, lpBuffer, inBufSize);
   pthread_mutex_unlock(&m_room_mutex);
   return nResult;
 }
@@ -405,7 +598,7 @@ int CApp::doUdpClientDelete(int inRoomID, CUDPClient * lpClient)
   }
   pthread_mutex_unlock(&m_room_mutex);
   return nResult;
-}*/
+}
 
 // 注意：阿里云专有网络无法获取外网地址，中心服务器可以同链接获取外网地址...
 // 因此，这个接口作废了，不会被调用，而是让中心服务器通过链接地址自动获取...

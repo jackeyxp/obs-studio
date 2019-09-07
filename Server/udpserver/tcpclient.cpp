@@ -2,6 +2,7 @@
 #include "app.h"
 #include "tcpclient.h"
 #include "tcpthread.h"
+#include "udpclient.h"
 #include <json/json.h>
 
 #define MAX_PATH_SIZE           260
@@ -13,6 +14,7 @@ CTCPClient::CTCPClient(CTCPThread * lpTCPThread, int connfd, int nHostPort, stri
   , m_nDBFlowID(0)
   , m_nClientType(0)
   , m_nConnFD(connfd)
+  , m_lpUdpPusher(NULL)
   , m_nHostPort(nHostPort)
   , m_strSinAddr(strSinAddr)
   , m_lpTCPThread(lpTCPThread)
@@ -47,6 +49,39 @@ CTCPClient::~CTCPClient()
   GetApp()->doTcpClientDelete(m_nRoomID, this);
   // 打印终端退出后剩余的链接数量...
   m_lpTCPThread->doDecreaseClient(this->m_nHostPort, this->m_strSinAddr);
+}
+
+int CTCPClient::doUdpCreateClient(CUDPClient * lpClient)
+{
+  int nHostPort = lpClient->GetHostPort();
+  uint8_t idTag = lpClient->GetIdTag();
+  // 如果是推流者，更新推流对象 => 只有一个推流者...
+  if (idTag == ID_TAG_PUSHER) {
+    m_lpUdpPusher = lpClient;
+  } else if (idTag == ID_TAG_LOOKER) {
+    // 如果观看者，放入集合当中 => 有多个观看者...
+    m_MapUdpLooker[nHostPort] = lpClient;
+  }
+  return 0;
+}
+
+int CTCPClient::doUdpDeleteClient(CUDPClient * lpClient)
+{
+  int nHostPort = lpClient->GetHostPort();
+  uint8_t idTag = lpClient->GetIdTag();
+  // 如果是推流者，直接置空...
+  if (idTag == ID_TAG_PUSHER) {
+    m_lpUdpPusher = NULL;
+  } else if (idTag == ID_TAG_LOOKER) {
+    // 如果观看者，从集合中删除之...
+    m_MapUdpLooker.erase(nHostPort);
+    /*GM_MapUDPConn::iterator itorItem;
+    itorItem = m_MapUdpLooker.find(nHostPort);
+    if (itorItem != m_MapUdpLooker.end()) {
+      m_MapUdpLooker.erase(itorItem);
+    }*/
+  }
+  return 0;
 }
 //
 // 发送网络数据 => 始终设置读事件...

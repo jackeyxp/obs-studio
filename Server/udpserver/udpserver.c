@@ -4,8 +4,7 @@
 //#include <execinfo.h>
 
 // STL must use g++...
-// g++ -g udpserver.c ../common/bmem.c ../common/server.c ../common/thread.cpp app.cpp tcpcamera.cpp tcproom.cpp tcpcenter.cpp tcpclient.cpp tcpthread.cpp udpthread.cpp room.cpp network.cpp student.cpp teacher.cpp -o udpserver -lrt -lpthread -ljson
-// g++ -g udpserver.c ../common/bmem.c ../common/server.c ../common/thread.cpp app.cpp room.cpp tcpcenter.cpp tcpclient.cpp tcpthread.cpp udpthread.cpp -o udpserver -lrt -lpthread -ljson
+// g++ -g udpserver.c ../common/bmem.c ../common/server.c ../common/thread.cpp app.cpp room.cpp tcpcenter.cpp tcpclient.cpp tcpthread.cpp udpclient.cpp udpthread.cpp -o udpserver -lrt -lpthread -ljson
 // valgrind --tool=helgrind --tool=memcheck --leak-check=full --show-reachable=yes ./udpserver
 
 CApp theApp;

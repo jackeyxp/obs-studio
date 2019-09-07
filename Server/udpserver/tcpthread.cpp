@@ -36,16 +36,16 @@ CTCPThread::~CTCPThread()
     delete m_lpTCPCenter;
     m_lpTCPCenter = NULL;
   }
-  // 先删终端，再删房间 => 终端有房间指针引用...
+  // 删除所有的TCP连接对象...
   this->clearAllClient();
 }
 
-int CTCPThread::doRoomCommand(int inCmdID, int inRoomID)
+int CTCPThread::doRoomCommand(int inRoomID, int inCmdID)
 {
   if( m_lpTCPCenter == NULL )
     return -1;
   // 中心套接字有效，转发计数器变化通知...
-  return m_lpTCPCenter->doRoomCommand(inCmdID, inRoomID);
+  return m_lpTCPCenter->doRoomCommand(inRoomID, inCmdID);
 }
 
 bool CTCPThread::InitThread()

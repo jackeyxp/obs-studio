@@ -14,7 +14,7 @@ public:
   int          doHandleTimeout();
   int          doEpollEvent(int nEvent);
   int          GetConnFD() { return m_center_fd; }
-  int          doRoomCommand(int nCmdID, int nRoomID);
+  int          doRoomCommand(int inRoomID, int inCmdID);
 private:
   bool         IsTimeout();
   void         ResetTimeout();

@@ -3,6 +3,7 @@
 
 #include "../common/server.h"
 #include "../common/rtp.h"
+#include "../common/circlebuf.h"
 
 #define DEFAULT_INI_FILE   "udpserver.ini"
 #define DEFAULT_PID_FILE   "udpserver.pid"
@@ -36,6 +37,8 @@ CApp * GetApp();
 //////////////////////////////////////////////////////////////////////////
 class CRoom;
 class CTCPClient;
+class CUDPClient;
 typedef map<int, CRoom*>        GM_MapRoom;       // RoomID     => CRoom*
 typedef map<string, string>     GM_MapJson;       // key        => value => JSON map object...
-typedef map<int, CTCPClient*>   GM_MapTCPConn;    // connfd     => CTCPClient*
+typedef map<int, CTCPClient*>   GM_MapTCPConn;    // connfd     => CTCPClient* => Student | Teacher
+typedef map<int, CUDPClient*>   GM_MapUDPConn;    // PortID     => CUDPClient* => Student | Teacher

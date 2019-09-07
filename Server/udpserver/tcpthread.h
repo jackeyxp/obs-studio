@@ -13,10 +13,9 @@ public:
   virtual void Entry();
 public:
   int     GetEpollFD() { return m_epoll_fd; }
-  GM_MapTCPConn & GetMapConnect() { return m_MapConnect; }
 public:
   bool    InitThread();
-  int     doRoomCommand(int inCmdID, int inRoomID);
+  int     doRoomCommand(int inRoomID, int inCmdID);
   void    doIncreaseClient(int inSinPort, string & strSinAddr);
   void    doDecreaseClient(int inSinPort, string & strSinAddr);
 private:
