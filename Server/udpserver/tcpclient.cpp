@@ -331,7 +331,7 @@ int CTCPClient::doCmdStudentOnLine()
   if( m_nClientType != kClientStudent )
     return 0;
   // 当前房间里的TCP讲师端的流量编号...
-  int nTeacherFlowID = GetApp()->GetTeacherDBFlowID(m_nRoomID);
+  int nTeacherFlowID = GetApp()->GetTcpTeacherDBFlowID(m_nRoomID);
   // 构造转发JSON数据块 => 返回套TCP讲师流量编号...
   json_object * new_obj = json_object_new_object();
   json_object_object_add(new_obj, "flow_teacher", json_object_new_int(nTeacherFlowID));

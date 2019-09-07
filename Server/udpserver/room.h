@@ -9,10 +9,10 @@ public:
   CRoom(int inRoomID);
   ~CRoom();
 public:
+  int         GetTcpTeacherDBFlowID();
   int         GetTcpTeacherCount() { return m_lpTCPTeacher ? 1 : 0; }
   int         GetTcpStudentCount() { return m_MapTCPStudent.size(); }
 public:
-  int         GetTeacherDBFlowID();
   int         doTcpClientCreate(CTCPClient * lpClient);
   int         doTcpClientDelete(CTCPClient * lpClient);
   int         doUdpClientDelete(CUDPClient * lpClient);

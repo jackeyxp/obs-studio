@@ -14,7 +14,7 @@ CRoom::~CRoom()
 {
 }
 
-int CRoom::GetTeacherDBFlowID()
+int CRoom::GetTcpTeacherDBFlowID()
 {
   return ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetDBFlowID() : 0);
 }
@@ -35,7 +35,7 @@ int CRoom::doTcpCreateTeacher(CTCPClient * lpClient)
   // 注意：这里只有当讲师端为空时，才发送通知，否则，会造成计数器增加，造成后续讲师端无法登陆的问题...
   // 只有当讲师端对象为空时，才转发计数器变化通知...
   if( m_lpTCPTeacher == NULL ) {
-    GetApp()->doTCPRoomCommand(m_nRoomID, kCmd_UdpServer_AddTeacher);
+    GetApp()->doTcpRoomCommand(m_nRoomID, kCmd_UdpServer_AddTeacher);
   }
   // 更新讲师端连接对象...
   m_lpTCPTeacher = lpClient;
@@ -47,7 +47,7 @@ int CRoom::doTcpCreateStudent(CTCPClient * lpClient)
   int nConnFD = lpClient->GetConnFD();
   m_MapTCPStudent[nConnFD] = lpClient;
   // 获取TCP线程对象，转发计数器变化通知...
-  GetApp()->doTCPRoomCommand(m_nRoomID, kCmd_UdpServer_AddStudent);
+  GetApp()->doTcpRoomCommand(m_nRoomID, kCmd_UdpServer_AddStudent);
   // 获取当前房间里的讲师端状态...
   bool bIsUDPTeacherOnLine = false;
   bool bIsTCPTeacherOnLine = ((m_lpTCPTeacher != NULL) ? true : false);
@@ -75,7 +75,7 @@ int CRoom::doTcpDeleteTeacher(CTCPClient * lpClient)
   // 如果是房间里的老师端，置空，返回...
   m_lpTCPTeacher = NULL;
   // 获取TCP线程对象，转发计数器变化通知...
-  GetApp()->doTCPRoomCommand(m_nRoomID, kCmd_UdpServer_DelTeacher);
+  GetApp()->doTcpRoomCommand(m_nRoomID, kCmd_UdpServer_DelTeacher);
   return 0;
 }
 
@@ -87,7 +87,7 @@ int CRoom::doTcpDeleteStudent(CTCPClient * lpClient)
   if( itorItem != m_MapTCPStudent.end() ) {
     m_MapTCPStudent.erase(itorItem);
     // 获取TCP线程对象，转发计数器变化通知...
-    GetApp()->doTCPRoomCommand(m_nRoomID, kCmd_UdpServer_DelStudent);
+    GetApp()->doTcpRoomCommand(m_nRoomID, kCmd_UdpServer_DelStudent);
     return 0;
   }
   // 如果通过FD方式没有找到，通过指针遍历查找...
@@ -97,7 +97,7 @@ int CRoom::doTcpDeleteStudent(CTCPClient * lpClient)
     if(itorItem->second == lpClient) {
       m_MapTCPStudent.erase(itorItem);
       // 获取TCP线程对象，转发计数器变化通知...
-      GetApp()->doTCPRoomCommand(m_nRoomID, kCmd_UdpServer_DelStudent);
+      GetApp()->doTcpRoomCommand(m_nRoomID, kCmd_UdpServer_DelStudent);
       return 0;
     }
     // 2018.09.12 - by jackey => 造成过严重问题...

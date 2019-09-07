@@ -506,20 +506,20 @@ string CApp::GetAllRoomList()
   return strRoomList;
 }
 
-int CApp::GetTeacherDBFlowID(int inRoomID)
+int CApp::GetTcpTeacherDBFlowID(int inRoomID)
 {
   int nTeacherDBFlowID = 0;
   pthread_mutex_lock(&m_room_mutex);
   GM_MapRoom::iterator itorRoom = m_MapRoom.find(inRoomID);
   if (itorRoom != m_MapRoom.end()) {
     CRoom * lpRoom = itorRoom->second;
-    nTeacherDBFlowID = lpRoom->GetTeacherDBFlowID();
+    nTeacherDBFlowID = lpRoom->GetTcpTeacherDBFlowID();
   }
   pthread_mutex_unlock(&m_room_mutex);
   return nTeacherDBFlowID;
 }
 
-int CApp::doTCPRoomCommand(int inRoomID, int inCmdID)
+int CApp::doTcpRoomCommand(int inRoomID, int inCmdID)
 {
   if( m_lpTCPThread == NULL || this->IsSignalQuit() )
     return -1;

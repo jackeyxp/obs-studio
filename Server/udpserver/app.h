@@ -25,8 +25,8 @@ public: /* 针对CUDPThread线程的数据接口... */
   bool        onRecvEvent(uint32_t inHostAddr, uint16_t inHostPort, char * lpBuffer, int inBufSize);
 public: /* 针对CRoom的房间接口... */
   string      GetAllRoomList();
-  int         GetTeacherDBFlowID(int inRoomID);
-  int         doTCPRoomCommand(int inRoomID, int inCmdID);
+  int         GetTcpTeacherDBFlowID(int inRoomID);
+  int         doTcpRoomCommand(int inRoomID, int inCmdID);
   int         doTcpClientCreate(int inRoomID, CTCPClient * lpClient);
   int         doTcpClientDelete(int inRoomID, CTCPClient * lpClient);
   int         doUdpClientDelete(int inRoomID, CUDPClient * lpClient);
