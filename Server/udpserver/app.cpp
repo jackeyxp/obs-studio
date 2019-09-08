@@ -482,6 +482,13 @@ void CApp::doTagDelete(int nHostPort)
   m_MapUdpConn.erase(itorItem++);  
 }
 
+int CApp::doTcpRoomCommand(int inRoomID, int inCmdID)
+{
+  if( m_lpTCPThread == NULL || this->IsSignalQuit() )
+    return -1;
+  return m_lpTCPThread->doRoomCommand(inRoomID, inCmdID);
+}
+
 string CApp::GetAllRoomList()
 {
   string strRoomList;
@@ -506,98 +513,25 @@ string CApp::GetAllRoomList()
   return strRoomList;
 }
 
-int CApp::GetTcpTeacherDBFlowID(int inRoomID)
+// 创建房间 => 通过房间号进行创建 => 需要互斥...
+CRoom * CApp::doCreateRoom(int inRoomID)
 {
-  int nTeacherDBFlowID = 0;
-  pthread_mutex_lock(&m_room_mutex);
-  GM_MapRoom::iterator itorRoom = m_MapRoom.find(inRoomID);
-  if (itorRoom != m_MapRoom.end()) {
-    CRoom * lpRoom = itorRoom->second;
-    nTeacherDBFlowID = lpRoom->GetTcpTeacherDBFlowID();
-  }
-  pthread_mutex_unlock(&m_room_mutex);
-  return nTeacherDBFlowID;
-}
-
-int CApp::doTcpRoomCommand(int inRoomID, int inCmdID)
-{
-  if( m_lpTCPThread == NULL || this->IsSignalQuit() )
-    return -1;
-  return m_lpTCPThread->doRoomCommand(inRoomID, inCmdID);
-}
-
-int CApp::doTcpClientCreate(int inRoomID, CTCPClient * lpClient)
-{
-  int nResult = -1;
-  if (inRoomID <= 0 || lpClient == NULL)
-    return nResult;
+  // 避免房间被多个线程同时创建，需要互斥...
   pthread_mutex_lock(&m_room_mutex);
   CRoom * lpRoom = NULL;
-  // 首先，通过房间号码创建或更新房间对象...
-  GM_MapRoom::iterator itorRoom = m_MapRoom.find(inRoomID);
-  if (itorRoom != m_MapRoom.end()) {
+  GM_MapRoom::iterator itorRoom;
+  itorRoom = m_MapRoom.find(inRoomID);
+  if( itorRoom != m_MapRoom.end() ) {
+    // 如果找到了房间对象...
     lpRoom = itorRoom->second;
   } else {
+    // 如果没有找到房间，创建一个新的房间...
     lpRoom = new CRoom(inRoomID);
     m_MapRoom[inRoomID] = lpRoom;
   }
-  // 将终端对象加入到指定的房间当中...
-  nResult = lpRoom->doTcpClientCreate(lpClient);
+  // 释放互斥保护，返回房间查找结果...
   pthread_mutex_unlock(&m_room_mutex);
-  return nResult;
-}
-
-int CApp::doTcpClientDelete(int inRoomID, CTCPClient * lpClient)
-{
-  int nResult = -1;
-  if (inRoomID <= 0 || lpClient == NULL)
-    return nResult;
-  pthread_mutex_lock(&m_room_mutex);
-  CRoom * lpRoom = NULL;
-  GM_MapRoom::iterator itorRoom = m_MapRoom.find(inRoomID);
-  if (itorRoom != m_MapRoom.end()) {
-    lpRoom = itorRoom->second;
-    nResult = lpRoom->doTcpClientDelete(lpClient);
-  }
-  pthread_mutex_unlock(&m_room_mutex);
-  return nResult;
-}
-
-int CApp::doUdpClientCreate(int inRoomID, CUDPClient * lpClient, char * lpBuffer, int inBufSize)
-{
-  int nResult = -1;
-  if (inRoomID <= 0 || lpClient == NULL)
-    return nResult;
-  pthread_mutex_lock(&m_room_mutex);
-  CRoom * lpRoom = NULL;
-  GM_MapRoom::iterator itorRoom = m_MapRoom.find(inRoomID);
-  // 首先，通过房间号码创建或更新房间对象...
-  if (itorRoom != m_MapRoom.end()) {
-    lpRoom = itorRoom->second;
-  } else {
-    lpRoom = new CRoom(inRoomID);
-    m_MapRoom[inRoomID] = lpRoom;
-  }
-  // 将终端对象加入到指定的房间当中...
-  nResult = lpRoom->doUdpClientCreate(lpClient, lpBuffer, inBufSize);
-  pthread_mutex_unlock(&m_room_mutex);
-  return nResult;
-}
-
-int CApp::doUdpClientDelete(int inRoomID, CUDPClient * lpClient)
-{
-  int nResult = -1;
-  if (inRoomID <= 0 || lpClient == NULL)
-    return nResult;
-  pthread_mutex_lock(&m_room_mutex);
-  CRoom * lpRoom = NULL;
-  GM_MapRoom::iterator itorRoom = m_MapRoom.find(inRoomID);
-  if (itorRoom != m_MapRoom.end()) {
-    lpRoom = itorRoom->second;
-    nResult = lpRoom->doUdpClientDelete(lpClient);
-  }
-  pthread_mutex_unlock(&m_room_mutex);
-  return nResult;
+  return lpRoom;
 }
 
 // 注意：阿里云专有网络无法获取外网地址，中心服务器可以同链接获取外网地址...

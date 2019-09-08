@@ -1,5 +1,6 @@
 
 #include "app.h"
+#include "room.h"
 #include "udpclient.h"
 
 CUDPClient::CUDPClient(int inUdpListenFD, uint8_t tmTag, uint8_t idTag, uint32_t inHostAddr, uint16_t inHostPort)
@@ -8,6 +9,7 @@ CUDPClient::CUDPClient(int inUdpListenFD, uint8_t tmTag, uint8_t idTag, uint32_t
   , m_nHostPort(inHostPort)
   , m_server_rtt_var_ms(-1)
   , m_server_rtt_ms(-1)
+  , m_lpRoom(NULL)
   , m_tmTag(tmTag)
   , m_idTag(idTag)
   , m_nRoomID(0)
@@ -34,11 +36,17 @@ CUDPClient::~CUDPClient()
 {
   // 打印UDP终端端被删除信息...
   log_trace("[UDP-%s-%s-Delete] HostPort: %d, LiveID: %d", get_tm_tag(m_tmTag), get_id_tag(m_idTag), m_nHostPort, this->GetDBCameraID());
+  // 房间对象和老师端对象都有效，在房间中注销老师对象...
+  if( m_lpRoom != NULL && m_tmTag == TM_TAG_TEACHER ) {
+    m_lpRoom->doUdpDeleteTeacher(this);
+  }
+  // 房间对象和学生端对象有效，在房间中注销学生对象...
+  if( m_lpRoom != NULL && m_tmTag == TM_TAG_STUDENT ) {
+    m_lpRoom->doUdpDeleteStudent(this);
+  }
   // 释放推流端音视频环形队列空间...
   circlebuf_free(&m_audio_circle);
   circlebuf_free(&m_video_circle);
-  // 调用接口删除房间里对应的对象...
-  GetApp()->doUdpClientDelete(m_nRoomID, this);
 }
 
 void CUDPClient::ResetTimeout()
@@ -118,14 +126,64 @@ bool CUDPClient::doTagDetect(char * lpBuffer, int inBufSize)
   
 bool CUDPClient::doTagCreate(char * lpBuffer, int inBufSize)
 {
+  bool bResult = false;
   // 更新创建命令包内容，创建或更新房间...
   memcpy(&m_rtp_create, lpBuffer, sizeof(m_rtp_create));
   if (m_rtp_create.roomID <= 0)
-    return false;
+    return bResult;
   // 保存房间编号到终端对象...
   m_nRoomID = m_rtp_create.roomID;
-  // 将当前UDP终端更新到指定的房间对象当中...
-  return GetApp()->doUdpClientCreate(m_nRoomID, this, lpBuffer, inBufSize);
+  // 更新创建命令包内容，创建或更新房间，更新房间里的老师端...
+  m_lpRoom = GetApp()->doCreateRoom(m_nRoomID);
+  // 如果是讲师终端类型，加入到房间里面对应的讲师端...
+  if (this->GetTmTag() == TM_TAG_TEACHER ) {
+    m_lpRoom->doUdpCreateTeacher(this);
+  }
+  // 如果是讲师终端类型，加入到房间里面对应的学生端...
+  if (this->GetTmTag() == TM_TAG_STUDENT ) {
+    m_lpRoom->doUdpCreateStudent(this);
+  }
+  // 回复推流端 => 房间已经创建成功，不要再发创建命令了...
+  if( this->GetIdTag() == ID_TAG_PUSHER ) {
+    bResult = this->doCreateForPusher(lpBuffer, inBufSize);
+  }
+  // 回复观看端 => 将推流端的序列头转发给观看端 => 由于没有P2P模式，观看端不用发送准备就绪命令...
+  if( this->GetIdTag() == ID_TAG_LOOKER ) {
+    bResult = this->doCreateForLooker(lpBuffer, inBufSize);
+  }
+  // 返回执行结果...
+  return bResult;
+}
+
+// 回复推流端 => 房间已经创建成功，不要再发创建命令了...
+bool CUDPClient::doCreateForPusher(char * lpBuffer, int inBufSize)
+{
+  // 构造反馈的数据包...
+  rtp_hdr_t rtpHdr = {0};
+  rtpHdr.tm = TM_TAG_SERVER;
+  rtpHdr.id = ID_TAG_SERVER;
+  rtpHdr.pt = PT_TAG_CREATE;
+  // 回复推流端 => 房间已经创建成功，不要再发创建命令了...
+  return this->doTransferToFrom((char*)&rtpHdr, sizeof(rtpHdr));
+}
+
+// 回复观看端 => 将推流端的序列头转发给观看端 => 由于没有P2P模式，观看端不用发送准备就绪命令...
+bool CUDPClient::doCreateForLooker(char * lpBuffer, int inBufSize)
+{
+  // 如果没有房间，直接返回...
+  if( m_lpRoom == NULL )
+    return false;
+  // 获取房间里指定编号的推流者对象 => 无推流者，直接返回...
+  int nDBCameraID = this->GetDBCameraID();
+  CUDPClient * lpUdpPusher = m_lpRoom->doFindUdpPusher(nDBCameraID);
+  if( lpUdpPusher == NULL )
+    return false;
+  // 获取推流者的序列头信息 => 序列头为空，直接返回...
+  string & strSeqHeader = lpUdpPusher->GetSeqHeader();
+  if( strSeqHeader.size() <= 0 )
+    return false;
+  // 回复观看端 => 将推流端的序列头转发给观看端...
+  return this->doTransferToFrom((char*)strSeqHeader.c_str(), strSeqHeader.size());
 }
 
 bool CUDPClient::doTagDelete(char * lpBuffer, int inBufSize)

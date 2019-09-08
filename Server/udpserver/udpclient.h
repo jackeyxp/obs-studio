@@ -3,6 +3,7 @@
 
 #include "global.h"
 
+class CRoom;
 class CUDPClient
 {
 public:
@@ -29,9 +30,11 @@ protected:
   bool          doTagReady(char * lpBuffer, int inBufSize);
   bool          doTagAudio(char * lpBuffer, int inBufSize);
   bool          doTagVideo(char * lpBuffer, int inBufSize);
+private:
+  bool          doCreateForPusher(char * lpBuffer, int inBufSize);
+  bool          doCreateForLooker(char * lpBuffer, int inBufSize);
 protected:
   int           m_nUdpListenFD;       // UDP监听套接字
-  int           m_nRoomID;            // 房间编号
   uint32_t      m_nHostAddr;          // 映射地址
   uint16_t      m_nHostPort;          // 映射端口
   uint8_t       m_tmTag;              // 终端类型
@@ -46,6 +49,8 @@ protected:
   circlebuf     m_video_circle;       // 推流端视频环形队列...
   GM_MapLose    m_AudioMapLose;			  // 推流端检测|观看端上报的音频丢包集合队列...
   GM_MapLose    m_VideoMapLose;			  // 推流端检测|观看端上报的视频丢包集合队列...
+  CRoom    *    m_lpRoom;             // 房间对象
+  int           m_nRoomID;            // 房间编号
 
   friend class CRoom;
 };

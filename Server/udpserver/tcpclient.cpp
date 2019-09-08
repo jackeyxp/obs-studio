@@ -1,5 +1,6 @@
 
 #include "app.h"
+#include "room.h"
 #include "tcpclient.h"
 #include "tcpthread.h"
 #include "udpclient.h"
@@ -12,6 +13,7 @@
 CTCPClient::CTCPClient(CTCPThread * lpTCPThread, int connfd, int nHostPort, string & strSinAddr)
   : m_nRoomID(0)
   , m_nDBFlowID(0)
+  , m_lpRoom(NULL)
   , m_nClientType(0)
   , m_nConnFD(connfd)
   , m_lpUdpPusher(NULL)
@@ -32,26 +34,25 @@ CTCPClient::~CTCPClient()
   // 打印终端退出信息...
   log_trace("TCPClient Delete: %s, From: %s:%d, Socket: %d", get_client_type(m_nClientType), 
             this->m_strSinAddr.c_str(), this->m_nHostPort, this->m_nConnFD);
-  // 如果是屏幕端，从房间当中删除之...
-  /*if( m_lpTCPRoom != NULL && m_nClientType == kClientScreen ) {
-    m_lpTCPRoom->doDeleteScreen(this);
-  }
+  /*// 如果是屏幕端，从房间当中删除之...
+  if( m_lpRoom != NULL && m_nClientType == kClientScreen ) {
+    m_lpRoom->doTcpDeleteScreen(this);
+  }*/
   // 如果是学生端，从房间当中删除之...
-  if( m_lpTCPRoom != NULL && m_nClientType == kClientStudent ) {
-    m_lpTCPRoom->doDeleteStudent(this);
+  if( m_lpRoom != NULL && m_nClientType == kClientStudent ) {
+    m_lpRoom->doTcpDeleteStudent(this);
   }
   // 如果是讲师端，从房间当中删除之 => 重置房间流量统计和音频扩展统计...
-  if( m_lpTCPRoom != NULL && m_nClientType == kClientTeacher ) {
-    GetApp()->GetUdpThread()->ResetRoomExFlow(m_nRoomID);
-    m_lpTCPRoom->doDeleteTeacher(this);
-  }*/
-  // 调用接口删除房间里对应的对象...
-  GetApp()->doTcpClientDelete(m_nRoomID, this);
+  if( m_lpRoom != NULL && m_nClientType == kClientTeacher ) {
+    //GetApp()->GetUdpThread()->ResetRoomExFlow(m_nRoomID);
+    m_lpRoom->doTcpDeleteTeacher(this);
+  }
   // 打印终端退出后剩余的链接数量...
   m_lpTCPThread->doDecreaseClient(this->m_nHostPort, this->m_strSinAddr);
 }
 
-int CTCPClient::doUdpCreateClient(CUDPClient * lpClient)
+// 从CRoom调用的更新当前长链接对应的UDP对象...
+void CTCPClient::doUdpCreateClient(CUDPClient * lpClient)
 {
   int nHostPort = lpClient->GetHostPort();
   uint8_t idTag = lpClient->GetIdTag();
@@ -62,10 +63,10 @@ int CTCPClient::doUdpCreateClient(CUDPClient * lpClient)
     // 如果观看者，放入集合当中 => 有多个观看者...
     m_MapUdpLooker[nHostPort] = lpClient;
   }
-  return 0;
 }
 
-int CTCPClient::doUdpDeleteClient(CUDPClient * lpClient)
+// 从CRoom调用的更新当前长链接对应的UDP对象...
+void CTCPClient::doUdpDeleteClient(CUDPClient * lpClient)
 {
   int nHostPort = lpClient->GetHostPort();
   uint8_t idTag = lpClient->GetIdTag();
@@ -81,7 +82,6 @@ int CTCPClient::doUdpDeleteClient(CUDPClient * lpClient)
       m_MapUdpLooker.erase(itorItem);
     }*/
   }
-  return 0;
 }
 //
 // 发送网络数据 => 始终设置读事件...
@@ -303,8 +303,17 @@ int CTCPClient::doCmdStudentLogin()
   m_strPCName  = m_MapJson["pc_name"];
   m_nRoomID = atoi(m_strRoomID.c_str());
   m_nRoleType = (ROLE_TYPE)atoi(m_MapJson["role_type"].c_str());
-  // 注意：内部会调用doSendCmdLoginForStudent()...
-  return GetApp()->doTcpClientCreate(m_nRoomID, this);
+  // 创建或更新房间，更新房间里的学生端...
+  m_lpRoom = GetApp()->doCreateRoom(m_nRoomID);
+  m_lpRoom->doTcpCreateStudent(this);
+  // 当前房间里的TCP讲师端是否在线 和 UDP讲师端是否在线...
+  CTCPClient * lpTCPTeacher = m_lpRoom->GetTcpTeacherClient();
+  bool bIsTCPTeacherOnLine = ((lpTCPTeacher != NULL) ? true : false);
+  CUDPClient * lpUdpPusher = ((lpTCPTeacher != NULL) ? lpTCPTeacher->GetUdpPusher() : NULL);
+  bool bIsUDPTeacherOnLine = ((lpUdpPusher != NULL) ? true : false);
+  int  nTeacherFlowID = ((lpTCPTeacher != NULL) ? lpTCPTeacher->GetDBFlowID() : 0);
+  // 发送反馈命令信息给学生端长链接对象...
+  return this->doSendCmdLoginForStudent(bIsTCPTeacherOnLine, bIsUDPTeacherOnLine, nTeacherFlowID);
 }
 
 int CTCPClient::doSendCmdLoginForStudent(bool bIsTCPOnLine, bool bIsUDPOnLine, int nTeacherFlowID)
@@ -331,7 +340,8 @@ int CTCPClient::doCmdStudentOnLine()
   if( m_nClientType != kClientStudent )
     return 0;
   // 当前房间里的TCP讲师端的流量编号...
-  int nTeacherFlowID = GetApp()->GetTcpTeacherDBFlowID(m_nRoomID);
+  CTCPClient * lpTCPTeacher = ((m_lpRoom != NULL) ? m_lpRoom->GetTcpTeacherClient() : NULL);
+  int nTeacherFlowID = ((lpTCPTeacher != NULL) ? lpTCPTeacher->GetDBFlowID() : 0);
   // 构造转发JSON数据块 => 返回套TCP讲师流量编号...
   json_object * new_obj = json_object_new_object();
   json_object_object_add(new_obj, "flow_teacher", json_object_new_int(nTeacherFlowID));
@@ -598,10 +608,11 @@ int CTCPClient::doCmdTeacherLogin()
   m_strMacAddr = m_MapJson["mac_addr"];
   m_strIPAddr  = m_MapJson["ip_addr"];
   m_strRoomID  = m_MapJson["room_id"];
-  m_nRoomID = atoi(m_strRoomID.c_str());
+  m_nRoomID    = atoi(m_strRoomID.c_str());
   m_nDBFlowID  = atoi(m_MapJson["flow_id"].c_str());
   // 创建或更新房间，更新房间里的讲师端...
-  GetApp()->doTcpClientCreate(m_nRoomID, this);
+  m_lpRoom = GetApp()->doCreateRoom(m_nRoomID);
+  m_lpRoom->doTcpCreateTeacher(this);
   // 构造转发JSON数据块，只返回套接字...
   json_object * new_obj = json_object_new_object();
   json_object_object_add(new_obj, "tcp_socket", json_object_new_int(m_nConnFD));

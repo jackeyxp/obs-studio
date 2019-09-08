@@ -21,16 +21,12 @@ public: /* 启动时的公共接口... */
   bool        doInitRLimit();
   void        doWaitForExit();
   bool        doProcessCmdLine(int argc, char * argv[]);
+  int         doTcpRoomCommand(int inRoomID, int inCmdID);
 public: /* 针对CUDPThread线程的数据接口... */
   bool        onRecvEvent(uint32_t inHostAddr, uint16_t inHostPort, char * lpBuffer, int inBufSize);
 public: /* 针对CRoom的房间接口... */
   string      GetAllRoomList();
-  int         GetTcpTeacherDBFlowID(int inRoomID);
-  int         doTcpRoomCommand(int inRoomID, int inCmdID);
-  int         doTcpClientCreate(int inRoomID, CTCPClient * lpClient);
-  int         doTcpClientDelete(int inRoomID, CTCPClient * lpClient);
-  int         doUdpClientDelete(int inRoomID, CUDPClient * lpClient);
-  int         doUdpClientCreate(int inRoomID, CUDPClient * lpClient, char * lpBuffer, int inBufSize);
+  CRoom   *   doCreateRoom(int inRoomID);
 public: /* 公共通用接口 */
   string  &   GetTcpCenterAddr() { return m_strTCPCenterAddr; }
   int         GetTcpCenterPort() { return m_nTCPCenterPort; }
