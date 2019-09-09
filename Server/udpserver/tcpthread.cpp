@@ -373,13 +373,13 @@ void CTCPThread::doHandleTimeout()
     lpTCPClient = itorConn->second;
     if( lpTCPClient->IsTimeout() ) {
       // 发生超时，从epoll队列中删除...
-      int nCurEventFD = lpTCPClient->m_nConnFD;
+      int nCurEventFD = lpTCPClient->GetConnFD();
       struct epoll_event evDelete = {0};
       evDelete.data.fd = nCurEventFD;
       evDelete.events = EPOLLIN | EPOLLET;
       epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, nCurEventFD, &evDelete);
       // 打印删除消息，删除对象...
-      log_trace("handleTimeout: %s, Socket(%d) be killed", get_client_type(lpTCPClient->m_nClientType), nCurEventFD);
+      log_trace("handleTimeout: %s, Socket(%d) be killed", get_client_type(lpTCPClient->GetClientType()), nCurEventFD);
       delete lpTCPClient; lpTCPClient = NULL;
       m_MapConnect.erase(itorConn++);
       // 关闭套接字...

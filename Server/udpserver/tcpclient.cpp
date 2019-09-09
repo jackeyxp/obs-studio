@@ -51,37 +51,26 @@ CTCPClient::~CTCPClient()
   m_lpTCPThread->doDecreaseClient(this->m_nHostPort, this->m_strSinAddr);
 }
 
-// 从CRoom调用的更新当前长链接对应的UDP对象...
-void CTCPClient::doUdpCreateClient(CUDPClient * lpClient)
+// 将UDP推流者保存到对应的TCP长链接终端里面...
+void CTCPClient::doUdpCreatePusher(CUDPClient * lpPusher)
 {
-  int nHostPort = lpClient->GetHostPort();
-  uint8_t idTag = lpClient->GetIdTag();
-  // 如果是推流者，更新推流对象 => 只有一个推流者...
-  if (idTag == ID_TAG_PUSHER) {
-    m_lpUdpPusher = lpClient;
-  } else if (idTag == ID_TAG_LOOKER) {
-    // 如果观看者，放入集合当中 => 有多个观看者...
-    m_MapUdpLooker[nHostPort] = lpClient;
-  }
+  if (lpPusher == NULL || ID_TAG_PUSHER != lpPusher->GetIdTag())
+    return;
+  if (this->GetConnFD() != lpPusher->GetTCPSockID())
+    return;
+  // 如果是推流者，保存更新 => 可能是学生推流者|老师推流者...
+  m_lpUdpPusher = lpPusher;
 }
 
-// 从CRoom调用的更新当前长链接对应的UDP对象...
-void CTCPClient::doUdpDeleteClient(CUDPClient * lpClient)
+// 将UDP推流者从对应的TCP长链接终端里面删除...
+void CTCPClient::doUdpDeletePusher(CUDPClient * lpPusher)
 {
-  int nHostPort = lpClient->GetHostPort();
-  uint8_t idTag = lpClient->GetIdTag();
-  // 如果是推流者，直接置空...
-  if (idTag == ID_TAG_PUSHER) {
-    m_lpUdpPusher = NULL;
-  } else if (idTag == ID_TAG_LOOKER) {
-    // 如果观看者，从集合中删除之...
-    m_MapUdpLooker.erase(nHostPort);
-    /*GM_MapUDPConn::iterator itorItem;
-    itorItem = m_MapUdpLooker.find(nHostPort);
-    if (itorItem != m_MapUdpLooker.end()) {
-      m_MapUdpLooker.erase(itorItem);
-    }*/
-  }
+  if (lpPusher == NULL || ID_TAG_PUSHER != lpPusher->GetIdTag())
+    return;
+  if (this->GetConnFD() != lpPusher->GetTCPSockID())
+    return;
+  // 如果是推流者，直接置空 => 可能是学生推流者|老师推流者...
+  m_lpUdpPusher = NULL;
 }
 //
 // 发送网络数据 => 始终设置读事件...

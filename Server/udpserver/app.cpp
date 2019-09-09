@@ -12,6 +12,8 @@ CApp::CApp()
   , m_lpUDPThread(NULL)
   , m_signal_quit(false)
   , m_bIsDebugMode(false)
+  , m_next_detect_ns(-1)
+  , m_next_check_ns(-1)
   , m_sem_t(NULL)
 {
   m_strTCPCenterAddr = DEF_CENTER_ADDR;
@@ -355,24 +357,140 @@ void CApp::doWaitForExit()
   log_trace("cleanup for gracefully terminate.");
 }
 
+// 遍历对象，进行超时检测...
 void CApp::doCheckTimeout()
 {
-  
+  // 每隔 10 秒检测一次对象超时 => 加上LL防止整数溢出...
+  int64_t period_ns = 10 * 1000 * 1000000LL;
+  int64_t cur_time_ns = os_gettime_ns();
+  // 设定第一个初始值的情况...
+  if( m_next_check_ns < 0 ) {
+    m_next_check_ns = cur_time_ns + period_ns;
+  }
+  // 如果检测时间还没到，直接返回...
+  if( m_next_check_ns > cur_time_ns )
+  	return;
+  assert( cur_time_ns >= m_next_check_ns );
+  // 计算下次进行超时检测命令的时间戳...
+  m_next_check_ns = os_gettime_ns() + period_ns;
+  // 遍历终端，进行超时检测...
+  CUDPClient * lpUdpClient = NULL;
+  GM_MapUDPConn::iterator itorItem = m_MapUdpConn.begin();
+  while( itorItem != m_MapUdpConn.end() ) {
+    lpUdpClient = itorItem->second;
+    if( lpUdpClient->IsTimeout() ) {
+      // 在析构函数中对房间信息进行清理工作...
+      delete lpUdpClient; lpUdpClient = NULL;
+      m_MapUdpConn.erase(itorItem++);
+    } else {
+      ++itorItem;
+    }
+  }
 }
 
+// 遍历所有对象，发起探测命令...
 void CApp::doSendDetectCmd()
 {
-  
+  // 每隔1秒发送一个探测命令包 => 必须转换成有符号...
+  int64_t cur_time_ns = os_gettime_ns();
+  int64_t period_ns = 1000 * 1000000;
+  // 第一个探测包延时1/3秒发送...
+  if( m_next_detect_ns < 0 ) { 
+    m_next_detect_ns = cur_time_ns + period_ns / 3;
+  }
+  // 如果发包时间还没到，直接返回...
+  if( m_next_detect_ns > cur_time_ns )
+    return;
+  assert( cur_time_ns >= m_next_detect_ns );
+  // 计算下次发送探测命令的时间戳...
+  m_next_detect_ns = os_gettime_ns() + period_ns;
+  // 遍历终端队列，进行网络探测...
+  CUDPClient * lpUdpClient = NULL;
+  GM_MapUDPConn::iterator itorItem = m_MapUdpConn.begin();
+  while( itorItem != m_MapUdpConn.end() ) {
+    // 调用发送服务器端探测命令，忽略结果...
+    lpUdpClient = itorItem->second;
+    lpUdpClient->doServerSendDetect();
+    ++itorItem;
+  }
 }
 
+// 推流者才会有补包命令...
 void CApp::doSendSupplyCmd()
 {
-  
+  // 补包发送结果 => -1(删除)0(没发)1(已发)...
+  GM_ListPusher::iterator itorItem = m_ListPusher.begin();
+  while( itorItem != m_ListPusher.end() ) {
+    // 执行补包命令，返回执行结果...
+    int nSendResult = (*itorItem)->doServerSendSupply();
+    // -1 => 没有补包了，从列表中删除...
+    if( nSendResult < 0 ) {
+      m_ListPusher.erase(itorItem++);
+      continue;
+    }
+    // 继续检测下一个有补包的推流者...
+    ++itorItem;
+    // 0 => 有补包，但是不到补包时间 => 休息15毫秒...
+    if( nSendResult == 0 )
+      continue;
+    // 1 => 有补包，已经发送补包命令 => 不要休息...
+    os_sem_post(m_sem_t);
+  }  
 }
 
+void CApp::doAddSupplyForPusher(CUDPClient * lpPusher)
+{
+  // 注意：是从doProcSocket()过来的，无需互斥处理...
+  GM_ListPusher::iterator itorItem;
+  itorItem = std::find(m_ListPusher.begin(), m_ListPusher.end(), lpPusher);
+  // 如果对象已经存在列表当中，直接返回...
+  if( itorItem != m_ListPusher.end() )
+    return;
+  // 对象没有在列表当中，放到列表尾部...
+  m_ListPusher.push_back(lpPusher);  
+}
+
+void CApp::doDelSupplyForPusher(CUDPClient * lpPusher)
+{
+  // 注意：是从doTagDelete()|doCheckTimeout()过来的，无需互斥处理...
+  m_ListPusher.remove(lpPusher);  
+}
+
+// 观看者才会有丢包命令...
 void CApp::doSendLoseCmd()
 {
-  
+  // 遍历包含丢包数据观看者队列对象...
+  GM_ListLooker::iterator itorItem = m_ListLooker.begin();
+  while( itorItem != m_ListLooker.end() ) {
+    // 执行发送丢包数据内容，返回是否还要执行丢包...
+    bool bSendResult = (*itorItem)->doServerSendLose();
+    // false => 没有丢包要发了，从队列当中删除...
+    if( !bSendResult ) {
+      m_ListLooker.erase(itorItem++);
+      continue;
+    }
+    assert( bSendResult );
+    // true => 还有丢包要发送，不能休息...
+    ++itorItem; os_sem_post(m_sem_t);
+  }  
+}
+
+void CApp::doAddLoseForLooker(CUDPClient * lpLooker)
+{
+  // 注意：是从doProcSocket()过来的，无需互斥处理...
+  GM_ListLooker::iterator itorItem;
+  itorItem = std::find(m_ListLooker.begin(), m_ListLooker.end(), lpLooker);
+  // 如果对象已经存在列表当中，直接返回...
+  if( itorItem != m_ListLooker.end() )
+    return;
+  // 对象没有在列表当中，放到列表尾部...
+  m_ListLooker.push_back(lpLooker);  
+}
+
+void CApp::doDelLoseForLooker(CUDPClient * lpLooker)
+{
+  // 注意：是从doTagDelete()|doCheckTimeout()过来的，无需互斥处理...
+  m_ListLooker.remove(lpLooker);  
 }
 
 void CApp::doRecvPacket()

@@ -13,6 +13,7 @@ public:
   int          GetTcpStudentCount() { return m_MapTCPStudent.size(); }
   CTCPClient * GetTcpTeacherClient() { return m_lpTCPTeacher; }
 public:
+  void         doDumpRoomInfo();
   CUDPClient * doFindUdpPusher(int inDBCameraID);
   void         doTcpCreateTeacher(CTCPClient * lpTeacher);
   void         doTcpCreateStudent(CTCPClient * lpStudent);

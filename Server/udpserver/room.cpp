@@ -15,6 +15,26 @@ CRoom::~CRoom()
 {
 }
 
+void CRoom::doDumpRoomInfo()
+{
+  log_trace("\n======== RoomID: %d ========\n", m_nRoomID);
+  // 打印房间里讲师端推流者个数，推流者下面的观看者个数...
+  CUDPClient * lpUdpTeacherPusher = ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetUdpPusher() : NULL);
+  int nTcpSockID   = ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetConnFD() : 0);
+  int nPusherCount = ((lpUdpTeacherPusher != NULL) ? 1 : 0);
+  int nLookerCount = ((lpUdpTeacherPusher != NULL) ? lpUdpTeacherPusher->GetLookerCount() : 0);
+  log_trace("Teacher-ID: %d, Teacher-Pusher: %d, Looker-Count: %d\n", nTcpSockID, nPusherCount, nLookerCount);
+  GM_MapTCPConn::iterator itorItem;
+  // 打印房间里学生端推流者个数，推流者下面的观看者个数...
+  for(itorItem = m_MapTCPStudent.begin(); itorItem != m_MapTCPStudent.end(); ++itorItem) {
+    CTCPClient * lpTcpClient = itorItem->second;
+    CUDPClient * lpUdpPusher = lpTcpClient->GetUdpPusher();
+    nPusherCount = ((lpUdpPusher != NULL) ? 1 : 0);
+    nLookerCount = ((lpUdpPusher != NULL) ? lpUdpPusher->GetLookerCount() : 0);
+    log_trace("Student-ID: %d, Student-Pusher: %d, Looker-Count: %d\n", itorItem->first, nPusherCount, nLookerCount);
+  }  
+}
+
 void CRoom::doTcpCreateTeacher(CTCPClient * lpTeacher)
 {
   int nClientType = lpTeacher->GetClientType();
@@ -126,14 +146,18 @@ void CRoom::doUdpCreateTeacher(CUDPClient * lpTeacher)
     if( m_lpTCPTeacher->GetUdpPusher() != lpTeacher ) {
       //GetApp()->doUDPTeacherPusherOnLine(m_nRoomID, true);
     }
+    // 将UDP推流终端保存到对应的TCP终端里面...
+    m_lpTCPTeacher->doUdpCreatePusher(lpTeacher);
   } else if (idTag == ID_TAG_LOOKER) {
-    // 查找学生推流者，并开启网络探测，然后，把讲师观看者用集合保存...
-    //CUDPClient * lpStudentPusher = this->doFindUdpPusher(nDBCameraID);
+    // 查找推流者，把观看者保存到推流者当中...
+    CUDPClient * lpUdpPusher = this->doFindUdpPusher(nDBCameraID);
     // 如果学生推流者不为空，需要打开网络探测...
-    //if(lpStudentPusher != NULL) { lpStudentPusher->SetCanDetect(true); }
+    //if(lpUdpPusher != NULL) { lpUdpPusher->SetCanDetect(true); }
+    // 将当前观看者保存到推流者的观看集合当中...
+    if (lpUdpPusher != NULL) {
+      lpUdpPusher->doAddUdpLooker(lpTeacher);
+    }
   }
-  // 将UDP终端保存到对应的TCP终端里面 => 可能是推流者|观看者...
-  m_lpTCPTeacher->doUdpCreateClient(lpTeacher);
 }
 
 void CRoom::doUdpCreateStudent(CUDPClient * lpStudent)
@@ -153,10 +177,17 @@ void CRoom::doUdpCreateStudent(CUDPClient * lpStudent)
     if (lpTcpStudent->GetUdpPusher() != lpStudent) {
       //GetApp()->doUDPStudentPusherOnLine(m_nRoomID, nDBCameraID, true);
     }
+    // 将UDP推流终端保存到对应的TCP终端里面...
+    lpTcpStudent->doUdpCreatePusher(lpStudent);
   } else if (idTag == ID_TAG_LOOKER) {
-  }  
-  // 将UDP终端保存到对应的TCP终端里面 => 可能是推流者|观看者...
-  lpTcpStudent->doUdpCreateClient(lpStudent);
+    // 查找推流者，把观看者保存到推流者当中...
+    CUDPClient * lpUdpPusher = this->doFindUdpPusher(nDBCameraID);
+    // 如果推流者不为空，需要打开网络探测...
+    // 将当前观看者保存到推流者的观看集合当中...
+    if (lpUdpPusher != NULL) {
+      lpUdpPusher->doAddUdpLooker(lpStudent);
+    }
+  }
 }
 
 void CRoom::doUdpDeleteTeacher(CUDPClient * lpTeacher)
@@ -178,14 +209,18 @@ void CRoom::doUdpDeleteTeacher(CUDPClient * lpTeacher)
     if(m_lpTCPTeacher->GetUdpPusher() == lpTeacher) {
       //GetApp()->doUDPTeacherPusherOnLine(m_nRoomID, false);
     }
+    // 将UDP推流终端从对应的TCP终端里面删除之...
+    m_lpTCPTeacher->doUdpDeletePusher(lpTeacher);
   } else if (idTag == ID_TAG_LOOKER) {
     // 如果是老师观看端，通知学生推流端停止推流，置空，返回...
-    //CUDPClient * lpStudentPusher = this->doFindUdpPusher(nDBCameraID);
+    CUDPClient * lpUdpPusher = this->doFindUdpPusher(nDBCameraID);
     // 如果学生推流者不为空，需要关闭网络探测...
-    //if(lpStudentPusher != NULL) { lpStudentPusher->SetCanDetect(false); }
+    //if(lpUdpPusher != NULL) { lpUdpPusher->SetCanDetect(false); }
+    // 将当前观看者从推流者的观看集合当中删除...
+    if (lpUdpPusher != NULL) {
+      lpUdpPusher->doDelUdpLooker(lpTeacher);
+    }
   }
-  // 将UDP终端从对应的TCP终端删除 => 可能是推流者|观看者...
-  m_lpTCPTeacher->doUdpDeleteClient(lpTeacher);
 }
 
 void CRoom::doUdpDeleteStudent(CUDPClient * lpStudent)
@@ -202,9 +237,14 @@ void CRoom::doUdpDeleteStudent(CUDPClient * lpStudent)
   if( idTag == ID_TAG_PUSHER ) {
     // 如果是学生推流端发起的删除，通知讲师端，可以删除拉流线程了...
     //GetApp()->doUDPStudentPusherOnLine(m_nRoomID, nDBCameraID, false);
+    // 将UDP推流终端从对应的TCP终端里面删除之...
+    lpTcpStudent->doUdpDeletePusher(lpStudent);
   } else if( idTag == ID_TAG_LOOKER ) {
-    // 如果是学生观看者发起的删除.....
+    // 如果是学生观看者发起的删除，找到对应的推流者.....
+    CUDPClient * lpUdpPusher = this->doFindUdpPusher(nDBCameraID);
+    // 将当前观看者从推流者的观看集合当中删除...
+    if (lpUdpPusher != NULL) {
+      lpUdpPusher->doDelUdpLooker(lpStudent);
+    }
   }  
-  // 将UDP终端从对应的TCP终端删除 => 可能是推流者|观看者...
-  lpTcpStudent->doUdpDeleteClient(lpStudent);
 }

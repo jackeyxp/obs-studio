@@ -19,7 +19,14 @@ public:
   string    &   GetSeqHeader() { return m_strSeqHeader; }
   int           GetDBCameraID() { return m_rtp_create.liveID; }
   int           GetTCPSockID() { return m_rtp_create.tcpSock; }
-  bool          doTransferToFrom(char * lpBuffer, int inBufSize);
+  int           GetLookerCount() { return m_MapUdpLooker.size(); }
+public:
+  void          doAddUdpLooker(CUDPClient * lpLooker);
+  void          doDelUdpLooker(CUDPClient * lpLooker);
+public:
+  bool          doServerSendLose();
+  bool          doServerSendDetect();
+  int           doServerSendSupply();
   bool          doProcessUdpEvent(uint8_t ptTag, char * lpBuffer, int inBufSize);
 protected:
   bool          doTagDetect(char * lpBuffer, int inBufSize);
@@ -31,9 +38,27 @@ protected:
   bool          doTagAudio(char * lpBuffer, int inBufSize);
   bool          doTagVideo(char * lpBuffer, int inBufSize);
 private:
+  uint32_t      doCalcMinSeq(bool bIsAudio);
+  uint32_t      doCalcMaxConSeq(bool bIsAudio);
+  void          doCalcAVJamStatus(bool bIsAudio);
+  void          doSendLosePacket(bool bIsAudio);
+  int           doSendSupplyCmd(bool bIsAudio);
+
+  bool          doIsLosePacket(bool bIsAudio, uint32_t inLoseSeq);
+  bool          doIsPusherLose(uint8_t inPType, uint32_t inLoseSeq);
   bool          doCreateForPusher(char * lpBuffer, int inBufSize);
   bool          doCreateForLooker(char * lpBuffer, int inBufSize);
+  bool          doDetectForLooker(char * lpBuffer, int inBufSize);
+
+  bool          doTransferToFrom(char * lpBuffer, int inBufSize);
+  bool          doTransferToLooker(char * lpBuffer, int inBufSize);
+
+  void          doTagAVPackProcess(char * lpBuffer, int inBufSize);
+  void          doEraseLoseSeq(uint8_t inPType, uint32_t inSeqID);
+  void          doFillLosePack(uint8_t inPType, uint32_t nStartLoseID, uint32_t nEndLoseID);
 protected:
+  CRoom    *    m_lpRoom;             // 房间对象
+  int           m_nRoomID;            // 房间编号
   int           m_nUdpListenFD;       // UDP监听套接字
   uint32_t      m_nHostAddr;          // 映射地址
   uint16_t      m_nHostPort;          // 映射端口
@@ -49,8 +74,5 @@ protected:
   circlebuf     m_video_circle;       // 推流端视频环形队列...
   GM_MapLose    m_AudioMapLose;			  // 推流端检测|观看端上报的音频丢包集合队列...
   GM_MapLose    m_VideoMapLose;			  // 推流端检测|观看端上报的视频丢包集合队列...
-  CRoom    *    m_lpRoom;             // 房间对象
-  int           m_nRoomID;            // 房间编号
-
-  friend class CRoom;
+  GM_MapUDPConn m_MapUdpLooker;       // 多个UDP观看者...
 };
