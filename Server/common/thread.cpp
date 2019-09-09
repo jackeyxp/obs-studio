@@ -2,6 +2,21 @@
 #include "server.h"
 #include "thread.h"
 
+OSMutexLocker::OSMutexLocker(pthread_mutex_t * lpMutex)
+  : m_lpMutex(lpMutex)
+{
+  if (m_lpMutex != NULL) {
+    pthread_mutex_lock(m_lpMutex);
+  }
+}
+
+OSMutexLocker::~OSMutexLocker()
+{
+  if (m_lpMutex != NULL) {
+    pthread_mutex_unlock(m_lpMutex);
+  }
+}
+
 CThread::CThread()
   : fStopRequested(false)
   , fJoined(false)

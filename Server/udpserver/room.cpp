@@ -9,14 +9,21 @@ CRoom::CRoom(int inRoomID)
   , m_lpTCPTeacher(NULL)
 {
   assert(m_nRoomID > 0);
+  // 初始化线程互斥对象 => 互斥TCP资源...
+  pthread_mutex_init(&m_tcp_mutex, NULL);
 }
 
 CRoom::~CRoom()
 {
+  // 删除线程互斥对象 => 互斥TCP资源...
+  pthread_mutex_destroy(&m_tcp_mutex);
 }
 
 void CRoom::doDumpRoomInfo()
 {
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
+  // 打印房间编号信息...
   log_trace("\n======== RoomID: %d ========\n", m_nRoomID);
   // 打印房间里讲师端推流者个数，推流者下面的观看者个数...
   CUDPClient * lpUdpTeacherPusher = ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetUdpPusher() : NULL);
@@ -37,35 +44,46 @@ void CRoom::doDumpRoomInfo()
 
 int CRoom::GetTcpTeacherCount()
 {
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
   return m_lpTCPTeacher ? 1 : 0;
 }
 
 int CRoom::GetTcpStudentCount()
 {
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
   return m_MapTCPStudent.size();
 }
 
 int CRoom::GetTcpTeacherDBFlowID()
 {
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
   return ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetDBFlowID() : 0);
 }
 
 bool CRoom::IsTcpTeacherClientOnLine()
 {
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
   return ((m_lpTCPTeacher != NULL) ? true : false);
 }
 
 bool CRoom::IsUdpTeacherPusherOnLine()
 {
-
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
   CUDPClient * lpUdpPusher = ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetUdpPusher() : NULL);
   return ((lpUdpPusher != NULL) ? true : false);
 }
 
 void CRoom::doTcpCreateTeacher(CTCPClient * lpTeacher)
 {
-  int nClientType = lpTeacher->GetClientType();
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
   // 如果终端类型不是讲师端，直接返回...
+  int nClientType = lpTeacher->GetClientType();
   if( nClientType != kClientTeacher )
     return;
   // 注意：这里只有当讲师端为空时，才发送通知，否则，会造成计数器增加，造成后续讲师端无法登陆的问题...
@@ -79,6 +97,8 @@ void CRoom::doTcpCreateTeacher(CTCPClient * lpTeacher)
 
 void CRoom::doTcpDeleteTeacher(CTCPClient * lpTeacher)
 {
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
   // 如果是房间里的老师端，置空，返回...
   if( m_lpTCPTeacher == lpTeacher ) {
     m_lpTCPTeacher = NULL;
@@ -91,9 +111,11 @@ void CRoom::doTcpDeleteTeacher(CTCPClient * lpTeacher)
 // 一个房间可以有多个学生观看端...
 void CRoom::doTcpCreateStudent(CTCPClient * lpStudent)
 {
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
+  // 如果终端类型不是学生观看端，直接返回...
   int nConnFD = lpStudent->GetConnFD();
   int nClientType = lpStudent->GetClientType();
-  // 如果终端类型不是学生观看端，直接返回...
   if( nClientType != kClientStudent )
     return;
   // 将学生观看到更新到观看列表...
@@ -104,8 +126,10 @@ void CRoom::doTcpCreateStudent(CTCPClient * lpStudent)
 
 void CRoom::doTcpDeleteStudent(CTCPClient * lpStudent)
 {
-  int nConnFD = lpStudent->GetConnFD();
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
   // 找到相关观看学生端对象，直接删除返回...
+  int nConnFD = lpStudent->GetConnFD();
   GM_MapTCPConn::iterator itorItem = m_MapTCPStudent.find(nConnFD);
   if( itorItem != m_MapTCPStudent.end() ) {
     m_MapTCPStudent.erase(itorItem);
@@ -134,6 +158,10 @@ void CRoom::doTcpDeleteStudent(CTCPClient * lpStudent)
 // 通过摄像头编号查找对应的推流终端 => 每个终端都只有一个推流者...
 CUDPClient * CRoom::doFindUdpPusher(int inDBCameraID)
 {
+  //////////////////////////////////////////////////////////////
+  // 注意：这个函数都是来自CApp主线程的调用，无需单独互斥...
+  //////////////////////////////////////////////////////////////
+
   // 先查找讲师端里面的推流者是否是想要的对象...
   CUDPClient * lpUdpPusher = ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetUdpPusher() : NULL);
   int nCurDBCameraID = ((lpUdpPusher != NULL) ? lpUdpPusher->GetDBCameraID() : 0);
@@ -155,40 +183,81 @@ CUDPClient * CRoom::doFindUdpPusher(int inDBCameraID)
 
 void CRoom::doUdpCreateTeacher(CUDPClient * lpTeacher)
 {
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
+  // 根据终端类型进行分发处理...
+  switch(lpTeacher->GetIdTag())
+  {
+    case ID_TAG_PUSHER: this->doUdpCreateTeacherPusher(lpTeacher); break;
+    case ID_TAG_LOOKER: this->doUdpCreateTeacherLooker(lpTeacher); break;
+  }
+}
+
+void CRoom::doUdpCreateTeacherPusher(CUDPClient * lpTeacher)
+{
   // 如果房间里的讲师长链接无效...
   if (m_lpTCPTeacher == NULL)
     return;
   // 如果讲师长链接里的Sock与UDP里的Sock不一致...
   int nSrcSockFD = m_lpTCPTeacher->GetConnFD();
   int nDstSockFD = lpTeacher->GetTCPSockID();
-  if ( nSrcSockFD != nDstSockFD )
+  if (nSrcSockFD != nDstSockFD)
     return;
   // 获取输入讲师端UDP连接相关变量...
   int nDBCameraID = lpTeacher->GetDBCameraID();
   int nHostPort = lpTeacher->GetHostPort();
   uint8_t idTag = lpTeacher->GetIdTag();
-  // 如果是讲师端推流者对象...
-  if (idTag == ID_TAG_PUSHER) {
-    // 如果新的讲师推流对象与原有对象不相同(可能多次发命令) => 告诉房间里所有TCP在线学生端，可以创建拉流线程了...
-    if( m_lpTCPTeacher->GetUdpPusher() != lpTeacher ) {
-      //GetApp()->doUDPTeacherPusherOnLine(m_nRoomID, true);
-    }
-    // 将UDP推流终端保存到对应的TCP终端里面...
-    m_lpTCPTeacher->doUdpCreatePusher(lpTeacher);
-  } else if (idTag == ID_TAG_LOOKER) {
-    // 查找推流者，把观看者保存到推流者当中...
-    CUDPClient * lpUdpPusher = this->doFindUdpPusher(nDBCameraID);
-    // 如果学生推流者不为空，需要打开网络探测...
-    //if(lpUdpPusher != NULL) { lpUdpPusher->SetCanDetect(true); }
-    // 将当前观看者保存到推流者的观看集合当中...
-    if (lpUdpPusher != NULL) {
-      lpUdpPusher->doAddUdpLooker(lpTeacher);
-    }
+  // 如果不是讲师端推流者对象...
+  if (idTag != ID_TAG_PUSHER)
+    return;
+  // 如果新的讲师推流对象与原有对象不相同(可能多次发命令) => 告诉房间里所有TCP在线学生端，可以创建拉流线程了...
+  if( m_lpTCPTeacher->GetUdpPusher() != lpTeacher ) {
+    //GetApp()->doUDPTeacherPusherOnLine(m_nRoomID, true);
   }
+  // 将UDP推流终端保存到对应的TCP终端里面...
+  m_lpTCPTeacher->doUdpCreatePusher(lpTeacher);
+}
+
+void CRoom::doUdpCreateTeacherLooker(CUDPClient * lpTeacher)
+{
+  // 如果房间里的讲师长链接无效...
+  if (m_lpTCPTeacher == NULL)
+    return;
+  // 如果讲师长链接里的Sock与UDP里的Sock不一致...
+  int nSrcSockFD = m_lpTCPTeacher->GetConnFD();
+  int nDstSockFD = lpTeacher->GetTCPSockID();
+  if (nSrcSockFD != nDstSockFD)
+    return;
+  // 获取输入讲师端UDP连接相关变量...
+  int nDBCameraID = lpTeacher->GetDBCameraID();
+  int nHostPort = lpTeacher->GetHostPort();
+  uint8_t idTag = lpTeacher->GetIdTag();
+  // 本函数只处理讲师观看者的情况...
+  if (idTag != ID_TAG_LOOKER)
+    return;
+  // 查找推流者，把观看者保存到推流者当中...
+  CUDPClient * lpUdpPusher = this->doFindUdpPusher(nDBCameraID);
+  if (lpUdpPusher == NULL)
+    return;
+  // 如果学生推流者不为空，需要打开网络探测...
+  //lpUdpPusher->SetCanDetect(true);
+  // 将当前观看者保存到推流者的观看集合当中...
+  lpUdpPusher->doAddUdpLooker(lpTeacher);
 }
 
 void CRoom::doUdpCreateStudent(CUDPClient * lpStudent)
 {
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
+  switch(lpStudent->GetIdTag())
+  {
+    case ID_TAG_PUSHER: this->doUdpCreateStudentPusher(lpStudent); break;
+    case ID_TAG_LOOKER: this->doUdpCreateStudentLooker(lpStudent); break;
+  }
+}
+
+void CRoom::doUdpCreateStudentPusher(CUDPClient * lpStudent)
+{
   // 查找UDP学生端对象对应的TCP学生端对象...
   int nTcpSockFD = lpStudent->GetTCPSockID();
   GM_MapTCPConn::iterator itorItem = m_MapTCPStudent.find(nTcpSockFD);
@@ -198,26 +267,51 @@ void CRoom::doUdpCreateStudent(CUDPClient * lpStudent)
   uint8_t idTag = lpStudent->GetIdTag();
   int nDBCameraID = lpStudent->GetDBCameraID();
   CTCPClient * lpTcpStudent = itorItem->second;
-  // 如果是学生端推流者对象...
-  if (idTag == ID_TAG_PUSHER) {
-    // 如果新的学生推流对象与原有对象不相同(可能多次发命令) => 告诉房间里所有TCP终端，可以创建拉流线程了...
-    if (lpTcpStudent->GetUdpPusher() != lpStudent) {
-      //GetApp()->doUDPStudentPusherOnLine(m_nRoomID, nDBCameraID, true);
-    }
-    // 将UDP推流终端保存到对应的TCP终端里面...
-    lpTcpStudent->doUdpCreatePusher(lpStudent);
-  } else if (idTag == ID_TAG_LOOKER) {
-    // 查找推流者，把观看者保存到推流者当中...
-    CUDPClient * lpUdpPusher = this->doFindUdpPusher(nDBCameraID);
-    // 如果推流者不为空，需要打开网络探测...
-    // 将当前观看者保存到推流者的观看集合当中...
-    if (lpUdpPusher != NULL) {
-      lpUdpPusher->doAddUdpLooker(lpStudent);
-    }
+  // 如果不是学生端推流者对象...
+  if (idTag != ID_TAG_PUSHER)
+    return;
+  // 如果新的学生推流对象与原有对象不相同(可能多次发命令) => 告诉房间里所有TCP终端，可以创建拉流线程了...
+  if (lpTcpStudent->GetUdpPusher() != lpStudent) {
+    //GetApp()->doUDPStudentPusherOnLine(m_nRoomID, nDBCameraID, true);
   }
+  // 将UDP推流终端保存到对应的TCP终端里面...
+  lpTcpStudent->doUdpCreatePusher(lpStudent);
+}
+
+void CRoom::doUdpCreateStudentLooker(CUDPClient * lpStudent)
+{
+  // 查找UDP学生端对象对应的TCP学生端对象...
+  int nTcpSockFD = lpStudent->GetTCPSockID();
+  GM_MapTCPConn::iterator itorItem = m_MapTCPStudent.find(nTcpSockFD);
+  if (itorItem == m_MapTCPStudent.end())
+    return;
+  // 获取UDP学生端相关的变量内容...
+  uint8_t idTag = lpStudent->GetIdTag();
+  int nDBCameraID = lpStudent->GetDBCameraID();
+  // 如果不是学生端观看者对象...
+  if (idTag != ID_TAG_LOOKER)
+    return;
+  // 查找推流者，把观看者保存到推流者当中...
+  CUDPClient * lpUdpPusher = this->doFindUdpPusher(nDBCameraID);
+  if (lpUdpPusher == NULL)
+    return;
+  // 如果推流者不为空，需要打开网络探测...
+  // 将当前观看者保存到推流者的观看集合当中...
+  lpUdpPusher->doAddUdpLooker(lpStudent);
 }
 
 void CRoom::doUdpDeleteTeacher(CUDPClient * lpTeacher)
+{
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
+  switch(lpTeacher->GetIdTag())
+  {
+    case ID_TAG_PUSHER: this->doUdpDeleteTeacherPusher(lpTeacher); break;
+    case ID_TAG_LOOKER: this->doUdpDeleteTeacherLooker(lpTeacher); break;
+  }
+}
+
+void CRoom::doUdpDeleteTeacherPusher(CUDPClient * lpTeacher)
 {
   // 如果房间里的讲师长链接无效...
   if (m_lpTCPTeacher == NULL)
@@ -231,26 +325,56 @@ void CRoom::doUdpDeleteTeacher(CUDPClient * lpTeacher)
   int nDBCameraID = lpTeacher->GetDBCameraID();
   int nHostPort = lpTeacher->GetHostPort();
   uint8_t idTag = lpTeacher->GetIdTag();
-  // 如果是老师推流端 => 告诉所有TCP在线学生端，可以删除拉流线程了
-  if (idTag == ID_TAG_PUSHER) {
-    if(m_lpTCPTeacher->GetUdpPusher() == lpTeacher) {
-      //GetApp()->doUDPTeacherPusherOnLine(m_nRoomID, false);
-    }
-    // 将UDP推流终端从对应的TCP终端里面删除之...
-    m_lpTCPTeacher->doUdpDeletePusher(lpTeacher);
-  } else if (idTag == ID_TAG_LOOKER) {
-    // 如果是老师观看端，通知学生推流端停止推流，置空，返回...
-    CUDPClient * lpUdpPusher = this->doFindUdpPusher(nDBCameraID);
-    // 如果学生推流者不为空，需要关闭网络探测...
-    //if(lpUdpPusher != NULL) { lpUdpPusher->SetCanDetect(false); }
-    // 将当前观看者从推流者的观看集合当中删除...
-    if (lpUdpPusher != NULL) {
-      lpUdpPusher->doDelUdpLooker(lpTeacher);
-    }
+  // 如果不是老师推流者对象...
+  if (idTag != ID_TAG_PUSHER)
+    return;
+  // 告诉所有TCP在线学生端，可以删除拉流线程了
+  if(m_lpTCPTeacher->GetUdpPusher() == lpTeacher) {
+    //GetApp()->doUDPTeacherPusherOnLine(m_nRoomID, false);
   }
+  // 将UDP推流终端从对应的TCP终端里面删除之...
+  m_lpTCPTeacher->doUdpDeletePusher(lpTeacher);
+}
+
+void CRoom::doUdpDeleteTeacherLooker(CUDPClient * lpTeacher)
+{
+  // 如果房间里的讲师长链接无效...
+  if (m_lpTCPTeacher == NULL)
+    return;
+  // 如果讲师长链接里的Sock与UDP里的Sock不一致...
+  int nSrcSockFD = m_lpTCPTeacher->GetConnFD();
+  int nDstSockFD = lpTeacher->GetTCPSockID();
+  if ( nSrcSockFD != nDstSockFD )
+    return;
+  // 获取输入讲师端UDP连接相关变量...
+  int nDBCameraID = lpTeacher->GetDBCameraID();
+  int nHostPort = lpTeacher->GetHostPort();
+  uint8_t idTag = lpTeacher->GetIdTag();
+  // 如果不是讲师观看者对象...
+  if (idTag != ID_TAG_LOOKER)
+    return;
+  // 如果是老师观看端，通知学生推流端停止推流，置空，返回...
+  CUDPClient * lpUdpPusher = this->doFindUdpPusher(nDBCameraID);
+  if (lpUdpPusher == NULL)
+    return;
+  // 如果学生推流者不为空，需要关闭网络探测...
+  //lpUdpPusher->SetCanDetect(false); }
+  // 将当前观看者从推流者的观看集合当中删除...
+  lpUdpPusher->doDelUdpLooker(lpTeacher);
 }
 
 void CRoom::doUdpDeleteStudent(CUDPClient * lpStudent)
+{
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
+  switch(lpStudent->GetIdTag())
+  {
+    case ID_TAG_PUSHER: this->doUdpDeleteStudentPusher(lpStudent); break;
+    case ID_TAG_LOOKER: this->doUdpDeleteStudentLooker(lpStudent); break;
+  }
+}
+
+void CRoom::doUdpDeleteStudentPusher(CUDPClient * lpStudent)
 {
   // 查找UDP学生端对象对应的TCP学生端对象...
   int nTcpSockFD = lpStudent->GetTCPSockID();
@@ -261,17 +385,32 @@ void CRoom::doUdpDeleteStudent(CUDPClient * lpStudent)
   uint8_t idTag = lpStudent->GetIdTag();
   int nDBCameraID = lpStudent->GetDBCameraID();
   CTCPClient * lpTcpStudent = itorItem->second;
-  if( idTag == ID_TAG_PUSHER ) {
-    // 如果是学生推流端发起的删除，通知讲师端，可以删除拉流线程了...
-    //GetApp()->doUDPStudentPusherOnLine(m_nRoomID, nDBCameraID, false);
-    // 将UDP推流终端从对应的TCP终端里面删除之...
-    lpTcpStudent->doUdpDeletePusher(lpStudent);
-  } else if( idTag == ID_TAG_LOOKER ) {
-    // 如果是学生观看者发起的删除，找到对应的推流者.....
-    CUDPClient * lpUdpPusher = this->doFindUdpPusher(nDBCameraID);
-    // 将当前观看者从推流者的观看集合当中删除...
-    if (lpUdpPusher != NULL) {
-      lpUdpPusher->doDelUdpLooker(lpStudent);
-    }
-  }  
+  // 如果不是学生推流者对象...
+  if( idTag != ID_TAG_PUSHER )
+    return;
+  // 如果是学生推流端发起的删除，通知讲师端，可以删除拉流线程了...
+  //GetApp()->doUDPStudentPusherOnLine(m_nRoomID, nDBCameraID, false);
+  // 将UDP推流终端从对应的TCP终端里面删除之...
+  lpTcpStudent->doUdpDeletePusher(lpStudent);
+}
+
+void CRoom::doUdpDeleteStudentLooker(CUDPClient * lpStudent)
+{
+  // 查找UDP学生端对象对应的TCP学生端对象...
+  int nTcpSockFD = lpStudent->GetTCPSockID();
+  GM_MapTCPConn::iterator itorItem = m_MapTCPStudent.find(nTcpSockFD);
+  if (itorItem == m_MapTCPStudent.end())
+    return;
+  // 获取UDP学生端相关的变量内容...
+  uint8_t idTag = lpStudent->GetIdTag();
+  int nDBCameraID = lpStudent->GetDBCameraID();
+  // 如果不是学生观看者对象...
+  if (idTag != ID_TAG_LOOKER)
+    return;
+  // 如果是学生观看者发起的删除，找到对应的推流者.....
+  CUDPClient * lpUdpPusher = this->doFindUdpPusher(nDBCameraID);
+  if (lpUdpPusher == NULL)
+    return;
+  // 将当前观看者从推流者的观看集合当中删除...
+  lpUdpPusher->doDelUdpLooker(lpStudent);
 }

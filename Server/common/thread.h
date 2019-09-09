@@ -3,6 +3,15 @@
 
 #include <pthread.h>
 
+class OSMutexLocker
+{
+public:
+	OSMutexLocker(pthread_mutex_t * lpMutex);
+	~OSMutexLocker();
+private:
+	pthread_mutex_t * m_lpMutex;
+};
+
 class CThread
 {
 public:

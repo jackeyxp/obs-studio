@@ -3,6 +3,7 @@
 
 #include "../common/server.h"
 #include "../common/rtp.h"
+#include "../common/thread.h"
 #include "../common/circlebuf.h"
 
 #define DEFAULT_INI_FILE   "udpserver.ini"

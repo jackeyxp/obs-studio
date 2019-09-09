@@ -2,7 +2,6 @@
 #pragma once
 
 #include "global.h"
-#include "../common/thread.h"
 
 class CUDPThread : public CThread
 {
