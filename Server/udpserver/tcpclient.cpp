@@ -296,11 +296,9 @@ int CTCPClient::doCmdStudentLogin()
   m_lpRoom = GetApp()->doCreateRoom(m_nRoomID);
   m_lpRoom->doTcpCreateStudent(this);
   // 当前房间里的TCP讲师端是否在线 和 UDP讲师端是否在线...
-  CTCPClient * lpTCPTeacher = m_lpRoom->GetTcpTeacherClient();
-  bool bIsTCPTeacherOnLine = ((lpTCPTeacher != NULL) ? true : false);
-  CUDPClient * lpUdpPusher = ((lpTCPTeacher != NULL) ? lpTCPTeacher->GetUdpPusher() : NULL);
-  bool bIsUDPTeacherOnLine = ((lpUdpPusher != NULL) ? true : false);
-  int  nTeacherFlowID = ((lpTCPTeacher != NULL) ? lpTCPTeacher->GetDBFlowID() : 0);
+  bool bIsTCPTeacherOnLine = m_lpRoom->IsTcpTeacherClientOnLine();
+  bool bIsUDPTeacherOnLine = m_lpRoom->IsUdpTeacherPusherOnLine();
+  int  nTeacherFlowID = m_lpRoom->GetTcpTeacherDBFlowID();
   // 发送反馈命令信息给学生端长链接对象...
   return this->doSendCmdLoginForStudent(bIsTCPTeacherOnLine, bIsUDPTeacherOnLine, nTeacherFlowID);
 }
@@ -328,9 +326,8 @@ int CTCPClient::doCmdStudentOnLine()
   // 如果不是学生端对象，直接返回...
   if( m_nClientType != kClientStudent )
     return 0;
-  // 当前房间里的TCP讲师端的流量编号...
-  CTCPClient * lpTCPTeacher = ((m_lpRoom != NULL) ? m_lpRoom->GetTcpTeacherClient() : NULL);
-  int nTeacherFlowID = ((lpTCPTeacher != NULL) ? lpTCPTeacher->GetDBFlowID() : 0);
+  // 当前房间里的TCP讲师端的流量编号 => 内部需要用互斥保护资源...
+  int nTeacherFlowID = ((m_lpRoom != NULL) ? m_lpRoom->GetTcpTeacherDBFlowID() : 0);
   // 构造转发JSON数据块 => 返回套TCP讲师流量编号...
   json_object * new_obj = json_object_new_object();
   json_object_object_add(new_obj, "flow_teacher", json_object_new_int(nTeacherFlowID));

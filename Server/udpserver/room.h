@@ -9,9 +9,11 @@ public:
   CRoom(int inRoomID);
   ~CRoom();
 public:
-  int          GetTcpTeacherCount() { return m_lpTCPTeacher ? 1 : 0; }
-  int          GetTcpStudentCount() { return m_MapTCPStudent.size(); }
-  CTCPClient * GetTcpTeacherClient() { return m_lpTCPTeacher; }
+  int          GetTcpTeacherCount();
+  int          GetTcpStudentCount();
+  int          GetTcpTeacherDBFlowID();
+  bool         IsTcpTeacherClientOnLine();
+  bool         IsUdpTeacherPusherOnLine();
 public:
   void         doDumpRoomInfo();
   CUDPClient * doFindUdpPusher(int inDBCameraID);

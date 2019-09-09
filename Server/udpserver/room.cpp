@@ -35,6 +35,33 @@ void CRoom::doDumpRoomInfo()
   }  
 }
 
+int CRoom::GetTcpTeacherCount()
+{
+  return m_lpTCPTeacher ? 1 : 0;
+}
+
+int CRoom::GetTcpStudentCount()
+{
+  return m_MapTCPStudent.size();
+}
+
+int CRoom::GetTcpTeacherDBFlowID()
+{
+  return ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetDBFlowID() : 0);
+}
+
+bool CRoom::IsTcpTeacherClientOnLine()
+{
+  return ((m_lpTCPTeacher != NULL) ? true : false);
+}
+
+bool CRoom::IsUdpTeacherPusherOnLine()
+{
+
+  CUDPClient * lpUdpPusher = ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetUdpPusher() : NULL);
+  return ((lpUdpPusher != NULL) ? true : false);
+}
+
 void CRoom::doTcpCreateTeacher(CTCPClient * lpTeacher)
 {
   int nClientType = lpTeacher->GetClientType();
