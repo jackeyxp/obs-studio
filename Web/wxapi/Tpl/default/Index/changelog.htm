@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+<!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+
+<title>启迪未来 - 北京众智未来科技有限公司</title>
+
+<!-- layui css and javascript -->
+<link href="/wxapi/public/layui/css/layui.css" rel="stylesheet" media="all">
+
+<link rel="stylesheet" href="/wxapi/public/css/myhaoyi.css">
+
+<style>
+.layui-main { margin-top: 70px; width: 900px; }
+@media screen and (max-width: 750px) {
+  .layui-main{width: auto; margin: 0 10px;}
+  .top{display: none;}
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="top">
+  <div class="inner">
+    <div class="logo">
+      <a href="https://www.qidiweilai.com">
+        <img src="/wxapi/public/images/logo.png" width="180px"></img>
+      </a>
+    </div>
+    <ul id="menu" class="nav">
+      <li><a href="/#page1">科学</a></li>
+      <li><a href="/#page2">机器人</a></li>
+      <li class="active"><a href="/#page3">双师系统</a></li>
+      <li><a href="/#page4">专家导师</a></li>
+      <li><a href="/#page5">学生作品</a></li>
+      <li><a href="/#page6">加盟咨询</a></li>
+    </ul>
+  </div>
+</div>
+
+<div class="layui-main">
+  <div class="site-content">
+    <h1 class="site-h1">更新日志</h1>
+    <ul class="layui-timeline">
+      <!-- 1.2.13 版本 -->
+      <li class="layui-timeline-item">
+        <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+        <div class="layui-timeline-content layui-text">
+          <div class="layui-timeline-title">
+            <h2>1.2.13</h2>
+            <span class="layui-badge-rim">2019-08-25</span>
+          </div>
+          <ul>
+            <li>
+              <h3>讲师端</h3>
+              <ul>
+                <li>新增 支持多路互动教室显示，多路互动教室自动投影到一个屏幕上</li>
+                <li>新增 支持互动教室投影时显示互动教室的名称</li>
+                <li>新增 文字数据源，可以插入文字资源</li>
+                <li>新增 图片数据源，可以插入图片资源</li>
+                <li>新增 待选区多窗口左右翻页功能</li>
+                <li>新增 支持第三方微信扫码登录模式</li>
+                <li>新增 利用轨道3多路混音进行回音消除</li>
+                <li>改进 升级检测转移到扫码登录之前</li>
+                <li>改进 数据源菜单，右键菜单</li>
+                <li>新增 数据源支持 *.ppt *.pptx 格式文件</li>
+              </ul>
+            </li>
+            <li>
+              <h3>学生端</h3>
+              <ul>
+                <li>新增 支持多路摄像头同时上传到老师端</li>
+                <li>新增 支持第三方微信扫码登录模式</li>
+                <li>改进 升级检测转移到扫码登录之前</li>
+              </ul>
+            </li>
+            <li>
+              <h3>屏幕端</h3>
+              <ul>
+                <li>新增 支持单独的学生屏幕分享功能</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <!-- 1.1.12 版本 -->
+      <li class="layui-timeline-item">
+        <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+        <div class="layui-timeline-content layui-text">
+          <div class="layui-timeline-title">
+            <h2>1.1.12</h2>
+            <span class="layui-badge-rim">2019-04-22</span>
+          </div>
+          <ul>
+            <li>
+              <h3>讲师端</h3>
+              <ul>
+                <li>新增 微信小程序扫描登录</li>
+                <li>优化 回音消除、资源窗口重排显示、崩溃检测</li>
+                <li>修正 数据源切换时的状态交换，分辨率缩放崩溃问题</li>
+              </ul>
+            </li>
+            <li>
+              <h3>学生端</h3>
+              <ul>
+                <li>新增 微信小程序扫描登录</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <!-- 1.1.7 版本 -->
+      <li class="layui-timeline-item">
+        <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+        <div class="layui-timeline-content layui-text">
+          <div class="layui-timeline-title">
+            <h2>1.1.7</h2>
+            <span class="layui-badge-rim">2019-02-25</span>
+          </div>
+          <ul>
+            <li>
+              <h3>讲师端</h3>
+              <ul>
+                <li>新增 互动教室 可以进行远程云台控制</li>
+                <li>修改 将中心服务器调整为https://www.qidiweilai.com</li>
+              </ul>
+            </li>
+            <li>
+              <h3>学生端</h3>
+              <ul>
+                <li>新增 左侧摄像头可以进行远程云台控制</li>
+                <li>新增 将学生端角色信息上传到服务器</li>
+                <li>新增 非推流状态的学生端可以接收互动学生端的扩展音频</li>
+                <li>新增 学生端的组播接收者或组播转发者在扩展音频上的改进</li>
+                <li>修改 将中心服务器调整为https://www.qidiweilai.com</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <!-- 1.1.5 版本 -->
+      <li class="layui-timeline-item">
+        <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+        <div class="layui-timeline-content layui-text">
+          <div class="layui-timeline-title">
+            <h2>1.1.5</h2>
+            <span class="layui-badge-rim">2019-01-20</span>
+          </div>
+          <ul>
+            <li>
+              <h3>讲师端、学生端</h3>
+              <ul>
+                <li>新增 命令行扩展指令，挂载特地的调试服务器；</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <!-- 1.1.4 版本 -->
+      <li class="layui-timeline-item">
+        <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+        <div class="layui-timeline-content layui-text">
+          <div class="layui-timeline-title">
+            <h2>1.1.4</h2>
+            <span class="layui-badge-rim">2018-12-31</span>
+          </div>
+          <ul>
+            <li>
+              <h3>讲师端</h3>
+              <ul>
+                <li>去掉 coreaudio-encoder.dll，避免aac压缩解码的混乱；</li>
+                <li>改进 全站支持带有SSL功能的https协议连接地址；</li>
+                <li>改进 curl访问库，支持https协议；</li>
+                <li>改进 更新软件后，需要删除AppData\Roaming\obs-teacher\global.ini当中的WebCenter与WebClass配置；</li>
+                <li>新增 预览画面右键菜单“开启浮动数据源”和“关闭浮动数据源”，实现讲师头像的画面叠加功能；</li>
+              </ul>
+            </li>
+            <li>
+              <h3>学生端</h3>
+              <ul>
+                <li>新增 本地IPC摄像头的预览功能；</li>
+                <li>改进 声音回放使用WASPI的方式，不再使用SDL播放；</li>
+                <li>改进 全站支持带有SSL功能的https协议连接地址；</li>
+                <li>改进 更新软件后，需要删除AppData\Roaming\obs-student\global.ini当中的WebCenter与WebClass配置；</li>
+                <li>改进 只要有视频播放时，右侧画面自动全屏，已经处于全屏状态的情况不处理；</li>
+                <li>改进 通道处于已连接状态也能对通道进行编辑修改操作；</li>
+                <li>新增 三种终端类型 => 外网接收者|组播接收者|组播发送者，通过后台网站进行终端类型配置；</li>
+                <li>新增 234.5.6.7组播数据发送地址，235.6.7.8组播丢包发送地址；</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <!-- 1.1.3 版本 -->
+      <li class="layui-timeline-item">
+        <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+        <div class="layui-timeline-content layui-text">
+          <div class="layui-timeline-title">
+            <h2>1.1.3</h2>
+            <span class="layui-badge-rim">2018-11-22</span>
+          </div>
+          <ul>
+            <li>
+              <h3>讲师端</h3>
+              <ul>
+                <li>改进 回音消除模块，提高回音消除效率；</li>
+                <li>改进 互动教室通道切换的命令处理过程；</li>
+                <li>改进 win-rtp互斥，使用libobs的函数库；</li>
+                <li>新增 启动后登录前的房间选择界面；</li>
+              </ul>
+            </li>
+            <li>
+              <h3>学生端</h3>
+              <ul>
+                <li>改进 回音消除模块，提高回音消除效率；</li>
+                <li>改进 音频播放模块，与回音消除模块的接口融合；</li>
+                <li>改进 win-rtp互斥，使用libobs的函数库；</li>
+                <li>新增 启动后登录前的房间选择界面；</li>
+                <li>新增 本地画面预览功能，默认处于静音状态；</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <!-- 孵化版 -->
+      <li class="layui-timeline-item">
+        <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+        <div class="layui-timeline-content">
+          <div class="layui-timeline-title">孵化期</div>
+        </div>
+      </li>      
+    </ul>
+  </div>
+</div>
+<div class="footer">
+  <div class="layui-main">
+    <p>Copyright 2018-2020 © <a href="/">北京众智未来科技有限公司</a></p>
+    <p>京ICP备17028722号-3</p>
+  </div>
+</div>
+</body>
+</html>
