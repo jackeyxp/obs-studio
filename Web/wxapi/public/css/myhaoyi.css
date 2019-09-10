@@ -1,0 +1,175 @@
+
+* { margin: 0; padding: 0; }
+ul { list-style-type: none; }
+img { border:none; }
+
+body, button, input, select, textarea {
+  font-family: 'PingFangSC','helvetica neue','hiragino sans gb','arial','microsoft yahei ui','microsoft yahei','simsun','微软雅黑', '宋体','sans-serif' !important;
+  font: 12px/1.5 "\5FAE\8F6F\96C5\9ED1", "Microsoft Yahei", "Hiragino Sans GB", "tahoma", "arial", "\5B8B\4F53";
+  -webkit-font-smoothing: antialiased;
+}
+
+/**************************************
+这里是更新日志用到的样式列表...
+**************************************/
+.site-content {
+  width: 100%; /*899px;*/
+  min-height: 500px;
+  padding: 20px 20px;
+  display: inline-block;
+  vertical-align: top;
+  font-size: 14px;
+}
+.site-h1 {
+  margin-bottom: 20px;
+  line-height: 60px;
+  padding-bottom: 10px;
+  color: #393D49;
+  border-bottom: 1px solid #eee;
+  font-size: 28px;
+  font-weight: 300;
+}
+.site-content .layui-timeline-title h2 {
+  display: inline-block;
+}
+.site-content .layui-timeline-title .layui-badge-rim {
+  top: -3px; left: 10px;
+}
+.footer {
+  width: 100%;
+  padding: 10px 0;
+  line-height: 20px;
+  text-align: center;
+  color: #333;
+  font-weight: 300;
+  position: relative;
+  bottom: 0;
+}
+/******************************************
+更新日志移动端的特殊样式处理...
+******************************************/
+@media screen and (max-width: 750px) {
+  .site-content{width: 100%; padding: 0; overflow: auto;}
+  .site-h1{padding-bottom: 0;}
+}
+
+.site-download {
+  /*margin-top: 10px;*/
+  font-size: 0;
+  display: inline-block;
+  margin-right: 10px;
+}
+.site-download a {
+  position: relative;
+  padding: 0 30px 0 65px;
+  height: 60px;
+  line-height: 60px;
+  border: 1px solid #FF5722;
+  border-color: rgba(255,87,34,.4);
+  font-size: 24px;
+  color: #222;
+  transition: all .5s;
+  -webkit-transition: all .5s;
+  text-decoration: none;
+  background-color: rgba(255,87,34,.7);
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#B2FF5722,endColorstr=#B2FF5722);
+}
+.site-download a:hover {
+  border-color: rgba(255,87,34,.3);
+  background-color: rgba(255,87,34,.9);
+  border-radius: 30px;
+  color: #fff;
+}
+.site-download a cite {
+  position: absolute;
+  font-size: 30px;
+  left: 30px;
+}
+.site-version {position: relative; color: #222; font-size: 14px;}
+.site-version span{padding: 0 3px;}
+.site-version *{font-style: normal;}
+.site-version a{color: #0168b7; text-decoration: none;}
+.site-version a:hover{color: #0168b7; text-decoration: underline;}
+
+.loading {
+  background-image:url(/wxapi/public/images/loading.gif);
+  background-repeat:no-repeat;
+  background-position:center;
+}
+
+.top {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 999;
+  display: block;
+  height: 50px;
+  background-color: #333;
+}
+.inner {
+  width: 1000px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+.logo {
+  float: left;
+  margin-top: 5px;
+}
+.logo a {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  text-decoration: none;
+}
+.firm {
+  position: absolute;
+  color:#fff;
+  font-size: 20px;
+  margin-top: 10px;
+  margin-left: 46px;
+  font-weight:normal;
+}
+.firm a {
+  display: inline-block;
+  text-decoration: none;
+  color: #fff;
+}
+.firm a:hover {
+  color: #83c3f3;
+}
+.nav {
+  float: right;
+  margin-top: 10px;
+  font-size: 0;
+}
+.nav li {
+  display: inline-block;
+  margin-left: 40px;
+}
+.nav a {
+  display: inline-block;
+  height: 30px;
+  line-height: 30px;
+  font-size: 14px;
+  color: #fff;
+  text-decoration: none;
+  transition:all .3s;
+  -webkit-transition:all .3s
+}
+.nav a:hover {
+  color: #83c3f3;
+}
+.nav .active a {
+  color: #83c3f3;
+}
+.nav .login a:hover {
+  color: #e67e22 !important;
+}
+.section {
+  text-align: center;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  background-size: cover;
+  overflow: hidden;
+}
