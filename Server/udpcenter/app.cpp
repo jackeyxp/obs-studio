@@ -7,6 +7,7 @@ CApp::CApp()
   : m_sem_t(NULL)
   , m_uRefCounterID(0)
   , m_lpTCPThread(NULL)
+  , m_signal_quit(false)
 {
   // 初始化辅助线程信号量...
   os_sem_init(&m_sem_t, 0);
@@ -66,9 +67,25 @@ void CApp::doWaitForExit()
 {
   // 设定默认的信号超时时间 => APP_SLEEP_MS 毫秒...
   unsigned long next_wait_ms = APP_SLEEP_MS;
-  while( true ) {
+  // 判断是否有信号退出标志...
+  while ( !this->IsSignalQuit() ) {
     os_sem_timedwait(m_sem_t, next_wait_ms);
   }
+  // 删除TCP线程对象...
+  if (m_lpTCPThread != NULL) {
+    delete m_lpTCPThread;
+    m_lpTCPThread = NULL;
+  }
+  // 打印已经成功退出信息...
+  log_trace("cleanup for gracefully terminate.");
+}
+
+void CApp::onSignalQuit()
+{
+  // 设置退出标志...
+  m_signal_quit = true;
+  // 触发信号量，快速退出...
+  os_sem_post(m_sem_t);
 }
 
 // 创建服务器对象 => 通过套接字编号进行创建...
