@@ -6,7 +6,7 @@
   //设定项目配置
   $array = array(
     // 定义版本号...
-    'VERSION' => '1.2.13',
+    'VERSION' => '2.0.1',
     // 微信登录网站应用需要的参数配置 => 微信开放平台
     'WECHAT_LOGIN' => array(
       'scope'=>'snsapi_login', //用户授权的作用域,使用逗号(,)分隔

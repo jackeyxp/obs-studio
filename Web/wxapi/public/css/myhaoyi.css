@@ -173,3 +173,66 @@ body, button, input, select, textarea {
   background-size: cover;
   overflow: hidden;
 }
+.bk-blue {
+  background: -webkit-gradient(linear, top left, bottom left, from(#cfe8fc), to(#7BAABE));
+  background: -webkit-linear-gradient(#cfe8fc, #7BAABE);
+  background: linear-gradient(#cfe8fc,#7BAABE);
+}
+.bk-white {
+  background: -webkit-gradient(linear, top left, bottom left, from(#ffffff), to(#eee9e5));
+  background: -webkit-linear-gradient(#ffffff, #eee9e5);
+  background: linear-gradient(#ffffff,#eee9e5);
+}
+.page-title {
+  color: #0168b7;
+  font-size: 40px;
+  line-height: 80px;
+  font-weight: 900;
+}
+.title1 {
+  opacity: 0.8;
+  font-size: 60px;
+  line-height: 93px;
+  background: url(/wxapi/public/images/titleline1.png) no-repeat center bottom;
+}
+.title2 {
+  opacity: 0.8;
+  font-size: 40px;
+  line-height: 75px;
+}
+.title3 { 
+  color: #666;
+  font-size: 24px;
+  line-height: 48px;
+  margin-top: 20px;
+}
+.foot_bot {
+  left: 0;
+  bottom: 10px;
+  width: 100%;
+  display: block;
+  font-size: 16px;
+  color: #333;
+  position: absolute;
+  text-align: center;
+  font-family: 'Microsoft Yahei','Tahoma','Arial','Helvetica','Simsun','STHeiti';
+}
+.foot_copy {bottom: 35px;}
+.contact {margin-top: 40px;}
+.title4 {
+  width: 50%;
+  margin: 0 auto;
+  font-size: 40px;
+  line-height: 75px;
+  border-bottom: 1px solid #d2d2d2;
+}
+.title5 {
+   width: 40%;
+   margin: 20px auto;
+   font-size: 18px;
+   text-align: left;
+   color:#000;
+}
+.title5 img {
+  width: 100%;
+}
