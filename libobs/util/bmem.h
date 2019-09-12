@@ -31,11 +31,19 @@ struct base_allocator {
 	void (*free)(void *);
 };
 
+#define bfree(ptr) new_bfree(ptr, __FILE__, __LINE__)
+#define bmalloc(size) new_bmalloc(size, __FILE__, __LINE__)
+#define bzalloc(size) new_bzalloc(size, __FILE__, __LINE__)
+#define brealloc(ptr, size) new_brealloc(ptr, size, __FILE__, __LINE__)
+
+EXPORT void bmem_init();
+EXPORT void bmem_free();
+
 EXPORT void base_set_allocator(struct base_allocator *defs);
 
-EXPORT void *bmalloc(size_t size);
-EXPORT void *brealloc(void *ptr, size_t size);
-EXPORT void bfree(void *ptr);
+EXPORT void  new_bfree(void *ptr, char * lpszFileName, size_t nFileLine);
+EXPORT void *new_bmalloc(size_t size, char * lpszFileName, size_t nFileLine);
+EXPORT void *new_brealloc(void *ptr, size_t size, char * lpszFileName, size_t nFileLine);
 
 EXPORT int base_get_alignment(void);
 
@@ -43,9 +51,9 @@ EXPORT long bnum_allocs(void);
 
 EXPORT void *bmemdup(const void *ptr, size_t size);
 
-static inline void *bzalloc(size_t size)
+static inline void *new_bzalloc(size_t size, char * lpszFileName, size_t nFileLine)
 {
-	void *mem = bmalloc(size);
+	void *mem = new_bmalloc(size, lpszFileName, nFileLine);
 	if (mem)
 		memset(mem, 0, size);
 	return mem;

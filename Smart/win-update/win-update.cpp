@@ -396,7 +396,7 @@ static bool ParseUpdateManifest(const char *manifest, bool *updatesAvailable,
 try {
 
 	json_error_t error;
-	Json root(json_loads(manifest, 0, &error));
+	OBSJson root(json_loads(manifest, 0, &error));
 	if (!root)
 		throw strprintf("Failed reading json string (%d): %s",
 				error.line, error.text);
@@ -776,99 +776,4 @@ void AutoUpdateThread::doLaunchDXWebSetup()
 	} while (false);
 	// 任何情况都要退出...
 	doCloseMainWindow();*/
-}
-
-/* ------------------------------------------------------------------------ */
-
-void WhatsNewInfoThread::run()
-try {
-	long responseCode;
-	vector<string> extraHeaders;
-	string text;
-	string error;
-	string signature;
-	CryptProvider localProvider;
-	BYTE whatsnewHash[BLAKE2_HASH_LENGTH];
-	bool success;
-
-	BPtr<char> whatsnewPath =
-		GetConfigPathPtr("obs-smart\\updates\\whatsnew.json");
-
-	/* ----------------------------------- *
-	 * create signature provider           */
-
-	if (!CryptAcquireContext(&localProvider, nullptr, MS_ENH_RSA_AES_PROV,
-				 PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
-		throw strprintf("CryptAcquireContext failed: %lu",
-				GetLastError());
-
-	provider = localProvider;
-
-	/* ----------------------------------- *
-	 * avoid downloading json again        */
-
-	if (CalculateFileHash(whatsnewPath, whatsnewHash)) {
-		char hashString[BLAKE2_HASH_STR_LENGTH];
-		HashToString(whatsnewHash, hashString);
-
-		string header = "If-None-Match: ";
-		header += hashString;
-		extraHeaders.push_back(move(header));
-	}
-
-	/* ----------------------------------- *
-	 * get current install GUID            */
-
-	string guid = GetProgramGUID();
-
-	if (!guid.empty()) {
-		string header = "X-OBS2-GUID: ";
-		header += guid;
-		extraHeaders.push_back(move(header));
-	}
-
-	/* ----------------------------------- *
-	 * get json from server                */
-
-	success = GetRemoteFile(WIN_WHATSNEW_URL, text, error, &responseCode,
-				nullptr, nullptr, extraHeaders, &signature);
-
-	if (!success || (responseCode != 200 && responseCode != 304)) {
-		if (responseCode == 404)
-			return;
-
-		throw strprintf("Failed to fetch whatsnew file: %s",
-				error.c_str());
-	}
-
-	/* ----------------------------------- *
-	 * verify file signature               */
-
-	if (responseCode == 200) {
-		success = CheckDataSignature(text, "whatsnew", signature.data(),
-					     signature.size());
-		if (!success)
-			throw string("Invalid whatsnew signature");
-	}
-
-	/* ----------------------------------- *
-	 * write or load json                  */
-
-	if (responseCode == 200) {
-		if (!QuickWriteFile(whatsnewPath, text.data(), text.size()))
-			throw strprintf("Could not write file '%s'",
-					whatsnewPath.Get());
-	} else {
-		if (!QuickReadFile(whatsnewPath, text))
-			throw strprintf("Could not read file '%s'",
-					whatsnewPath.Get());
-	}
-
-	/* ----------------------------------- *
-	 * success                             */
-
-	emit Result(QString::fromUtf8(text.c_str()));
-
-} catch (string &text) {
-	blog(LOG_WARNING, "%s: %s", __FUNCTION__, text.c_str());
 }

@@ -30,10 +30,9 @@ static int crashing = 0;
 static void *log_param = NULL;
 static void *crash_param = NULL;
 
-static void def_log_handler(int log_level, const char *format, va_list args,
-			    void *param)
+static void def_log_handler(int log_level, const char *format, va_list args, void *param)
 {
-	char out[4096];
+	char out[4096] = { 0 };
 	vsnprintf(out, sizeof(out), format, args);
 
 	if (log_level <= log_output_level) {
@@ -68,8 +67,7 @@ static void def_log_handler(int log_level, const char *format, va_list args,
 #define NORETURN __attribute__((noreturn))
 #endif
 
-NORETURN static void def_crash_handler(const char *format, va_list args,
-				       void *param)
+NORETURN static void def_crash_handler(const char *format, va_list args, void *param)
 {
 	vfprintf(stderr, format, args);
 	exit(0);

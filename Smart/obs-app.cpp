@@ -15,16 +15,20 @@
 #include <obs-config.h>
 #include <obs.hpp>
 
+#include <QNetworkRequest>
+#include <QNetworkReply>
 #include <QGuiApplication>
 #include <QProxyStyle>
 #include <QScreen>
 
 #include "qt-wrappers.hpp"
 #include "obs-app.hpp"
+#include "FastSession.h"
 #include "window-basic-main.hpp"
 #include "window-basic-settings.hpp"
 #include "crash-report.hpp"
 #include "platform.hpp"
+#include "getopt.h"
 
 #include <fstream>
 
@@ -36,8 +40,13 @@
 #endif
 
 #include <iostream>
+#include <IPTypes.h>
+#include <IPHlpApi.h>
+#include <atlconv.h>
 
 #include "ui-config.h"
+
+#pragma comment(lib, "iphlpapi.lib")
 
 using namespace std;
 
@@ -224,8 +233,7 @@ string CurrentDateTimeString()
 	return buf;
 }
 
-static inline void LogString(fstream &logFile, const char *timeString,
-			     char *str)
+static inline void LogString(fstream &logFile, const char *timeString, char *str)
 {
 	logFile << timeString << str << endl;
 }
@@ -1029,11 +1037,122 @@ bool OBSApp::InitTheme()
 	return this->SetTheme(themeName);
 }
 
+bool OBSApp::InitMacIPAddr()
+{
+	// 2018.01.11 - 解决 ERROR_BUFFER_OVERFLOW 的问题...
+	DWORD outBuflen = sizeof(IP_ADAPTER_INFO);
+	IP_ADAPTER_INFO * lpAdapter = new IP_ADAPTER_INFO;
+	DWORD retStatus = GetAdaptersInfo(lpAdapter, &outBuflen);
+	// 发现缓冲区不够用，重新分配空间...
+	if (retStatus == ERROR_BUFFER_OVERFLOW) {
+		delete lpAdapter; lpAdapter = NULL;
+		lpAdapter = (PIP_ADAPTER_INFO)new BYTE[outBuflen];
+		retStatus = GetAdaptersInfo(lpAdapter, &outBuflen);
+	}
+	// 还是发生了错误，打印错误，直接返回...
+	if (retStatus != ERROR_SUCCESS) {
+		blog(LOG_INFO, "GetAdaptersInfo Error: %u", retStatus);
+		delete lpAdapter; lpAdapter = NULL;
+		return false;
+	}
+	// 开始循环遍历网卡节点...
+	IP_ADAPTER_INFO * lpInfo = lpAdapter;
+	while (lpInfo != NULL) {
+		// 打印网卡描述信息 => 2018.03.27 - 解决无线网卡的问题...
+		blog(LOG_INFO, "== Adapter Type: %lu, Desc: %s ==\n", lpInfo->Type, lpInfo->Description);
+		// 必须是以太网卡，必须是IPV4的网卡，必须是有效的网卡 => 71 是无线网卡...
+		if ((lpInfo->Type != MIB_IF_TYPE_ETHERNET && lpInfo->Type != 71) || lpInfo->AddressLength != 6 || strcmp(lpInfo->IpAddressList.IpAddress.String, "0.0.0.0") == 0) {
+			lpInfo = lpInfo->Next;
+			continue;
+		}
+		// 获取MAC地址和IP地址，地址是相互关联的...
+		char szBuffer[MAX_PATH] = { 0 };
+		sprintf(szBuffer, "%02X-%02X-%02X-%02X-%02X-%02X", lpInfo->Address[0], lpInfo->Address[1], lpInfo->Address[2], lpInfo->Address[3], lpInfo->Address[4], lpInfo->Address[5]);
+		m_strIPAddr = lpInfo->IpAddressList.IpAddress.String;
+		m_strMacAddr = szBuffer;
+		lpInfo = lpInfo->Next;
+	}
+	// 释放分配的缓冲区...
+	delete lpAdapter;
+	lpAdapter = NULL;
+	return true;
+}
+
+// 注意：统一返回UTF8格式...
+char * OBSApp::GetServerDNSName()
+{
+	static char szBuffer[MAX_PATH] = { 0 };
+	if (strlen(szBuffer) > 0)
+		return szBuffer;
+	DWORD dwLen = MAX_PATH;
+	static WCHAR szTempName[MAX_PATH] = { 0 };
+	::GetComputerName(szTempName, &dwLen);
+	os_wcs_to_utf8(szTempName, MAX_PATH, szBuffer, MAX_PATH);
+	return szBuffer;
+}
+
+// 注意：统一返回UTF8格式...
+string OBSApp::getJsonString(Json::Value & inValue)
+{
+	string strReturn;
+	char szBuffer[32] = { 0 };
+	if (inValue.isInt()) {
+		sprintf(szBuffer, "%d", inValue.asInt());
+		strReturn = szBuffer;
+	}
+	else if (inValue.isString()) {
+		strReturn = inValue.asString();
+	}
+	return strReturn;
+}
+
+// 调用位置，详见 run_program() 函数，只调用一次...
+void OBSApp::doProcessCmdLine(int argc, char * argv[])
+{
+	int	ch = 0;
+	while ((ch = getopt(argc, argv, "?hvdrz")) != EOF)
+	{
+		switch (ch) {
+		case 'd': m_bIsDebugMode = true;  continue;
+		case 'r': m_bIsDebugMode = false; continue;
+		case 'p': m_bIsMiniMode = false; continue;
+		case 'm': m_strRoomID = argv[optind++]; optreset = 1; continue;
+		case 'u': m_strUserName = argv[optind++]; optreset = 1; continue;
+		case 'c': m_strCenterTcpAddr = argv[optind++]; optreset = 1; continue;
+		case '?':
+		case 'h':
+		case 'v':
+			blog(LOG_INFO, "-d: Run as Debug Mode => mount on Debug udpserver.");
+			blog(LOG_INFO, "-r: Run as Release Mode => mount on Release udpserver.");
+			break;
+		}
+	}
+	// 如果房间号|用户名|中心地址，都不为空，说明是外挂的参数模式...
+	if (m_strRoomID.size() > 0 && m_strUserName.size() > 0 && m_strCenterTcpAddr.size() > 0) {
+		m_bIsMiniMode = false;
+	}
+}
+
 OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
 	: QApplication(argc, argv), profilerNameStore(store)
 {
-	sleepInhibitor = os_inhibit_sleep_create("Smart Video/audio");
+	m_nUdpPort = 0;
+	m_nRemotePort = 0;
+	m_nTrackerPort = 0;
+	m_nFastTimer = -1;
+	m_nOnLineTimer = -1;
+	m_nFlowTimer = -1;
+	m_nDBFlowID = 0;
+	m_nRtpTCPSockFD = 0;
+	m_LoginMini = NULL;
+	m_RemoteSession = NULL;
+	m_bIsDebugMode = false;
+	m_bIsMiniMode = true;
+	m_nClientType = kClientTeacher;
+	m_strWebCenter = DEF_WEB_CENTER;
+	// 注意：m_strCenterTcpAddr|m_nCenterTcpPort不要赋初值，避免后续混乱...
 
+	sleepInhibitor = os_inhibit_sleep_create("Smart Video/audio");
 	setWindowIcon(QIcon::fromTheme("obs", QIcon(":/res/images/obs.png")));
 }
 
@@ -1144,6 +1263,8 @@ void OBSApp::AppInit()
 {
 	ProfileScope("OBSApp::AppInit");
 
+	if (!this->InitMacIPAddr())
+		throw "Failed to get MAC or IP address";
 	if (!InitApplicationBundle())
 		throw "Failed to initialize application bundle";
 	if (!MakeUserDirs())
@@ -1290,6 +1411,142 @@ bool OBSApp::OBSInit()
 		});
 	ResetHotkeyState(applicationState() == Qt::ApplicationActive);
 	return true;
+}
+
+// 处理讲师端退出事件通知...
+void OBSApp::doLogoutEvent()
+{
+	// 释放登录窗口对象...
+	if (m_LoginMini != NULL) {
+		delete m_LoginMini;
+		m_LoginMini = NULL;
+	}
+	// 释放远程会话对象...
+	if (m_RemoteSession != NULL) {
+		delete m_RemoteSession;
+		m_RemoteSession = NULL;
+	}
+}
+
+// 创建并初始化登录窗口...
+void OBSApp::doLoginInit()
+{
+	// 创建小程序二维码登录窗口...
+	m_LoginMini = new CLoginMini();
+	m_LoginMini->show();
+	// 建立登录窗口与应用对象的信号槽关联函数...
+	connect(m_LoginMini, SIGNAL(doTriggerMiniSuccess()), this, SLOT(onTriggerMiniSuccess()));
+	// 关联网络信号槽反馈结果事件...
+	connect(&m_objNetManager, SIGNAL(finished(QNetworkReply *)), this, SLOT(onReplyFinished(QNetworkReply *)));
+}
+
+// 处理小程序登录成功之后的信号槽事件...
+void OBSApp::onTriggerMiniSuccess()
+{
+	// 保存登录房间号...
+	int nDBRoomID = m_LoginMini->GetDBRoomID();
+	m_strRoomID = QString("%1").arg(nDBRoomID).toStdString();
+	// 先关闭登录窗口...
+	m_LoginMini->close();
+	// 创建主窗口 => 失败返回...
+	if (!this->OBSInit()) return;
+	// 将房间号保存到obs核心对象...
+	obs_set_room_id(nDBRoomID);
+	// 开启一个定时上传检测时钟 => 每隔5秒执行一次...
+	m_nFastTimer = this->startTimer(5 * 1000);
+	// 每隔15秒检测一次，从服务器获取流量统计并存入数据库...
+	m_nFlowTimer = this->startTimer(15 * 1000);
+	// 每隔30秒检测一次，讲师端在中转服务器上在线汇报通知...
+	m_nOnLineTimer = this->startTimer(30 * 1000);
+	// 已经获取到了远程中转服务器地址，可以立即连接...
+	this->doCheckRemote();
+}
+
+void OBSApp::onReplyFinished(QNetworkReply *reply)
+{
+	// 如果发生网络错误，打印错误信息，跳出循环...
+	if (reply->error() != QNetworkReply::NoError) {
+		blog(LOG_INFO, "QT error => %d, %s", reply->error(), reply->errorString().toStdString().c_str());
+		return;
+	}
+	QByteArray & theByteArray = reply->readAll();
+	string & strData = theByteArray.toStdString();
+	//blog(LOG_DEBUG, "QT Reply Data => %s", strData.c_str());
+}
+
+// 时钟定时执行过程...
+void OBSApp::timerEvent(QTimerEvent *inEvent)
+{
+	int nTimerID = inEvent->timerId();
+	if (nTimerID == m_nFastTimer) {
+		this->doCheckFDFS();
+	}
+	else if (nTimerID == m_nOnLineTimer) {
+		this->doCheckOnLine();
+	}
+	else if (nTimerID == m_nFlowTimer) {
+		this->doCheckRoomFlow();
+	}
+}
+
+// 发送在线检测命令包...
+void OBSApp::doCheckOnLine()
+{
+	if (m_RemoteSession != NULL) {
+		m_RemoteSession->doSendOnLineCmd();
+	}
+}
+
+// 检测是否需要进行数据上传...
+void OBSApp::doCheckFDFS()
+{
+	this->doCheckRemote();
+}
+
+// 自动检测并创建RemoteSession...
+void OBSApp::doCheckRemote()
+{
+	// 如果主窗口还没有加载完毕，不能创建远程对象，因为无法读取资源配置...
+	OBSBasic * lpBasicWnd = qobject_cast<OBSBasic*>(mainWindow);
+	if (!lpBasicWnd->IsLoaded())
+		return;
+	// 如果远程会话已经存在，并且已经连接，直接返回...
+	if (m_RemoteSession != NULL && !m_RemoteSession->IsCanReBuild())
+		return;
+	// 判断存储服务器地址是否有效...
+	if (m_strRemoteAddr.size() <= 0 || m_nRemotePort <= 0)
+		return;
+	// 如果会话有效，先删除之...
+	if (m_RemoteSession != NULL) {
+		delete m_RemoteSession;
+		m_RemoteSession = NULL;
+	}
+	// 初始化远程中转会话对象...
+	m_RemoteSession = new CRemoteSession();
+	m_RemoteSession->InitSession(m_strRemoteAddr.c_str(), m_nRemotePort);
+	// 关联UDP连接被服务器删除时的事件通知信号槽、获取在线通道列表的信号槽、开启或删除rtp资源的信号槽...
+	//this->connect(m_RemoteSession, SIGNAL(doTriggerUdpLogout(int, int, int)), lpBasicWnd, SLOT(onTriggerUdpLogout(int, int, int)));
+	//this->connect(m_RemoteSession, SIGNAL(doTriggerCameraList(Json::Value&)), lpBasicWnd, SLOT(onTriggerCameraList(Json::Value&)));
+	//this->connect(m_RemoteSession, SIGNAL(doTriggerRtpSource(int, bool)), lpBasicWnd, SLOT(onTriggerRtpSource(int, bool)));
+	//this->connect(m_RemoteSession, SIGNAL(doTriggerCameraLiveStop(int)), lpBasicWnd, SLOT(onTriggerCameraLiveStop(int)));
+	//this->connect(m_RemoteSession, SIGNAL(doTriggerScreenFinish(int, QString, QString)), lpBasicWnd, SLOT(onTriggerScreenFinish(int, QString, QString)), Qt::QueuedConnection);
+}
+
+// 通过Web转发统计已登录房间流量...
+void OBSApp::doCheckRoomFlow()
+{
+	if (m_strRoomID.size() <= 0 || m_nDBFlowID <= 0 || m_strRemoteAddr.size() <= 0)
+		return;
+	/*QNetworkReply * lpNetReply = NULL;
+	QNetworkRequest theQTNetRequest;
+	string & strWebClass = App()->GetWebClass();
+	QString strContentVal = QString("user_id=%1&room_id=%2&flow_id=%3&remote_addr=%4&remote_port=%5")
+		.arg(m_nDBUserID).arg(m_strRoomID.c_str()).arg(m_nDBFlowID)
+		.arg(m_strRemoteAddr.c_str()).arg(m_nRemotePort);
+	QString strRequestURL = QString("%1%2").arg(strWebClass.c_str()).arg("/wxapi.php/Mini/roomFlow");
+	theQTNetRequest.setUrl(QUrl(strRequestURL));
+	theQTNetRequest.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
+	lpNetReply = m_objNetManager.post(theQTNetRequest, strContentVal.toUtf8());*/
 }
 
 string OBSApp::GetVersionString() const
@@ -1779,14 +2036,14 @@ static int run_program(fstream &logFile, int argc, char *argv[])
 		}
 
 		// 读取命令行各字段内容信息...
-		//program.doProcessCmdLine(argc, argv);
+		program.doProcessCmdLine(argc, argv);
 
 		// 等登录成功之后再调用...
-		if (!program.OBSInit())
-			return 0;
+		//if (!program.OBSInit())
+		//	return 0;
 		
 		// 初始化登录窗口...
-		//program.doLoginInit();
+		program.doLoginInit();
 
 		prof.Stop();
 		return program.exec();
@@ -2208,6 +2465,9 @@ void ctrlc_handler(int s)
 
 int main(int argc, char *argv[])
 {
+	// 初始化内存泄漏检测器...
+	bmem_init();
+
 #ifdef _WIN32
 	obs_init_win32_crash_handler();
 	SetErrorMode(SEM_FAILCRITICALERRORS);
@@ -2285,6 +2545,9 @@ int main(int argc, char *argv[])
 	int ret = run_program(logFile, argc, argv);
 
 	blog(LOG_INFO, "Number of memory leaks: %ld", bnum_allocs());
+
+	// 释放内存泄漏检测器...
+	bmem_free();
 
 	// 最后才设置错误打印句柄，否则无法打印...
 	base_set_log_handler(nullptr, nullptr);

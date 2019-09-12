@@ -563,10 +563,10 @@ int os_mkdir(const char *path)
 	success = CreateDirectory(path_utf16, NULL);
 	bfree(path_utf16);
 
-	if (!success)
-		return (GetLastError() == ERROR_ALREADY_EXISTS) ? MKDIR_EXISTS
-								: MKDIR_ERROR;
-
+	// 注意：这里需要追加判断是否有错误...
+	if (!success && GetLastError() != 0 ) {
+		return (GetLastError() == ERROR_ALREADY_EXISTS) ? MKDIR_EXISTS : MKDIR_ERROR;
+	}
 	return MKDIR_SUCCESS;
 }
 
@@ -584,9 +584,7 @@ int os_rename(const char *old_path, const char *new_path)
 	}
 
 	code = MoveFileExW(old_path_utf16, new_path_utf16,
-			   MOVEFILE_REPLACE_EXISTING)
-		       ? 0
-		       : -1;
+			MOVEFILE_REPLACE_EXISTING) ? 0 : -1;
 
 error:
 	bfree(old_path_utf16);
@@ -614,8 +612,7 @@ int os_safe_replace(const char *target, const char *from, const char *backup)
 		code = 0;
 	} else if (GetLastError() == ERROR_FILE_NOT_FOUND) {
 		code = MoveFileExW(wfrom, wtarget, MOVEFILE_REPLACE_EXISTING)
-			       ? 0
-			       : -1;
+			? 0 : -1;
 	}
 
 fail:

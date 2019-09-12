@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <QNetworkAccessManager>
 #include <QApplication>
 #include <QTranslator>
 #include <QPointer>
@@ -31,9 +32,13 @@
 #include <memory>
 #include <vector>
 #include <deque>
+#include "json.h"
 
 #include "HYDefine.h"
 #include "window-main.hpp"
+#include "window-login-mini.h"
+
+using namespace std;
 
 std::string CurrentTimeString();
 std::string CurrentDateTimeString();
@@ -59,39 +64,96 @@ public:
 
 typedef std::function<void()> VoidFunc;
 
+class CLoginMini;
+class CRemoteSession;
 class OBSApp : public QApplication {
 	Q_OBJECT
 private:
-	std::string locale;
-	std::string theme;
-	ConfigFile globalConfig;
-	TextLookup textLookup;
-	OBSContext obsContext;
-	QPointer<OBSMainWindow> mainWindow;
-	profiler_name_store_t *profilerNameStore = nullptr;
+	string                         m_strCenterTcpAddr;         // 中心服务器的TCP地址...
+	int                            m_nCenterTcpPort;           // 中心服务器的TCP端口...
+	std::string                    m_strWebCenter;             // 访问中心网站地址 => 仅在小程序模式下有效...
+	std::string                    m_strTrackerAddr;           // FDFS-Tracker的IP地址...
+	int                            m_nTrackerPort;             // FDFS-Tracker的端口地址...
+	std::string                    m_strRemoteAddr;            // 远程UDPServer的TCP地址...
+	int                            m_nRemotePort;              // 远程UDPServer的TCP端口...
+	std::string                    m_strUdpAddr;               // 远程UDPServer的UDP地址...
+	int                            m_nUdpPort;                 // 远程UDPServer的UDP端口...
+	int                            m_nDBFlowID;                // 从服务器获取到的流量统计数据库编号...
+	int                            m_nDBUserID;                // 已登录用户的数据库编号...
+	std::string                    m_strUserName;              // 已登录用户的用户名称...
+	std::string                    m_strRoomID;                // 登录的房间号...
+	std::string                    m_strMacAddr;               // 本机MAC地址...
+	std::string                    m_strIPAddr;                // 本机IP地址...
+	int                            m_nFastTimer;               // 分布式存储、中转链接检测时钟...
+	int                            m_nFlowTimer;               // 流量统计检测时钟...
+	int                            m_nOnLineTimer;             // 中转服务器在线检测时钟...
+	int                            m_nRtpTCPSockFD;            // CRemoteSession在服务器端的套接字号码...
+	int                            m_nClientType;              // 当前终端的类型 => Teacher|Student
+	bool                           m_bIsDebugMode;             // 是否是调试模式 => 挂载到调试服务器...
+	bool                           m_bIsMiniMode;              // 是否是小程序模式 => 挂载到阿里云服务器...
+	std::string                    locale;
+	std::string                    theme;
+	ConfigFile                     globalConfig;
+	TextLookup                     textLookup;
+	OBSContext                     obsContext;
+	QPointer<OBSMainWindow>        mainWindow;                 // 主窗口对象
+	QPointer<CLoginMini>           m_LoginMini;                // 小程序登录窗口
+	QPointer<CRemoteSession>       m_RemoteSession;            // For UDP-Server
+	QNetworkAccessManager          m_objNetManager;            // QT 网络管理对象...
+	profiler_name_store_t     *    profilerNameStore = nullptr;
 
 	os_inhibit_t *sleepInhibitor = nullptr;
 	int sleepInhibitRefs = 0;
 
 	bool enableHotkeysInFocus = true;
 	bool enableHotkeysOutOfFocus = true;
-
 	std::deque<obs_frontend_translate_ui_cb> translatorHooks;
-
-	bool UpdatePre22MultiviewLayout(const char *layout);
-
+	QPalette defaultPalette;
+private:
+	bool InitTheme();
+	bool InitLocale();
+	bool InitMacIPAddr();
 	bool InitGlobalConfig();
 	bool InitGlobalConfigDefaults();
-	bool InitLocale();
-	bool InitTheme();
-
 	inline void ResetHotkeyState(bool inFocus);
-
-	QPalette defaultPalette;
-
 	void ParseExtraThemeData(const char *path);
+	bool UpdatePre22MultiviewLayout(const char *layout);
 	void AddExtraThemeColor(QPalette &pal, int group, const char *name,	uint32_t color);
+public:
+	static string getJsonString(Json::Value & inValue);
+	static char * GetServerDNSName();
+public:
+	bool     IsMiniMode() { return m_bIsMiniMode; }
+	bool     IsDebugMode() { return m_bIsDebugMode; }
+	int      GetClientType() { return m_nClientType; }
+	int      GetRtpTCPSockFD() { return m_nRtpTCPSockFD; }
+	int      GetDBFlowID() { return m_nDBFlowID; }
+	int      GetDBUserID() { return m_nDBUserID; }
+	string & GetLocalIPAddr() { return m_strIPAddr; }
+	string & GetLocalMacAddr() { return m_strMacAddr; }
+	string & GetRoomIDStr() { return m_strRoomID; }
+	string & GetWebCenter() { return m_strWebCenter; }
+	string & GetUserName() { return m_strUserName; }
 
+	string & GetCenterAddr() { return m_strCenterTcpAddr; }
+	int      GetCenterPort() { return m_nCenterTcpPort; }
+	string & GetTrackerAddr() { return m_strTrackerAddr; }
+	int		 GetTrackerPort() { return m_nTrackerPort; }
+	string & GetRemoteAddr() { return m_strRemoteAddr; }
+	int		 GetRemotePort() { return m_nRemotePort; }
+	string & GetUdpAddr() { return m_strUdpAddr; }
+	int		 GetUdpPort() { return m_nUdpPort; }
+
+	void     SetDBFlowID(int nDBFlowID) { m_nDBFlowID = nDBFlowID; }
+	void     SetRtpTCPSockFD(int nTCPSockFD) { m_nRtpTCPSockFD = nTCPSockFD; }
+	void	 SetUdpAddr(const string & strAddr) { m_strUdpAddr = strAddr; }
+	void     SetUdpPort(int nPort) { m_nUdpPort = nPort; }
+	void	 SetRemoteAddr(const string & strAddr) { m_strRemoteAddr = strAddr; }
+	void     SetRemotePort(int nPort) { m_nRemotePort = nPort; }
+	void	 SetTrackerAddr(const string & strAddr) { m_strTrackerAddr = strAddr; }
+	void     SetTrackerPort(int nPort) { m_nTrackerPort = nPort; }
+	void	 SetCenterAddr(const string & strAddr) { m_strCenterTcpAddr = strAddr; }
+	void     SetCenterPort(int nPort) { m_nCenterTcpPort = nPort; }
 public:
 	OBSApp(int &argc, char **argv, profiler_name_store_t *store);
 	~OBSApp();
@@ -99,40 +161,44 @@ public:
 	void AppInit();
 	bool OBSInit();
 
+	void doLoginInit();
+	void doLogoutEvent();
+	void doProcessCmdLine(int argc, char * argv[]);
+
+	void doCheckFDFS();
+	void doCheckRemote();
+	void doCheckOnLine();
+	void doCheckRoomFlow();
+
+	void timerEvent(QTimerEvent * inEvent);
+
 	void UpdateHotkeyFocusSetting(bool reset = true);
 	void DisableHotkeys();
 
-	inline bool HotkeysEnabledInFocus() const
-	{
+	inline bool HotkeysEnabledInFocus() const {
 		return enableHotkeysInFocus;
 	}
 
 	inline QMainWindow *GetMainWindow() const { return mainWindow.data(); }
-
+	inline CLoginMini *GetLoginMini() const { return m_LoginMini.data(); }
 	inline config_t *GlobalConfig() const { return globalConfig; }
 
 	inline const char *GetLocale() const { return locale.c_str(); }
-
 	inline const char *GetTheme() const { return theme.c_str(); }
 	bool SetTheme(std::string name, std::string path = "");
-
 	inline lookup_t *GetTextLookup() const { return textLookup; }
-
 	inline const char *GetString(const char *lookupVal) const {
 		return textLookup.GetString(lookupVal);
 	}
 
 	bool TranslateString(const char *lookupVal, const char **out) const;
-
 	profiler_name_store_t *GetProfilerNameStore() const {
 		return profilerNameStore;
 	}
 
 	const char *GetLastLog() const;
 	const char *GetCurrentLog() const;
-
 	const char *GetLastCrashLog() const;
-
 	std::string GetVersionString() const;
 	bool IsPortableMode();
 
@@ -171,6 +237,8 @@ public:
 
 public slots:
 	void Exec(VoidFunc func);
+	void onTriggerMiniSuccess();
+	void onReplyFinished(QNetworkReply *reply);
 signals:
 	void StyleChanged();
 };

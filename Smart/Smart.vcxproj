@@ -11,7 +11,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\deps\json11\json11.cpp" />
     <ClCompile Include="..\deps\libff\libff\ff-util.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
     </ClCompile>
@@ -21,10 +20,15 @@
     <ClCompile Include="combobox-ignorewheel.cpp" />
     <ClCompile Include="crash-report.cpp" />
     <ClCompile Include="double-slider.cpp" />
+    <ClCompile Include="fastdfs\FastSession.cpp" />
     <ClCompile Include="focus-list.cpp" />
+    <ClCompile Include="getopt.cpp" />
     <ClCompile Include="horizontal-scroll-area.cpp" />
     <ClCompile Include="hotkey-edit.cpp" />
     <ClCompile Include="item-widget-helpers.cpp" />
+    <ClCompile Include="json\json_reader.cpp" />
+    <ClCompile Include="json\json_value.cpp" />
+    <ClCompile Include="json\json_writer.cpp" />
     <ClCompile Include="md5.cpp" />
     <ClCompile Include="menu-button.cpp" />
     <ClCompile Include="obs-app.cpp" />
@@ -65,6 +69,7 @@
     <ClCompile Include="window-basic-status-bar.cpp" />
     <ClCompile Include="window-basic-transform.cpp" />
     <ClCompile Include="window-dock.cpp" />
+    <ClCompile Include="window-login-mini.cpp" />
     <ClCompile Include="window-namedialog.cpp" />
     <ClCompile Include="window-projector.cpp" />
     <ClCompile Include="window-wait-ppt.cpp" />
@@ -73,6 +78,7 @@
     <QtMoc Include="obs-app.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="forms\LoginMini.ui" />
     <QtUic Include="forms\NameDialog.ui" />
     <QtUic Include="forms\OBSBasic.ui" />
     <QtUic Include="forms\OBSBasicFilters.ui" />
@@ -212,12 +218,32 @@
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\deps\json11\json11.hpp" />
     <ClInclude Include="..\deps\libff\libff\ff-util.h" />
     <ClInclude Include="..\libobs\obs-config.h" />
+    <ClInclude Include="..\Server\common\rtp.h" />
     <ClInclude Include="..\vsbuild\config\obsconfig.h" />
     <ClInclude Include="audio-encoders.hpp" />
+    <ClInclude Include="fastdfs\fastdfs.h" />
+    <QtMoc Include="window-login-mini.h">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\json -I.\fastdfs -I.\win-update -I.\obs-frontend-api -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\deps\w32-pthreads -IF:\obs-studio\vsbuild\deps\jansson\include -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <QtMoc Include="fastdfs\FastSession.h">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\json -I.\fastdfs -I.\win-update -I.\obs-frontend-api -I.\..\Server\common -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\deps\w32-pthreads -IF:\obs-studio\deps\jansson\src -IF:\obs-studio\vsbuild\deps\jansson\include -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
+    <ClInclude Include="getopt.h" />
     <ClInclude Include="HYDefine.h" />
+    <ClInclude Include="json\autolink.h" />
+    <ClInclude Include="json\config.h" />
+    <ClInclude Include="json\features.h" />
+    <ClInclude Include="json\forwards.h" />
+    <ClInclude Include="json\json.h" />
+    <ClInclude Include="json\json_batchallocator.h" />
+    <ClInclude Include="json\json_tool.h" />
+    <ClInclude Include="json\reader.h" />
+    <ClInclude Include="json\value.h" />
+    <ClInclude Include="json\writer.h" />
     <ClInclude Include="md5.h" />
     <ClInclude Include="resource.h" />
     <QtMoc Include="window-basic-setting.hpp">
@@ -442,7 +468,7 @@
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;win-update;obs-frontend-api;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);F:\obs-deps\win32\include;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\vsbuild\config;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\w32-pthreads;F:\obs-studio\vsbuild\deps\jansson\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtNetwork;$(QTDIR)\mkspecs\win32-msvc2015;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;json;fastdfs;win-update;obs-frontend-api;..\Server\common;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);F:\obs-deps\win32\include;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\vsbuild\config;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\w32-pthreads;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtNetwork;$(QTDIR)\mkspecs\win32-msvc2015;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
@@ -460,7 +486,7 @@
     </Link>
     <QtMoc>
       <Define>WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
-      <IncludePath>.;win-update;obs-frontend-api;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);F:\obs-deps\win32\include;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\deps\json11;F:\obs-studio\vsbuild\config;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\w32-pthreads;F:\obs-studio\vsbuild\deps\jansson\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtNetwork;$(QTDIR)\mkspecs\win32-msvc2015;%(AdditionalIncludeDirectories)</IncludePath>
+      <IncludePath>.;json;fastdfs;win-update;obs-frontend-api;..\Server\common;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);F:\obs-deps\win32\include;F:\obs-studio\libobs;F:\obs-studio\deps\libff;F:\obs-studio\vsbuild\config;F:\obs-studio\deps\blake2\src;F:\obs-studio\deps\w32-pthreads;F:\obs-studio\deps\jansson\src;F:\obs-studio\vsbuild\deps\jansson\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtNetwork;$(QTDIR)\mkspecs\win32-msvc2015;%(AdditionalIncludeDirectories)</IncludePath>
       <OutputFile>.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</OutputFile>
       <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
     </QtMoc>

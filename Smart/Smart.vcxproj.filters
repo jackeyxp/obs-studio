@@ -27,8 +27,14 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="FastDFS Files">
+      <UniqueIdentifier>{c73af500-c328-4045-88b2-4f2b6a5ec94f}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Update Files">
       <UniqueIdentifier>{7a4ba36a-ae83-488d-a30c-1b3c186f0ce7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Json Files">
+      <UniqueIdentifier>{7a6c7ae4-fe0e-4ac8-a11a-5c07cd336c17}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -155,9 +161,6 @@
     <ClCompile Include="win-update\win-update-helpers.cpp">
       <Filter>Update Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\json11\json11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="item-widget-helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -195,6 +198,24 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="window-basic-setting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="json\json_reader.cpp">
+      <Filter>Json Files</Filter>
+    </ClCompile>
+    <ClCompile Include="json\json_value.cpp">
+      <Filter>Json Files</Filter>
+    </ClCompile>
+    <ClCompile Include="json\json_writer.cpp">
+      <Filter>Json Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fastdfs\FastSession.cpp">
+      <Filter>FastDFS Files</Filter>
+    </ClCompile>
+    <ClCompile Include="window-login-mini.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="getopt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -337,6 +358,12 @@
     <QtMoc Include="window-basic-settings.hpp">
       <Filter>Source Files</Filter>
     </QtMoc>
+    <QtMoc Include="window-login-mini.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="fastdfs\FastSession.h">
+      <Filter>FastDFS Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="forms\OBSBasicSettings.ui">
@@ -367,6 +394,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="forms\OBSBasicSetting.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="forms\LoginMini.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -473,9 +503,6 @@
     <ClInclude Include="win-update\win-update-helpers.hpp">
       <Filter>Update Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\json11\json11.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\deps\libff\libff\ff-util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -491,10 +518,49 @@
     <ClInclude Include="..\libobs\obs-config.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
+    <ClInclude Include="md5.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fastdfs\fastdfs.h">
+      <Filter>FastDFS Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Server\common\rtp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="HYDefine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="md5.h">
+    <ClInclude Include="json\autolink.h">
+      <Filter>Json Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json\config.h">
+      <Filter>Json Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json\features.h">
+      <Filter>Json Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json\forwards.h">
+      <Filter>Json Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json\json.h">
+      <Filter>Json Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json\json_batchallocator.h">
+      <Filter>Json Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json\json_tool.h">
+      <Filter>Json Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json\reader.h">
+      <Filter>Json Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json\value.h">
+      <Filter>Json Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json\writer.h">
+      <Filter>Json Files</Filter>
+    </ClInclude>
+    <ClInclude Include="getopt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

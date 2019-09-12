@@ -62,7 +62,6 @@
 #endif
 
 #include "ui_OBSBasic.h"
-#include "ui_ColorSelect.h"
 
 #include <fstream>
 #include <sstream>
@@ -70,9 +69,6 @@
 #include <QScreen>
 #include <QWindow>
 
-#include <json11.hpp>
-
-using namespace json11;
 using namespace std;
 
 #ifdef BROWSER_AVAILABLE
@@ -4061,6 +4057,9 @@ void OBSBasic::closeEvent(QCloseEvent *event)
 	 * sources, etc) so that all references are released before shutdown */
 	ClearSceneData();
 
+	// 调用退出事件通知...
+	App()->doLogoutEvent();
+	// 调用关闭退出接口...
 	App()->quit();
 }
 

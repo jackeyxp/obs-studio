@@ -1001,6 +1001,13 @@ void obs_shutdown(void)
 	struct obs_module *module;
 	struct obs_core *core;
 
+	// 注意：需要提前释放参数...
+	if (cmdline_args.argv != NULL) {
+		bfree(cmdline_args.argv);
+		cmdline_args.argc = 0;
+		cmdline_args.argv = NULL;
+	}
+
 	if (!obs)
 		return;
 
@@ -1061,7 +1068,6 @@ void obs_shutdown(void)
 	bfree(core->module_config_path);
 	bfree(core->locale);
 	bfree(core);
-	bfree(cmdline_args.argv);
 
 #ifdef _WIN32
 	uninitialize_com();

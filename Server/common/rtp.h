@@ -1,6 +1,10 @@
 
 #pragma once
 
+#define DEF_WEB_CENTER     "https://edu.ihaoyi.cn"   // 默认中心网站(443) => 必须是 https:// 兼容小程序接口...
+#define DEF_CENTER_ADDR            "edu.ihaoyi.cn"   // 默认UDP中心服务器域名...
+#define DEF_CENTER_PORT                     26026    // 默认UDP中心服务器端口...
+
 // define student role type...
 enum ROLE_TYPE
 {
@@ -23,7 +27,7 @@ enum {
 const long CMD_LINE_START   = __LINE__ + 2;
 enum {
   kCmd_Student_Login        = __LINE__ - CMD_LINE_START,
-  kCmd_Student_OnLine	      = __LINE__ - CMD_LINE_START,
+  kCmd_Student_OnLine       = __LINE__ - CMD_LINE_START,
   kCmd_Teacher_Login        = __LINE__ - CMD_LINE_START,
   kCmd_Teacher_OnLine       = __LINE__ - CMD_LINE_START,
   kCmd_UdpServer_Login      = __LINE__ - CMD_LINE_START,
