@@ -91,7 +91,7 @@ static void a_free(void *ptr)
 static struct base_allocator alloc = {a_malloc, a_realloc, a_free};
 static long num_allocs = 0;
 
-#define DEBUG_LEAK
+//#define DEBUG_LEAK
 
 #ifdef DEBUG_LEAK
 static DARRAY(void *)   g_mem;
