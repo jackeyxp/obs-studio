@@ -1,0 +1,14 @@
+{
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "i-load-more": "../../view-weapp/load-more/index",
+    "van-dialog": "../../vant-weapp/dialog/index",
+    "van-card": "../../vant-weapp/card/index",
+    "van-icon": "../../vant-weapp/icon/index",
+    "van-cell": "../../vant-weapp/cell/index",
+    "van-tag": "../../vant-weapp/tag/index",
+    "wux-grids": "../../wux-weapp/grids/index",
+    "wux-grid": "../../wux-weapp/grid/index",
+    "w-tabs": "../../wuss-weapp/w-tabs/index"
+  }
+}

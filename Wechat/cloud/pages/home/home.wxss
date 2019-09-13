@@ -1,0 +1,5 @@
+
+.room-icon {
+  color:#ef473a;
+  font-size: 20px !important;
+}

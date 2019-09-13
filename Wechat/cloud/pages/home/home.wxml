@@ -1,0 +1,63 @@
+
+<van-dialog id="van-dialog" />
+
+<van-dialog
+  show-cancel-button
+  show="{{ m_show_auth }}"
+  confirmButtonText="授权"
+  bind:getuserinfo="getUserInfo"
+  confirm-button-open-type="getUserInfo"
+  message="本小程序需要您的授权才能使用后续的功能，请点击授权按钮完成授权。"
+/>
+
+<view class="top-area">
+  <van-cell
+    title="总共 {{ m_total_num }} 个直播房间教室"
+    icon="tv-o" icon-class="room-icon"
+  />
+</view>
+
+<!--<van-card
+    title="少儿才艺启蒙班，启发少儿音乐兴趣启发少儿音乐兴趣启发少儿音乐兴趣"
+    card-age="年龄段：3~6岁"
+    lazy-load="{{ true }}"
+    shop-cart="{{ true }}"
+    price="200"
+    tag="标签"
+    origin-price="400"
+    custom-class="van-card"
+    thumb="//img.yzcdn.cn/upload_files/2017/07/02/af5b9f44deaeb68000d7e4a711160c53.jpg"
+  >
+    <view slot="tags">
+      <van-tag plain type="danger" custom-class="tag">标签1</van-tag>
+      <van-tag plain type="danger">标签2</van-tag>
+    </view>
+   </van-card>
+  <van-card
+    title="少儿才艺启蒙班，启发少儿音乐兴趣启发少儿音乐兴趣启发少儿音乐兴趣"
+    card-time="课时数：30"
+    card-age="年龄段：3~6岁"
+    lazy-load="{{ true }}"
+    shop-cart="{{ true }}"
+    price="200"
+    origin-price="400"
+    custom-class="van-card"
+    thumb="//img.yzcdn.cn/upload_files/2017/07/02/af5b9f44deaeb68000d7e4a711160c53.jpg"
+  />-->
+
+<block wx:for="{{m_arrRoom}}" wx:key="unique">
+  <van-card
+    id="{{index}}"
+    bind:click="onClickRoom"
+    customStyle="font-size:14px;padding:10px 15px;"
+    title="{{item.room_name}}"
+    desc="教室：{{item.room_id}}"
+    card-age="机构：{{item.agent_name}}"
+    card-time="课程：{{item.subject_name}}"
+    tag="{{item.subject_name}}"
+    lazy-load="{{true}}"
+    shop-cart="{{false}}"
+    thumb="{{ m_urlSite }}{{ item.qrcode }}"
+  />
+</block>
+<i-load-more loading="{{m_show_more}}" tip="{{m_no_more}}" />

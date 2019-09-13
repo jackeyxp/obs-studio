@@ -1,0 +1,12 @@
+{
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "van-cell-group": "../../vant-weapp/cell-group/index",
+    "i-load-more": "../../view-weapp/load-more/index",
+    "van-dialog": "../../vant-weapp/dialog/index",
+    "wux-result": "../../wux-weapp/result/index",
+    "wux-grids": "../../wux-weapp/grids/index",
+    "wux-grid": "../../wux-weapp/grid/index",
+    "van-cell": "../../vant-weapp/cell/index"
+  }
+}

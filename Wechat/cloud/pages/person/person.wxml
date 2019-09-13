@@ -1,0 +1,70 @@
+
+<van-dialog id="van-dialog" />
+
+<view class="feed-back" style="background: {{m_bgColor}}">
+<block wx:if="{{m_show_auth == 0}}">
+  <view style="margin-top:120px;">
+    <i-load-more loading="true" tip="正在加载..." />
+  </view>
+</block>
+<block wx:elif="{{m_show_auth == 1}}">
+  <wux-result
+      fixed="true"
+      title="授权失败"
+      icon="{{ m_icon }}"
+      buttons="{{ m_buttons }}"
+      bind:getuserinfo="getUserInfo"
+      extra="Copyright © 2019 双师课堂"
+      label="本小程序需要您的授权，请点击授权按钮完成授权。"
+  />
+</block>
+<block wx:elif="{{m_show_auth == 2}}">
+  <view class="feed-head">
+    <image mode="aspectFill" lazy-load="true" src="{{m_userInfo.avatarUrl}}" />
+    <view class="feed-name">{{m_userInfo.nickName}}</view>
+  </view>
+  <!--<wux-grids wx:if="{{ m_grids.length > 0 }}" col="4" bordered="{{ false }}" wux-class="feed-top-area">
+    <block wx:for="{{ m_grids }}" wx:for-item="grid" wx:key="index">
+      <wux-grid label="{{ grid.label }}"
+        data-item="{{ grid.data }}"
+        bind:click="toggleGridNav"
+        wux-nav-back="fa-stack fa-lg"
+        wux-nav-circle="fa fa-circle fa-stack-2x"
+        wux-nav-inner="fa {{ grid.icon }} fa-stack-1x fa-inverse" />
+    </block>
+  </wux-grids>-->
+  <view wx:if="{{ m_grids.length > 0 }}" class="feed-top-area">
+    <van-cell-group>
+      <block wx:for="{{ m_grids }}" wx:for-item="grid" wx:key="index">
+        <van-cell title="{{ grid.label }}" size="large" is-link
+        icon-class="{{ grid.data }}" icon="{{ grid.icon }}"
+        url="{{ grid.link }}" />
+      </block>
+    </van-cell-group>
+  </view>
+  <view class="feed-top-area">
+    <van-cell-group>
+      <van-cell title="推荐给朋友" size="large" is-link
+        icon-class="icon-green" icon="gift-o">
+        <button slot="extra" open-type="share" class="feed-share" />
+      </van-cell>
+      <van-cell title="意见反馈" size="large" is-link
+        icon-class="icon-blue" icon="question-o">
+        <contact-button slot="extra" type="default-light" />
+        <contact-button slot="extra" type="default-light" />
+        <contact-button slot="extra" type="default-light" />
+        <contact-button slot="extra" type="default-light" />
+        <contact-button slot="extra" type="default-light" />
+        <contact-button slot="extra" type="default-light" />
+        <contact-button slot="extra" type="default-light" />
+        <contact-button slot="extra" type="default-light" />
+        <contact-button slot="extra" type="default-light" />
+        <contact-button slot="extra" type="default-light" />
+      </van-cell>
+      <van-cell title="关于我们" size="large" is-link
+      icon-class="icon-red" icon="like-o"
+      url="/pages/about/about" />
+    </van-cell-group>
+  </view>
+</block>
+</view>

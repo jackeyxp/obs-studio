@@ -1,0 +1,56 @@
+
+@import '../../style/font-awesome.wxss';
+
+page {
+  background-color: #eee;
+}
+.feed-back {
+  min-width: 100%;
+  min-height: 100%;
+  position: absolute;
+}
+.feed-head {
+  font-size: 32rpx;
+  text-align: center;
+  background-color: #fff;
+}
+.feed-head image {
+  vertical-align: middle;
+  display: inline-block;
+  border-radius: 100%;
+  margin: 10rpx 0rpx;
+  border: none;
+  width: 160rpx;
+  height: 160rpx;
+}
+.feed-name {
+  color: #666;
+  padding: 10rpx 0rpx;
+}
+.feed-cell {
+  border-bottom: 1px solid #eee;
+}
+.icon-red {
+  font-size: 20px !important;
+  color: tomato;
+}
+.icon-blue {
+  font-size: 20px !important;
+  color: deepskyblue;
+}
+.icon-green {
+  font-size: 20px !important;
+  color: forestgreen;
+}
+.feed-share {
+  opacity: 0;
+  width:100%;
+  height: 100%;
+  z-index: 9999;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+.feed-top-area {
+  margin-top: 15rpx;
+}
