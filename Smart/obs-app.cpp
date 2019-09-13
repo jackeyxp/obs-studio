@@ -24,6 +24,7 @@
 #include "qt-wrappers.hpp"
 #include "obs-app.hpp"
 #include "FastSession.h"
+#include "window-login-mini.h"
 #include "window-basic-main.hpp"
 #include "window-basic-settings.hpp"
 #include "crash-report.hpp"
@@ -1110,27 +1111,24 @@ string OBSApp::getJsonString(Json::Value & inValue)
 void OBSApp::doProcessCmdLine(int argc, char * argv[])
 {
 	int	ch = 0;
-	while ((ch = getopt(argc, argv, "?hvdrz")) != EOF)
+	while ((ch = getopt(argc, argv, "?drw")) != EOF)
 	{
 		switch (ch) {
 		case 'd': m_bIsDebugMode = true;  continue;
 		case 'r': m_bIsDebugMode = false; continue;
-		case 'p': m_bIsMiniMode = false; continue;
-		case 'm': m_strRoomID = argv[optind++]; optreset = 1; continue;
-		case 'u': m_strUserName = argv[optind++]; optreset = 1; continue;
-		case 'c': m_strCenterTcpAddr = argv[optind++]; optreset = 1; continue;
+		case 'w': m_strWebCenterAddr = argv[optind++]; optreset = 1; continue;
 		case '?':
-		case 'h':
-		case 'v':
-			blog(LOG_INFO, "-d: Run as Debug Mode => mount on Debug udpserver.");
-			blog(LOG_INFO, "-r: Run as Release Mode => mount on Release udpserver.");
+			blog(LOG_INFO, "-? => Print help.");
+			blog(LOG_INFO, "-d => Run as Debug Mode => mount on Debug udpserver.");
+			blog(LOG_INFO, "-r => Run as Release Mode => mount on Release udpserver.");
+			blog(LOG_INFO, "-w http://x.x.x.x => Input web server full url.");
 			break;
 		}
 	}
-	// 如果房间号|用户名|中心地址，都不为空，说明是外挂的参数模式...
-	if (m_strRoomID.size() > 0 && m_strUserName.size() > 0 && m_strCenterTcpAddr.size() > 0) {
-		m_bIsMiniMode = false;
-	}
+}
+
+CLoginMini * OBSApp::GetLoginMini() const {
+	return m_LoginMini.data();
 }
 
 OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
@@ -1148,9 +1146,10 @@ OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
 	m_RemoteSession = NULL;
 	m_bIsDebugMode = false;
 	m_bIsMiniMode = true;
-	m_nClientType = kClientTeacher;
-	m_strWebCenter = DEF_WEB_CENTER;
-	// 注意：m_strCenterTcpAddr|m_nCenterTcpPort不要赋初值，避免后续混乱...
+	m_nCenterTcpPort = 0;
+	m_nClientType = kClientSmart;
+	m_strWebCenterAddr = DEF_WEB_CENTER;
+	// 注意：所有配置都通过网站接口获取，而不是从默认值当中获取...
 
 	sleepInhibitor = os_inhibit_sleep_create("Smart Video/audio");
 	setWindowIcon(QIcon::fromTheme("obs", QIcon(":/res/images/obs.png")));
@@ -2032,7 +2031,9 @@ static int run_program(fstream &logFile, int argc, char *argv[])
 			for (int i = 2; i < argc; ++i) {
 				stor << " " << argv[i];
 			}
-			blog(LOG_INFO, "Command Line Arguments: %s", stor.str().c_str());
+			// 注意：这里的中文参数必须经过转换之后，才能被显示出来...
+			QString strCommand = QString::fromLocal8Bit(stor.str().c_str());
+			blog(LOG_INFO, "Command Line Arguments: %s", strCommand.toStdString().c_str());
 		}
 
 		// 读取命令行各字段内容信息...

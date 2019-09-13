@@ -36,7 +36,6 @@
 
 #include "HYDefine.h"
 #include "window-main.hpp"
-#include "window-login-mini.h"
 
 using namespace std;
 
@@ -69,9 +68,9 @@ class CRemoteSession;
 class OBSApp : public QApplication {
 	Q_OBJECT
 private:
+	std::string                    m_strWebCenterAddr;         // 中心网站服务器地址 => 可以带上端口号...
 	string                         m_strCenterTcpAddr;         // 中心服务器的TCP地址...
 	int                            m_nCenterTcpPort;           // 中心服务器的TCP端口...
-	std::string                    m_strWebCenter;             // 访问中心网站地址 => 仅在小程序模式下有效...
 	std::string                    m_strTrackerAddr;           // FDFS-Tracker的IP地址...
 	int                            m_nTrackerPort;             // FDFS-Tracker的端口地址...
 	std::string                    m_strRemoteAddr;            // 远程UDPServer的TCP地址...
@@ -88,7 +87,7 @@ private:
 	int                            m_nFlowTimer;               // 流量统计检测时钟...
 	int                            m_nOnLineTimer;             // 中转服务器在线检测时钟...
 	int                            m_nRtpTCPSockFD;            // CRemoteSession在服务器端的套接字号码...
-	int                            m_nClientType;              // 当前终端的类型 => Teacher|Student
+	int                            m_nClientType;              // 当前终端的类型 => Smart
 	bool                           m_bIsDebugMode;             // 是否是调试模式 => 挂载到调试服务器...
 	bool                           m_bIsMiniMode;              // 是否是小程序模式 => 挂载到阿里云服务器...
 	std::string                    locale;
@@ -132,11 +131,12 @@ public:
 	string & GetLocalIPAddr() { return m_strIPAddr; }
 	string & GetLocalMacAddr() { return m_strMacAddr; }
 	string & GetRoomIDStr() { return m_strRoomID; }
-	string & GetWebCenter() { return m_strWebCenter; }
-	string & GetUserName() { return m_strUserName; }
+	string & GetUserNameStr() { return m_strUserName; }
 
-	string & GetCenterAddr() { return m_strCenterTcpAddr; }
-	int      GetCenterPort() { return m_nCenterTcpPort; }
+	string & GetWebCenterAddr() { return m_strWebCenterAddr; }
+
+	string & GetTcpCenterAddr() { return m_strCenterTcpAddr; }
+	int      GetTcpCenterPort() { return m_nCenterTcpPort; }
 	string & GetTrackerAddr() { return m_strTrackerAddr; }
 	int		 GetTrackerPort() { return m_nTrackerPort; }
 	string & GetRemoteAddr() { return m_strRemoteAddr; }
@@ -152,8 +152,8 @@ public:
 	void     SetRemotePort(int nPort) { m_nRemotePort = nPort; }
 	void	 SetTrackerAddr(const string & strAddr) { m_strTrackerAddr = strAddr; }
 	void     SetTrackerPort(int nPort) { m_nTrackerPort = nPort; }
-	void	 SetCenterAddr(const string & strAddr) { m_strCenterTcpAddr = strAddr; }
-	void     SetCenterPort(int nPort) { m_nCenterTcpPort = nPort; }
+	void	 SetTcpCenterAddr(const string & strAddr) { m_strCenterTcpAddr = strAddr; }
+	void     SetTcpCenterPort(int nPort) { m_nCenterTcpPort = nPort; }
 public:
 	OBSApp(int &argc, char **argv, profiler_name_store_t *store);
 	~OBSApp();
@@ -179,10 +179,10 @@ public:
 		return enableHotkeysInFocus;
 	}
 
+	inline CLoginMini *GetLoginMini() const;
 	inline QMainWindow *GetMainWindow() const { return mainWindow.data(); }
-	inline CLoginMini *GetLoginMini() const { return m_LoginMini.data(); }
+	profiler_name_store_t *GetProfilerNameStore() const { return profilerNameStore; }
 	inline config_t *GlobalConfig() const { return globalConfig; }
-
 	inline const char *GetLocale() const { return locale.c_str(); }
 	inline const char *GetTheme() const { return theme.c_str(); }
 	bool SetTheme(std::string name, std::string path = "");
@@ -192,9 +192,6 @@ public:
 	}
 
 	bool TranslateString(const char *lookupVal, const char **out) const;
-	profiler_name_store_t *GetProfilerNameStore() const {
-		return profilerNameStore;
-	}
 
 	const char *GetLastLog() const;
 	const char *GetCurrentLog() const;

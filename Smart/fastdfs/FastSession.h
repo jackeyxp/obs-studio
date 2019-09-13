@@ -122,8 +122,8 @@ protected slots:
 private:
 	bool doSendCommonCmd(int nCmdID, const char * lpJsonPtr = NULL, int nJsonSize = 0);
 	bool doParseJson(const char * lpData, int nSize, Json::Value & outValue);
-	bool doCmdTeacherLogin(const char * lpData, int nSize);
-	bool doCmdTeacherOnLine(const char * lpData, int nSize);
+	bool doCmdSmartLogin(const char * lpData, int nSize);
+	bool doCmdSmartOnLine(const char * lpData, int nSize);
 	//bool doCmdUdpLogout(const char * lpData, int nSize);
 	//bool doCmdTeacherCameraList(const char * lpData, int nSize);
 	//bool doCmdTeacherCameraLiveStop(const char * lpData, int nSize);
@@ -158,8 +158,8 @@ protected slots:
 private:
 	bool doSendCommonCmd(int nCmdID, const char * lpJsonPtr = NULL, int nJsonSize = 0);
 	bool doParseJson(const char * lpData, int nSize, Json::Value & outValue);
-	bool doCmdTeacherLogin(const char * lpData, int nSize);
-	bool doCmdTeacherOnLine(const char * lpData, int nSize);
+	bool doCmdSmartLogin(const char * lpData, int nSize);
+	bool doCmdSmartOnLine(const char * lpData, int nSize);
 	bool doCmdPHPBindMini(const char * lpData, int nSize);
 	bool SendData(const char * lpDataPtr, int nDataSize);
 private:

@@ -118,9 +118,7 @@ const char * get_client_type(int inType)
   switch(inType)
   {
     case kClientPHP:       return "PHP";
-    case kClientStudent:   return "Student";
-    case kClientTeacher:   return "Teacher";
-    case kClientUdpServer: return "UdpServer";
+    case kClientSmart:     return "Smart";
     case kClientScreen:    return "Screen";
   }
   return "unknown";
@@ -131,10 +129,8 @@ const char * get_command_name(int inCmd)
 {
   switch(inCmd)
   {
-    case kCmd_Student_Login:        return "Student_Login";
-    case kCmd_Student_OnLine:       return "Student_OnLine";
-    case kCmd_Teacher_Login:        return "Teacher_Login";
-    case kCmd_Teacher_OnLine:       return "Teacher_OnLine";
+    case kCmd_Smart_Login:          return "Smart_Login";
+    case kCmd_Smart_OnLine:         return "Smart_OnLine";
     case kCmd_UdpServer_Login:      return "UdpServer_Login";
     case kCmd_UdpServer_OnLine:     return "UdpServer_OnLine";
     case kCmd_UdpServer_AddTeacher: return "UdpServer_AddTeacher";

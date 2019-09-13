@@ -38,10 +38,8 @@ const char * get_command_name(int inCmd)
 {
 	switch (inCmd)
 	{
-	case kCmd_Student_Login:        return "Student_Login";
-	case kCmd_Student_OnLine:       return "Student_OnLine";
-	case kCmd_Teacher_Login:        return "Teacher_Login";
-	case kCmd_Teacher_OnLine:       return "Teacher_OnLine";
+	case kCmd_Smart_Login:          return "Smart_Login";
+	case kCmd_Smart_OnLine:         return "Smart_OnLine";
 	case kCmd_UdpServer_Login:      return "UdpServer_Login";
 	case kCmd_UdpServer_OnLine:     return "UdpServer_OnLine";
 	case kCmd_UdpServer_AddTeacher: return "UdpServer_AddTeacher";
@@ -504,9 +502,9 @@ void CRemoteSession::onReadyRead()
 		bool bResult = false;
 		switch(lpCmdHeader->m_cmd)
 		{
+		case kCmd_Smart_Login:         bResult = this->doCmdSmartLogin(lpDataPtr, lpCmdHeader->m_pkg_len); break;
+		case kCmd_Smart_OnLine:        bResult = this->doCmdSmartOnLine(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		//case kCmd_UDP_Logout:        bResult = this->doCmdUdpLogout(lpDataPtr, lpCmdHeader->m_pkg_len); break;
-		case kCmd_Teacher_Login:     bResult = this->doCmdTeacherLogin(lpDataPtr, lpCmdHeader->m_pkg_len); break;
-		case kCmd_Teacher_OnLine:    bResult = this->doCmdTeacherOnLine(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		//case kCmd_Camera_LiveStop:   bResult = this->doCmdTeacherCameraLiveStop(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		//case kCmd_Camera_OnLineList: bResult = this->doCmdTeacherCameraList(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		//case kCmd_Screen_Packet:     bResult = this->doCmdScreenPacket(lpDataPtr, lpCmdHeader); break;
@@ -629,8 +627,7 @@ bool CRemoteSession::doCmdUdpLogout(const char * lpData, int nSize)
 	return true;
 }*/
 
-// 注意：kCmd_Teacher_Login和kCmd_Camera_LiveStart，都会回馈这个命令...
-bool CRemoteSession::doCmdTeacherLogin(const char * lpData, int nSize)
+bool CRemoteSession::doCmdSmartLogin(const char * lpData, int nSize)
 {
 	Json::Value value;
 	// 进行Json数据包的内容解析...
@@ -648,7 +645,7 @@ bool CRemoteSession::doCmdTeacherLogin(const char * lpData, int nSize)
 		App()->SetRtpTCPSockFD(nTCPSocketFD);
 	}
 	// 打印命令反馈详情信息 => 只有摄像头通道编号大于0时，才需要反馈给主界面进行拉流或断流操作...
-	blog(LOG_INFO, "[RemoteSession] doCmdTeacherLogin => tcp_socket: %d, CameraID: %d, OnLine: %d", nTCPSocketFD, nDBCameraID, bIsCameraOnLine);
+	blog(LOG_INFO, "[RemoteSession] doCmdSmartLogin => tcp_socket: %d, CameraID: %d, OnLine: %d", nTCPSocketFD, nDBCameraID, bIsCameraOnLine);
 	// 根据摄像头在线状态，进行rtp_source资源拉流线程的创建或删除...
 	if ( nDBCameraID > 0 ) {
 		emit this->doTriggerRtpSource(nDBCameraID, bIsCameraOnLine);
@@ -656,7 +653,7 @@ bool CRemoteSession::doCmdTeacherLogin(const char * lpData, int nSize)
 	return true;
 }
 
-bool CRemoteSession::doCmdTeacherOnLine(const char * lpData, int nSize)
+bool CRemoteSession::doCmdSmartOnLine(const char * lpData, int nSize)
 {
 	return true;
 }
@@ -771,7 +768,7 @@ bool CRemoteSession::doSendOnLineCmd()
 		return false;
 	ASSERT(m_bIsConnected);
 	// 调用统一的接口进行命令数据的发送操作...
-	return this->doSendCommonCmd(kCmd_Teacher_OnLine);
+	return this->doSendCommonCmd(kCmd_Smart_OnLine);
 }
 
 // 链接成功之后，发送登录命令...
@@ -792,7 +789,7 @@ bool CRemoteSession::SendLoginCmd()
 	root["pc_name"] = OBSApp::GetServerDNSName();
 	strJson = root.toStyledString();
 	// 调用统一的接口进行命令数据的发送操作...
-	return this->doSendCommonCmd(kCmd_Teacher_Login, strJson.c_str(), strJson.size());
+	return this->doSendCommonCmd(kCmd_Smart_Login, strJson.c_str(), strJson.size());
 }
 
 // 通用的命令发送接口...
@@ -839,7 +836,7 @@ void CCenterSession::onConnected()
 	// 设置链接成功标志...
 	m_bIsConnected = true;
 	// 链接成功，立即发送登录命令 => 返回tcp_socket...
-	this->doSendCommonCmd(kCmd_Teacher_Login);
+	this->doSendCommonCmd(kCmd_Smart_Login);
 }
 
 void CCenterSession::onReadyRead()
@@ -867,9 +864,9 @@ void CCenterSession::onReadyRead()
 		bool bResult = false;
 		switch (lpCmdHeader->m_cmd)
 		{
-		case kCmd_Teacher_Login:     bResult = this->doCmdTeacherLogin(lpDataPtr, lpCmdHeader->m_pkg_len); break;
-		case kCmd_Teacher_OnLine:    bResult = this->doCmdTeacherOnLine(lpDataPtr, lpCmdHeader->m_pkg_len); break;
-		case kCmd_PHP_Bind_Mini:     bResult = this->doCmdPHPBindMini(lpDataPtr, lpCmdHeader->m_pkg_len); break;
+		case kCmd_Smart_Login:     bResult = this->doCmdSmartLogin(lpDataPtr, lpCmdHeader->m_pkg_len); break;
+		case kCmd_Smart_OnLine:    bResult = this->doCmdSmartOnLine(lpDataPtr, lpCmdHeader->m_pkg_len); break;
+		case kCmd_PHP_Bind_Mini:   bResult = this->doCmdPHPBindMini(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		}
 		// 删除已经处理完毕的数据 => Header + pkg_len...
 		m_strRecv.erase(0, lpCmdHeader->m_pkg_len + sizeof(Cmd_Header));
@@ -895,7 +892,7 @@ bool CCenterSession::doCmdPHPBindMini(const char * lpData, int nSize)
 	return true;
 }
 
-bool CCenterSession::doCmdTeacherLogin(const char * lpData, int nSize)
+bool CCenterSession::doCmdSmartLogin(const char * lpData, int nSize)
 {
 	Json::Value value;
 	// 进行Json数据包的内容解析...
@@ -906,13 +903,13 @@ bool CCenterSession::doCmdTeacherLogin(const char * lpData, int nSize)
 	// 获取远程连接在服务器端的TCP套接字，并打印出来...
 	m_nCenterTcpSocketFD = atoi(OBSApp::getJsonString(value["tcp_socket"]).c_str());
 	m_uCenterTcpTimeID = (uint32_t)atoi(OBSApp::getJsonString(value["tcp_time"]).c_str());
-	blog(LOG_INFO, "[CenterSession] doCmdTeacherLogin => tcp_socket: %d, tcp_time: %lu", m_nCenterTcpSocketFD, m_uCenterTcpTimeID);
+	blog(LOG_INFO, "[CenterSession] doCmdSmartLogin => tcp_socket: %d, tcp_time: %lu", m_nCenterTcpSocketFD, m_uCenterTcpTimeID);
 	// 向外层通知获取tcp_socket状态成功...
 	emit this->doTriggerTcpConnect();
 	return true;
 }
 
-bool CCenterSession::doCmdTeacherOnLine(const char * lpData, int nSize)
+bool CCenterSession::doCmdSmartOnLine(const char * lpData, int nSize)
 {
 	return true;
 }
@@ -954,7 +951,7 @@ bool CCenterSession::doSendOnLineCmd()
 		return false;
 	ASSERT(m_bIsConnected);
 	// 调用统一的接口进行命令数据的发送操作...
-	return this->doSendCommonCmd(kCmd_Teacher_OnLine);
+	return this->doSendCommonCmd(kCmd_Smart_OnLine);
 }
 
 // 通用的命令发送接口...

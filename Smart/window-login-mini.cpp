@@ -74,8 +74,14 @@ CLoginMini::CLoginMini(QWidget *parent)
 
 CLoginMini::~CLoginMini()
 {
-	this->killTimer(m_nCenterTimer);
-	this->killTimer(m_nOnLineTimer);
+	if (m_nCenterTimer > 0) {
+		this->killTimer(m_nCenterTimer);
+		m_nCenterTimer = -1;
+	}
+	if (m_nOnLineTimer > 0) {
+		this->killTimer(m_nOnLineTimer);
+		m_nOnLineTimer = -1;
+	}
 	if (m_lpMovieGif != NULL) {
 		delete m_lpMovieGif;
 		m_lpMovieGif = NULL;
@@ -177,32 +183,10 @@ void CLoginMini::initWindow()
 	connect(ui->btnClose, SIGNAL(clicked()), this, SLOT(onButtonCloseClicked()));
 	// 关联网络信号槽反馈结果事件...
 	connect(&m_objNetManager, SIGNAL(finished(QNetworkReply *)), this, SLOT(onReplyFinished(QNetworkReply *)));
-	// 通过CApp运行模式，进行不同的处理过程...
-	this->doCheckAppMode();
+	// 发起获取中心服务器的TCP地址和端口的命令...
+	this->doWebGetCenterAddr();
 	// 只进行一次更新状态检测...
 	//this->TimedCheckForUpdates();
-}
-
-void CLoginMini::doCheckAppMode()
-{
-	// 如果是小程序模式，发起获取中心服务器的TCP地址和端口的命令...
-	if (App()->IsMiniMode()) {
-		this->doWebGetCenterAddr();
-		return;
-	}
-	// 如果是参数模式，查看各个需要的参数是否有效...
-	string & strRoomID = App()->GetRoomIDStr();
-	string & strUserName = App()->GetUserName();
-	string & strTcpCenterAddr = App()->GetCenterAddr();
-	int nTcpCenterPort = App()->GetCenterPort();
-	// 如果这些参数全部全部有效，开始连接私有中心服务器...
-	if (strRoomID.size() > 0 && strUserName.size() > 0 && strTcpCenterAddr.size() > 0) {
-		nTcpCenterPort = ((nTcpCenterPort <= 0) ? DEF_CENTER_PORT : nTcpCenterPort);
-		App()->SetCenterPort(nTcpCenterPort);
-		this->doTcpConnCenterAddr();
-		return;
-	}
-	// 如果这些参数不是全部有效，直接弹出输入框，等待用户输入后，点击登录确认框...
 }
 
 void CLoginMini::doWebGetCenterAddr()
@@ -231,13 +215,16 @@ void CLoginMini::doWebGetCenterAddr()
 	m_eMiniState = kCenterAddr;
 	m_strQRNotice = QStringLiteral("正在获取中心服务器地址...");
 	ui->titleScan->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+	ui->titleName->setText(QTStr("MINI.Window.Title"));
+	// 如果是外部参数模式，需要修改标题栏名称...
+	//ui->titleName->setText(QTStr("MINI.Window.Normal"));
 	// 构造凭证访问地址，发起网络请求...
-	/*QNetworkReply * lpNetReply = NULL;
+	QNetworkReply * lpNetReply = NULL;
 	QNetworkRequest theQTNetRequest;
-	string & strWebCenter = App()->GetWebCenter();
+	string & strWebCenter = App()->GetWebCenterAddr();
 	QString strRequestURL = QString("%1%2").arg(strWebCenter.c_str()).arg("/wxapi.php/Mini/getUDPCenter");
 	theQTNetRequest.setUrl(QUrl(strRequestURL));
-	lpNetReply = m_objNetManager.get(theQTNetRequest);*/
+	lpNetReply = m_objNetManager.get(theQTNetRequest);
 	// 更新显示界面内容...
 	this->update();
 }
@@ -248,12 +235,12 @@ void CLoginMini::doWebGetMiniToken()
 	m_eMiniState = kMiniToken;
 	m_strQRNotice = QStringLiteral("正在获取访问凭证...");
 	// 构造凭证访问地址，发起网络请求...
-	/*QNetworkReply * lpNetReply = NULL;
+	QNetworkReply * lpNetReply = NULL;
 	QNetworkRequest theQTNetRequest;
-	string & strWebCenter = App()->GetWebCenter();
+	string & strWebCenter = App()->GetWebCenterAddr();
 	QString strRequestURL = QString("%1%2").arg(strWebCenter.c_str()).arg("/wxapi.php/Mini/getToken");
 	theQTNetRequest.setUrl(QUrl(strRequestURL));
-	lpNetReply = m_objNetManager.get(theQTNetRequest);*/
+	lpNetReply = m_objNetManager.get(theQTNetRequest);
 	// 更新显示界面内容...
 	this->update();
 }
@@ -298,14 +285,14 @@ void CLoginMini::doWebGetMiniLoginRoom()
 	m_strScan = QStringLiteral("正在登录已选择的房间...");
 	ui->titleScan->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 	// 构造网络访问地址，发起网络请求...
-	/*QNetworkReply * lpNetReply = NULL;
+	QNetworkReply * lpNetReply = NULL;
 	QNetworkRequest theQTNetRequest;
-	string & strWebCenter = App()->GetWebCenter();
+	string & strWebCenter = App()->GetWebCenterAddr();
 	QString strContentVal = QString("room_id=%1&type_id=%2&debug_mode=%3").arg(m_nDBRoomID).arg(App()->GetClientType()).arg(App()->IsDebugMode());
-	QString strRequestURL = QString("%1%2").arg(strWebCenter.c_str()).arg("/wxapi.php/Gather/loginLiveRoom");
+	QString strRequestURL = QString("%1%2").arg(strWebCenter.c_str()).arg("/wxapi.php/Mini/loginRoom");
 	theQTNetRequest.setUrl(QUrl(strRequestURL));
 	theQTNetRequest.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
-	lpNetReply = m_objNetManager.post(theQTNetRequest, strContentVal.toUtf8());*/
+	lpNetReply = m_objNetManager.post(theQTNetRequest, strContentVal.toUtf8());
 	// 更新显示界面内容...
 	this->update();
 }
@@ -491,8 +478,8 @@ void CLoginMini::onProcCenterAddr(QNetworkReply *reply)
 	m_strCenterTcpAddr = OBSApp::getJsonString(value["udpcenter_addr"]);
 	m_nCenterTcpPort = atoi(OBSApp::getJsonString(value["udpcenter_port"]).c_str());
 	// 将中心服务器地址和端口保存到App当中备用...
-	App()->SetCenterAddr(m_strCenterTcpAddr);
-	App()->SetCenterPort(m_nCenterTcpPort);
+	App()->SetTcpCenterAddr(m_strCenterTcpAddr);
+	App()->SetTcpCenterPort(m_nCenterTcpPort);
 	// 发起连接中心服务器的会话对象...
 	this->doTcpConnCenterAddr();
 }
@@ -522,7 +509,7 @@ void CLoginMini::onTriggerTcpConnect()
 	ASSERT(m_CenterSession != NULL);
 	if (!m_CenterSession->IsConnected()) {
 		m_strQRNotice = QString("%1%2").arg(QStringLiteral("连接中心服务器失败，错误号：")).arg(m_CenterSession->GetErrCode());
-		blog(LOG_INFO, "QT error => %d", m_CenterSession->GetErrCode());
+		blog(LOG_INFO, "QT error => %d, %s:%d", m_CenterSession->GetErrCode(), m_strCenterTcpAddr.c_str(), m_nCenterTcpPort);
 		m_eMiniState = kCenterAddr;
 		m_lpLoadBack->hide();
 		m_strScan.clear();
@@ -536,16 +523,16 @@ void CLoginMini::onTriggerTcpConnect()
 	// 将中心会话在服务器上的套接字编号进行保存...
 	m_nTcpSocketFD = m_CenterSession->GetTcpSocketFD();
 	m_uTcpTimeID = m_CenterSession->GetTcpTimeID();
-	// 每隔30秒检测一次，讲师端在中心服务器上在线汇报通知...
+	// 每隔30秒检测一次，终端在中心服务器上在线汇报通知...
 	m_nOnLineTimer = this->startTimer(30 * 1000);
 	// 发起获取小程序Token值的网络命令...
-	//this->doWebGetMiniToken();
+	this->doWebGetMiniToken();
 	
 	/*== 仅供快速测试 ==*/
-	m_nDBUserID = 1;
-	m_nDBRoomID = 200005;
+	//m_nDBUserID = 1;
+	//m_nDBRoomID = 200005;
 	// 一切正常，开始登录指定的房间...
-	this->doWebGetMiniLoginRoom();  
+	//this->doWebGetMiniLoginRoom();  
 }
 
 // 响应中心会话反馈的小程序绑定登录信号槽事件通知...
