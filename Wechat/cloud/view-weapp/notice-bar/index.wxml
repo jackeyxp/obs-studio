@@ -1,0 +1,9 @@
+<view wx:if="{{ show }}" class="i-class i-noticebar" style="color: {{ color }}; background-color: {{ backgroundcolor }}">
+    <van-icon wx:if="{{ icon }}" name="{{ icon }}" size="20px" color="{{color}}" class="i-noticebar-icon"></van-icon>
+    <view class="i-noticebar-content-wrap">
+        <view class="i-noticebar-content {{loop?'i-noticebar-content-loop':''}}" animation="{{ animationData }}">
+           <slot></slot>
+        </view>
+    </view>
+    <van-icon wx:if="{{closable}}" class="i-noticebar-operation" name="cross" size="20px" color="{{color}}" bindtap="handleClose"></van-icon>
+</view>

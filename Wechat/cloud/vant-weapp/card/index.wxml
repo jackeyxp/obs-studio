@@ -1,0 +1,55 @@
+<view style="{{ customStyle }}" class="custom-class van-card {{ centered ? 'van-card--center' : '' }}" hover-class="van-card--hover" bind:tap="onTap">
+  <view class="van-card__thumb">
+    <image
+      wx:if="{{ thumb }}"
+      src="{{ thumb }}"
+      mode="{{ thumbMode }}"
+      lazy-load="{{ lazyLoad }}"
+      class="van-card__img thumb-class"
+    />
+    <slot name="thumb" />
+    <van-tag
+      wx:if="{{ tag }}"
+      mark
+      type="danger"
+      custom-class="van-card__tag"
+    >
+      {{ tag }}
+    </van-tag>
+  </view>
+
+  <view class="van-card__content">
+    <view wx:if="{{ title }}" class="van-card__title van-multi-ellipsis--l2 title-class">{{ title }}</view>
+    <slot wx:else name="title" />
+
+    <view wx:if="{{ desc }}" class="van-card__desc van-multi-ellipsis--l1 desc-class">{{ desc }}</view>
+    <slot name="desc" />
+
+    <view wx:if="{{ cardTime }}" class="van-card__desc van-multi-ellipsis--l1 van-card__top time-class">{{ cardTime }}</view>
+    <view wx:if="{{ cardAge }}" class="van-card__desc van-multi-ellipsis--l1 age-class">{{ cardAge }}</view>
+
+    <slot name="tags" />
+
+    <block wx:if="{{ shopCart }}">
+      <view class="van-cart__item">
+        <van-icon name="circle" color="#f44" size="24px" custom-class="van-cart__circle" />
+        <van-icon name="shopping-cart-o" color="#f44" size="18px" custom-class="van-cart__shop" />
+      </view>
+    </block>
+
+    <view class="van-card__bottom">
+      <view wx:if="{{ price || price === 0 }}" class="van-card__price price-class">{{ currency }} {{ price }}</view>
+      <view wx:if="{{ originPrice || originPrice === 0 }}" class="van-card__origin-price origin-price-class">{{ currency }} {{ originPrice }}</view>
+      <view wx:if="{{ num }}" class="van-card__num num-class">x {{ num }}</view>
+    </view>
+  </view>
+
+  <view class="van-card__footer">
+    <slot name="footer" />
+  </view>
+
+  <view wx:if="{{ showArrow }}" class="van-card__arrow">
+    <van-icon name="arrow" />
+  </view>
+
+</view>

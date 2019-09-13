@@ -1,0 +1,18 @@
+/**app.wxss**/
+
+page {
+  color: #333;
+  font-size: 16px;
+  background: #eee;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  font-family: 'PingFang SC', Helvetica, 'STHeiti STXihei', 'Microsoft YaHei', Tohoma, Arial, sans-serif;
+}
+
+.tag {
+  margin-right: 5px;  
+}
+
+.top-area {
+  margin-top: 15rpx;
+}

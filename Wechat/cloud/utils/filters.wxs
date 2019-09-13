@@ -1,0 +1,40 @@
+
+// 计算当前机构还剩余金额和已消费金额的数量，超过万元的重新计算...
+//let theNewIntMoney = parseInt(theAgentMoney / 10000);
+//let theNewFltMoney = (theAgentMoney / 10000.0).toFixed(2);
+//theAgentMoney = (theNewIntMoney > 0) ? theNewFltMoney + ' 万元' : theAgentMoney + ' 元';
+
+function toFix(value) {
+  var theFloat = parseFloat(value);
+  theFloat = isNaN(theFloat) ? 0 : theFloat;
+  return theFloat.toFixed(2);
+}
+
+function toMinute(dtCreated, dtUpdated) {
+  var theDiff = Date.parse(dtUpdated) - Date.parse(dtCreated);
+  return Math.ceil(theDiff / 1000 / 60);
+}
+
+function toAddInt(v1, v2) {
+  var theV1 = parseInt(v1);
+  var theV2 = parseInt(v2);
+  theV1 = isNaN(theV1) ? 0 : theV1;
+  theV2 = isNaN(theV2) ? 0 : theV2;
+  return (theV1 + theV2);
+}
+
+function toAddFloat(v1, v2) {
+  var theV1 = parseFloat(v1);
+  var theV2 = parseFloat(v2);
+  theV1 = isNaN(theV1) ? 0 : theV1;
+  theV2 = isNaN(theV2) ? 0 : theV2;
+  var theFloat = theV1 + theV2;
+  return theFloat.toFixed(2);
+}
+
+module.exports = {
+  toFix: toFix,
+  toMinute: toMinute,
+  toAddInt: toAddInt,
+  toAddFloat: toAddFloat,
+}
