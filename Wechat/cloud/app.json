@@ -2,12 +2,22 @@
   "pages": [
     "pages/home/home",
     "pages/room/room",
-    "pages/bind/bind",
+    "pages/shop/shop",
+    "pages/live/live",
+    "pages/about/about",
+    "pages/agent/agent",
+    "pages/child/child",
     "pages/person/person",
+    "pages/member/member",
+    "pages/parent/parent",
+    "pages/userItem/userItem",
+    "pages/liveItem/liveItem",
+    "pages/shopItem/shopItem",
+    "pages/agentItem/agentItem"
   ],
   "window": {
     "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "ºÆÒ»ÔÆ",
+    "navigationBarTitleText": "æµ©ä¸€äº‘",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#eee",
     "backgroundTextStyle": "dark",
@@ -22,13 +32,13 @@
         "selectedIconPath": "images/home_focus.png",
         "pagePath": "pages/home/home",
         "iconPath": "images/home.png",
-        "text": "Ê×Ò³"
+        "text": "é¦–é¡µ"
       },
       {
         "selectedIconPath": "images/person_focus.png",
         "pagePath": "pages/person/person",
         "iconPath": "images/person.png",
-        "text": "ÎÒµÄ"
+        "text": "æˆ‘çš„"
       }
     ]
   },

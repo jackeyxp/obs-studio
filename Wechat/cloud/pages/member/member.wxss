@@ -1,0 +1,29 @@
+
+.feed-search {
+  border-bottom: 1rpx solid #ddd;
+  position: fixed;
+  z-index: 100;
+  width: 100%;
+}
+.feed-contain {
+  padding-top: 50px;
+}
+.feed-card {
+  font-size: 14px !important;
+  padding: 10px 15px !important;
+}
+.feed-desc {
+  display: inline !important;
+  color: #0080ff !important;
+}
+.feed-sign-no {
+  color: #fe0000;
+  display: inline;
+}
+.feed-sign-ok {
+  color: #0080ff;
+  display: inline;
+}
+.feed-time {
+  color: #fe0000 !important;
+}

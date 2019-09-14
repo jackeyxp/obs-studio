@@ -1,0 +1,52 @@
+
+  <van-notify id="van-notify" />
+  <van-dialog id="van-dialog" />
+
+  <van-cell-group custom-class="feed-item">
+    <van-field
+      label="学校名称"
+      value="{{ m_shopName }}"
+      placeholder="请输入学校名称"
+      bind:change="onNameChange"
+      clearable required focus="{{ !m_bEdit }}"
+    />
+    <van-field
+      label="学校地址"
+      value="{{ m_shopAddr }}"
+      placeholder="请输入学校地址"
+      bind:change="onAddrChange"
+      clearable required
+    />
+    <van-field
+      label="学校电话"
+      value="{{ m_shopPhone }}"
+      placeholder="请输入学校电话"
+      bind:change="onPhoneChange"
+      clearable required
+    />
+    <van-cell title="学校地区" required is-link>
+      <picker slot="extra" mode="region" class="addr-picker"
+    	  value="{{ m_arrArea }}" bindchange="onAreaChange">
+        <view>{{ m_curArea }}</view>
+      </picker>
+    </van-cell>
+    <van-cell title="学校校长" required is-link>
+      <picker slot="extra" mode="selector" class="addr-picker" range="{{ m_arrMaster }}" 
+        value="{{ m_curMasterIndex }}" range-key="wx_nickname" bindchange="onMasterChange">
+        <view>{{ m_curMasterName }}</view>
+      </picker>
+    </van-cell>
+    <van-cell title="所属机构" required is-link>
+      <picker slot="extra" mode="selector" class="addr-picker" range="{{ m_arrAgent }}" 
+        value="{{ m_curAgentIndex }}" range-key="name" bindchange="onAgentChange">
+        <view>{{ m_curAgentName }}</view>
+      </picker>
+    </van-cell>
+    <view class="addr-footer">
+      <van-button size="small" type="primary"
+      plain class="addr-right" bind:click="doBtnCancel"> 取 消 </van-button>
+      <van-button size="small" type="primary" 
+      class="addr-right" bind:click="doBtnSave">{{ m_bEdit ? ' 保 存 ' : ' 添 加 ' }}</van-button>
+      <van-button wx:if="{{ m_bEdit }}" size="small" type="danger" bind:click="doBtnDel"> 删 除 </van-button>
+    </view>
+  </van-cell-group>

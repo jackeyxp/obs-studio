@@ -27,7 +27,7 @@ Page({
     /*label: '支付管理',
       data: 'navOrder',
       icon: 'fa-money',
-      label: '幼儿园管理',
+      label: '学校管理',
       data: 'navShop',
       icon: 'fa-home',
       label: '我的帐号',
@@ -73,7 +73,7 @@ Page({
       icon: 'friends-o',
       link: '../grade/grade',
     }, {
-      label: '幼儿园管理',
+      label: '学校管理',
       data: 'navShop',
       icon: 'fa-home',
     }, {
@@ -114,7 +114,7 @@ Page({
       icon: 'tv-o',
       link: '../live/live',
     }, {
-      label: '幼儿园管理',
+      label: '学校管理',
       data: 'icon-green',
       icon: 'shop-o',
       link: '../shop/shop',
@@ -196,9 +196,9 @@ Page({
       case theTypeID.kAdministerUser: theGrids = this.data.m_AdminGrids; break;
     }
     // 如果用户可以管理机构，需要追加条目...
-    if (theAppData.m_nMasterAgentID > 0) {
-      theGrids.push(this.data.m_myAgent);
-    }
+    //if (theAppData.m_nMasterAgentID > 0) {
+    //  theGrids.push(this.data.m_myAgent);
+    //}
     // 更新到界面...
     this.setData({ 
       m_show_auth: 2, 

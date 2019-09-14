@@ -1,0 +1,17 @@
+
+.feed-item {
+  margin: 15rpx 0rpx;
+}
+.feed-picker {
+  width: 50%;
+  color: #888;
+  text-align: right;
+}
+.feed-footer {
+  text-align: right;
+  padding: 15px 20px;
+  background: #fff;
+}
+.feed-right {
+  margin-right: 30rpx;
+}

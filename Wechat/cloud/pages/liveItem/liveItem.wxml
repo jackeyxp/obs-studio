@@ -1,0 +1,43 @@
+
+  <van-notify id="van-notify" />
+  <van-dialog id="van-dialog" />
+
+  <van-cell-group custom-class="feed-item">
+    <van-field
+      label="房间名称"
+      value="{{ m_liveName }}"
+      placeholder="请输入房间名称"
+      bind:change="onNameChange"
+      clearable required focus="{{ !m_bEdit }}"
+    />
+    <van-field
+      label="房间密码"
+      value="{{ m_livePass }}"
+      placeholder="请输入6位数字密码"
+      bind:change="onPassChange"
+      clearable required
+      maxlength="6"
+      type="number"
+    />
+    <van-cell title="所属科目" required is-link>
+      <picker slot="extra" mode="selector" class="addr-picker" range="{{ m_arrSubject }}" 
+        value="{{ m_curSubjectIndex }}" range-key="subject_name" bindchange="onSubjectChange">
+        <view>{{ m_curSubjectName }}</view>
+      </picker>
+    </van-cell>
+    <van-cell title="所属机构" required is-link="{{ m_isAdmin }}">
+      <picker slot="extra" mode="selector" class="addr-picker" range="{{ m_arrAgent }}" 
+        value="{{ m_curAgentIndex }}" range-key="name" bindchange="onAgentChange"
+        disabled="{{ !m_isAdmin }}">
+        <view>{{ m_curAgentName }}</view>
+      </picker>
+    </van-cell>
+    <view class="addr-footer">
+      <van-button size="small" type="primary"
+      plain class="addr-right" bind:click="doBtnCancel"> 取 消 </van-button>
+      <van-button size="small" type="primary" 
+      class="addr-right" bind:click="doBtnSave">{{ m_bEdit ? ' 保 存 ' : ' 添 加 ' }}</van-button>
+      <van-button wx:if="{{ m_bEdit && m_isAdmin }}"
+      size="small" type="danger" bind:click="doBtnDel"> 删 除 </van-button>
+    </view>
+  </van-cell-group>

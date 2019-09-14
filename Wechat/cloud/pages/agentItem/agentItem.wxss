@@ -1,0 +1,17 @@
+
+.feed-item {
+  margin: 15rpx 0rpx;
+}
+.addr-picker {
+  width: 50%;
+  color: #888;
+  text-align: right;
+}
+.addr-footer {
+  text-align: right;
+  padding: 15px 20px;
+  background: #fff;
+}
+.addr-right {
+  margin-right: 30rpx;
+}

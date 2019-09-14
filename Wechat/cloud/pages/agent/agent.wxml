@@ -1,0 +1,51 @@
+
+<wxs src="../../utils/filters.wxs" module="filters" />
+
+<van-notify id="van-notify" />
+<van-dialog id="van-dialog" />
+
+<view class="top-area">
+  <van-cell title="总共 {{ m_total_num }} 个机构"
+    custom-class="feed-agent" icon="wap-home" icon-class="icon-blue">
+    <van-button slot="extra" type="primary" size="small" bind:click="doAddAgent">添加机构</van-button>
+  </van-cell>
+</view>
+<block wx:for="{{ m_arrAgent }}" wx:key="index">
+<van-swipe-cell right-width="{{ 65 }}" id="{{ index }}" data-title="{{ item.name }}" bind:click="onSwipeClick">
+  <van-cell-group custom-class="feed-item">
+    <van-cell title="机构名称" id="{{ index }}" is-link icon="edit"
+      icon-class="icon-blue" bind:click="doModAgent"
+      value="{{ item.name }}" />
+    <van-cell title="续费充值" id="{{ index }}" icon="gold-coin-o" icon-class="icon-blue" >
+      <view class="cost-item">
+        <view class="cost-txt">还剩余</view>
+        <view class="cost-red">{{ filters.toFix(item.money) }} 元</view>
+      </view>
+    </van-cell>
+    <van-cell title="消费记录" id="{{ index }}" icon="label-o" icon-class="icon-blue" >
+      <view class="cost-item">
+        <view class="cost-txt">已消费</view>
+        <view class="cost-red">{{ filters.toFix(item.cost) }} 元</view>
+      </view>
+    </van-cell>
+  </van-cell-group>
+  <view slot="right" class="van-swipe-cell__right">删除</view>
+</van-swipe-cell>
+</block>
+
+<i-load-more loading="{{ m_show_more }}" tip="{{ m_no_more }}" />
+
+<!--<van-card
+  id="{{ index }}"
+  data-item="{{ item }}"
+  bind:click="doModAgent"
+  customStyle="font-size:14px;padding:10px 15px;"
+  title="{{ item.name }}"
+  desc="地址：{{item.addr}}"
+  card-time="电话：{{ item.phone }}"
+  card-age="管理：{{ item.wx_nickname }}"
+  lazy-load="{{ true }}"
+  shop-cart="{{ false }}"
+  show-arrow="{{ true }}"
+  thumb="{{ m_urlSite }}{{ item.qrcode }}"
+/>-->

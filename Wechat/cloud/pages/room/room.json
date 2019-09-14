@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "直播间详情",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "van-cell-group": "../../vant-weapp/cell-group/index",
+    "van-field": "../../vant-weapp/field/index",
+    "van-icon": "../../vant-weapp/icon/index",
+    "van-cell": "../../vant-weapp/cell/index"
+  }
+}

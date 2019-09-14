@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "用户信息 - 修改",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "van-cell-group": "../../vant-weapp/cell-group/index",
+    "van-notify": "../../vant-weapp/notify/index",
+    "van-button": "../../vant-weapp/button/index",
+    "van-field": "../../vant-weapp/field/index",
+    "van-cell": "../../vant-weapp/cell/index"
+  }
+}

@@ -1,0 +1,46 @@
+
+<view class="top-area">
+  <van-cell-group>
+  <van-cell title="用户类型" icon-class="icon-blue" icon="award-o" is-link="{{ m_bIsAdmin }}">
+    <picker slot="extra" mode="selector" class="feed-picker {{m_bIsAdmin ? '' : 'feed-margin'}}"
+      range="{{ m_userTypeName }}" value="{{ m_curUser.user_type }}"
+      bindchange="onUserTypeChange" disabled="{{ !m_bIsAdmin }}">
+      <view>{{ m_userTypeName[m_curUser.user_type] }}</view>
+    </picker>
+  </van-cell>
+  <van-cell title="家长信息" size="large" is-link
+    value="{{ m_curUser.real_name ? m_curUser.real_name : '未填写' }} - {{ m_curUser.wx_nickname }}"
+    icon-class="icon-blue" icon="manager-o" url="/pages/parent/parent" />
+  <van-cell title="宝宝信息" size="large" is-link
+    value="{{ m_curUser.child_name ? m_curUser.child_name : '未填写' }} - {{ m_curUser.child_nick ? m_curUser.child_nick : '未填写' }}
+    icon-class="icon-blue" icon="smile-o" url="/pages/child/child" />
+  <van-cell title="所属学校" size="large" is-link icon-class="icon-blue" icon="shop-o">
+    <picker slot="extra" mode="selector" class="feed-picker" range="{{ m_arrShop }}" 
+      value="{{ m_curShopIndex }}" range-key="name" bindchange="onShopChange">
+      <view>{{ m_curShopName ? m_curShopName : '无' }}</view>
+    </picker>
+  </van-cell>
+  </van-cell-group>
+</view>
+
+<!--<view class="top-area">
+  <van-cell-group>
+  <van-cell title="购课充值" size="large" is-link icon="gold-coin-o" 
+    icon-class="icon-green" url="/pages/listPay/listPay" />
+  <van-cell title="签到记录" size="large" is-link icon="label-o"
+    icon-class="icon-green" url="/pages/listSign/listSign" />
+  <van-cell title="宝宝风采" size="large" is-link icon="award-o"
+    icon-class="icon-green" url="/pages/listGrow/listGrow" />
+  </van-cell-group>
+</view>-->
+
+<!--<view class="top-area">
+  <van-cell custom-class="feed-cell" title="立即签到" size="large" is-link border="{{ false }}"
+    icon-class="icon-red" icon="sign" value="{{ m_curUser.lesson_num }}" />
+  <van-cell custom-class="feed-cell" title="发送红包" size="large" is-link border="{{ false }}"
+    icon-class="icon-red" icon="point-gift-o" value=""
+    url="/pages/listRed/listRed" />
+  <van-cell custom-class="feed-cell" title="购课提醒" size="large" is-link border="{{ false }}"
+    icon-class="icon-red" icon="paid" value=""
+    url="/pages/listWarn/listWarn" />
+</view>-->

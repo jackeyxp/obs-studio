@@ -1,0 +1,13 @@
+
+<van-cell-group custom-class="top-area">
+  <van-cell title="直播间号码" icon="tv-o"
+    icon-class="icon-blue" value="{{ m_curRoom.room_id }}" />
+  <van-cell title="直播间名称" icon="notes-o"
+    icon-class="icon-blue" value="{{ m_curRoom.room_name }}" />
+  <van-cell title="课程名称" icon="todo-list-o"
+    icon-class="icon-blue" value="{{ m_curRoom.subject_name }}" />
+  <van-cell title="所属机构" icon="shop-o"
+    icon-class="icon-blue" value="{{ m_curRoom.agent_name }}" />
+  <van-cell title="创建时间" icon="clock-o"
+    icon-class="icon-blue" value="{{ m_curRoom.created }}" />
+</van-cell-group>

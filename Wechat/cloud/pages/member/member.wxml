@@ -1,0 +1,30 @@
+
+<van-search
+  custom-class="feed-search"
+  placeholder="请输入搜索关键词"
+  bind:change="onChange"
+  value="{{ m_str_query }}"
+/>
+
+<view class="feed-contain">
+  <block wx:for="{{ m_arrUser }}" wx:key="index">
+    <van-card
+      id="{{ index }}"
+      data-item="{{ item }}"
+      bind:click="doShowUser"
+      custom-class="feed-card"
+      title="{{item.child_name ? item.child_name : ''}} - {{item.child_nick ? item.child_nick : ''}} - {{item.real_name ? item.real_name : ''}} - {{item.wx_nickname}} - {{m_userTypeName[item.user_type]}}"
+      desc-class="feed-desc"
+      desc="剩余：{{ item.point_num }} 课时，"
+      card-time="地区：{{item.wx_country}} / {{item.wx_province}} / {{item.wx_city}}"
+      card-age="学校：{{ item.shop_name ? item.shop_name : '无' }}"
+      lazy-load="{{ true }}"
+      shop-cart="{{ false }}"
+      show-arrow="{{ true }}"
+      thumb="{{ item.wx_headurl }}">
+      <view slot="desc" class="feed-sign-no">今日：未签到</view>
+    </van-card>
+  </block>
+</view>
+
+<i-load-more loading="{{ m_show_more }}" tip="{{ m_no_more }}" />

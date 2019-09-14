@@ -1,0 +1,48 @@
+
+<van-notify id="van-notify" />
+<van-dialog id="van-dialog" />
+
+<van-cell-group custom-class="feed-item">
+  <van-field
+    label="机构名称"
+    value="{{ m_agentName }}"
+    placeholder="请输入机构名称"
+    bind:change="onNameChange"
+    clearable required focus="{{ !m_bEdit }}"
+  />
+  <van-field
+    label="机构地址"
+    value="{{ m_agentAddr }}"
+    placeholder="请输入机构地址"
+    bind:change="onAddrChange"
+    clearable required
+  />
+  <van-field
+    label="机构电话"
+    value="{{ m_agentPhone }}"
+    placeholder="请输入机构电话"
+    bind:change="onPhoneChange"
+    clearable required
+  />
+  <van-field
+    label="机构费率"
+    value="{{ m_agentCPM }}"
+    placeholder="请输入每分钟费用"
+    error-message="每分钟费用(单位:元)"
+    bind:change="onCPMChange"
+    clearable required
+  />
+  <van-cell title="机构管理员" required is-link>
+    <picker slot="extra" mode="selector" class="addr-picker" range="{{ m_arrMaster }}" 
+      value="{{ m_curMasterIndex }}" range-key="wx_nickname" bindchange="onMasterChange">
+      <view>{{ m_curMasterName }}</view>
+    </picker>
+  </van-cell>
+  <view class="addr-footer">
+    <van-button size="small" type="primary"
+    plain class="addr-right" bind:click="doBtnCancel"> 取 消 </van-button>
+    <van-button size="small" type="primary" 
+    class="addr-right" bind:click="doBtnSave">{{ m_bEdit ? ' 保 存 ' : ' 添 加 ' }}</van-button>
+    <van-button wx:if="{{ m_bEdit }}" size="small" type="danger" bind:click="doBtnDel"> 删 除 </van-button>
+  </view>
+</van-cell-group>

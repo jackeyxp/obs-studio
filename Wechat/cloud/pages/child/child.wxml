@@ -1,0 +1,37 @@
+
+<van-notify id="van-notify" />
+
+<van-cell-group custom-class="feed-item">
+  <van-field
+    label="宝宝姓名"
+    value="{{ m_curUser.child_name }}"
+    placeholder="请输入宝宝姓名"
+    bind:change="onNameChange"
+    clearable required
+  />
+  <van-field
+    label="宝宝小名"
+    value="{{ m_curUser.child_nick }}"
+    placeholder="请输入宝宝小名"
+    bind:change="onNickChange"
+    clearable required
+  />
+  <van-cell title="宝宝生日" required is-link>
+    <picker slot="extra" mode="date" class="feed-picker"
+      value="{{ m_curUser.birthday }}" bindchange="onBirthChange">
+      <view>{{ m_curUser.birthday ? m_curUser.birthday : '无' }}</view>
+    </picker>
+  </van-cell>
+  <van-cell title="宝宝性别" required is-link>
+    <picker slot="extra" mode="selector" class="feed-picker" range="{{ m_arrSex }}" 
+      value="{{ m_curUser.child_sex }}" bindchange="onChildSexChange">
+      <view>{{ m_arrSex[m_curUser.child_sex] }}</view>
+    </picker>
+  </van-cell>
+  <view class="feed-footer">
+    <van-button size="small" type="primary"
+    plain class="feed-right" bind:click="doBtnCancel"> 取 消 </van-button>
+    <van-button size="small" type="primary" 
+    class="feed-right" bind:click="doBtnSave"> 保 存 </van-button>
+  </view>
+</van-cell-group>

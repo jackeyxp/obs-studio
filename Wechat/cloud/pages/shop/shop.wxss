@@ -1,0 +1,8 @@
+
+.feed-shop {
+  line-height: 30px !important;
+  align-items: center;
+}
+.feed-left-icon {
+  height: 30px !important;
+}

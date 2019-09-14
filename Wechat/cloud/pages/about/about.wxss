@@ -1,0 +1,51 @@
+
+Page {
+  background-color: #fff;
+}
+.feed-head {
+  text-align: center;
+  margin: 40rpx auto 40rpx;
+}
+.feed-head image {
+  vertical-align: middle;
+  display: inline-block;
+  border-radius: 10rpx;
+  margin-bottom: 10rpx;
+  border: none;
+  width: 120rpx;
+  height: 120rpx;
+}
+.feed-name {
+  color: #666;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+.feed-text {
+  color: #555;
+  font-size: 26rpx;
+  text-indent: 50rpx;
+  margin: 10rpx 20rpx 0;
+}
+.feed-link {
+  margin-top: -4rpx;
+}
+.feed-contact {
+  color: #888;
+  font-size: 28rpx;
+  text-align: center;
+}
+.feed-hover {
+  color: dodgerblue;
+  /*background-color: #dedede;*/
+}
+.wux-result__ft {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding: 30rpx;
+  text-align: center;
+  box-sizing: border-box;
+  font-size: 28rpx;
+  position: fixed;
+  color: grey;
+}

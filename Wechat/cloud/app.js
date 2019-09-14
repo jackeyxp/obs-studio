@@ -28,7 +28,7 @@ App({
       kParentUser: 0, kAssistUser: 1, kTeacherUser: 2,
       kShopMasterUser: 3, kShopOwnerUser: 4, kMaintainUser: 5, kAdministerUser: 6
     },
-    m_userTypeName: ['家长', '助教', '讲师', '管理员', '拥有者', '运营维护者', '系统管理员'],
+    m_userTypeName: ['家长', '助教', '讲师', '校长', '学校老板', '运营维护者', '系统管理员'],
     m_parentTypeName: ['无', '妈妈', '爸爸', '亲属']
   },
   // 登录接口...

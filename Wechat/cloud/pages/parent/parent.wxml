@@ -1,0 +1,33 @@
+
+<van-notify id="van-notify" />
+
+<van-cell-group custom-class="feed-item">
+  <van-field
+    label="家长姓名"
+    value="{{ m_curUser.real_name }}"
+    placeholder="请输入家长姓名"
+    bind:change="onNameChange"
+    clearable required
+  />
+  <van-field
+    type="number"
+    maxlength="11"
+    label="家长手机"
+    value="{{ m_curUser.real_phone }}"
+    placeholder="请输入家长手机"
+    bind:change="onPhoneChange"
+    clearable required
+  />
+  <van-cell title="家长身份" required is-link>
+    <picker slot="extra" mode="selector" class="feed-picker" range="{{ m_arrParentType }}" 
+      value="{{ m_curUser.parent_type }}" bindchange="onParentTypeChange">
+      <view>{{ m_arrParentType[m_curUser.parent_type] }}</view>
+    </picker>
+  </van-cell>
+  <view class="feed-footer">
+    <van-button size="small" type="primary"
+    plain class="feed-right" bind:click="doBtnCancel"> 取 消 </van-button>
+    <van-button size="small" type="primary" 
+    class="feed-right" bind:click="doBtnSave"> 保 存 </van-button>
+  </view>
+</van-cell-group>
