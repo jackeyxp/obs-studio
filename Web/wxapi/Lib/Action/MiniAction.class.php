@@ -807,9 +807,12 @@ class MiniAction extends Action
     // 保存到临时对象...
     $dbChild = $_POST;
     if(isset($dbChild['child_id']) && $dbChild['child_id'] > 0) {
+      $dbChild['updated'] = date('Y-m-d H:i:s');
       D('child')->save($dbChild);
     } else {
       unset($dbChild['child_id']);
+      $dbChild['created'] = date('Y-m-d H:i:s');
+      $dbChild['updated'] = date('Y-m-d H:i:s');
       $dbChild['child_id'] = D('child')->add($dbChild);
       $dbUser['user_id'] = $dbChild['user_id'];
       $dbUser['child_id'] = $dbChild['child_id'];
