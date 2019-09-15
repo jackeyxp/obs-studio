@@ -281,6 +281,7 @@ void CLoginMini::doWebGetMiniLoginRoom()
 	// 显示动画，修改状态...
 	ui->iconScan->hide();
 	m_lpLoadBack->show();
+	m_strQRNotice.clear();
 	m_eMiniState = kMiniLoginRoom;
 	m_strScan = QStringLiteral("正在登录已选择的房间...");
 	ui->titleScan->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
@@ -368,18 +369,19 @@ void CLoginMini::doWebGetMiniUserInfo()
 	// 显示动画，修改状态...
 	ui->iconScan->hide();
 	m_lpLoadBack->show();
+	m_strQRNotice.clear();
 	m_eMiniState = kMiniUserInfo;
 	m_strScan = QStringLiteral("正在获取已登录用户信息...");
 	ui->titleScan->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 	// 构造网络访问地址，发起网络请求...
-	/*QNetworkReply * lpNetReply = NULL;
+	QNetworkReply * lpNetReply = NULL;
 	QNetworkRequest theQTNetRequest;
-	string & strWebCenter = App()->GetWebCenter();
+	string & strWebCenter = App()->GetWebCenterAddr();
 	QString strContentVal = QString("user_id=%1&room_id=%2&type_id=%3").arg(m_nDBUserID).arg(m_nDBRoomID).arg(App()->GetClientType());
 	QString strRequestURL = QString("%1%2").arg(strWebCenter.c_str()).arg("/wxapi.php/Mini/getLoginUser");
 	theQTNetRequest.setUrl(QUrl(strRequestURL));
 	theQTNetRequest.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
-	lpNetReply = m_objNetManager.post(theQTNetRequest, strContentVal.toUtf8());*/
+	lpNetReply = m_objNetManager.post(theQTNetRequest, strContentVal.toUtf8());
 	// 更新显示界面内容...
 	this->update();
 }
@@ -526,13 +528,13 @@ void CLoginMini::onTriggerTcpConnect()
 	// 每隔30秒检测一次，终端在中心服务器上在线汇报通知...
 	m_nOnLineTimer = this->startTimer(30 * 1000);
 	// 发起获取小程序Token值的网络命令...
-	this->doWebGetMiniToken();
+	//this->doWebGetMiniToken();
 	
 	/*== 仅供快速测试 ==*/
-	//m_nDBUserID = 1;
-	//m_nDBRoomID = 200005;
+	m_nDBUserID = 1;
+	m_nDBRoomID = 10001;
 	// 一切正常，开始登录指定的房间...
-	//this->doWebGetMiniLoginRoom();  
+	this->doWebGetMiniLoginRoom();  
 }
 
 // 响应中心会话反馈的小程序绑定登录信号槽事件通知...

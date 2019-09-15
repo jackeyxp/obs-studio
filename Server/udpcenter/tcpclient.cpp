@@ -125,7 +125,8 @@ int CTCPClient::ForRead()
     switch( m_nClientType )
     {
       case kClientPHP:       nResult = this->doPHPClient(lpCmdHeader, lpDataPtr); break;
-      case kClientSmart  :   nResult = this->doSmartClient(lpCmdHeader, lpDataPtr); break;
+      case kClientStudent:   nResult = this->doSmartClient(lpCmdHeader, lpDataPtr); break;
+      case kClientTeacher:   nResult = this->doSmartClient(lpCmdHeader, lpDataPtr); break;
       case kClientUdpServer: nResult = this->doUdpServerClient(lpCmdHeader, lpDataPtr); break;
     }
 		// 删除已经处理完毕的数据 => Header + pkg_len...

@@ -1,4 +1,4 @@
-
+﻿
 #include "server.h"
 #include "bmem.h"
 #include "rtp.h"
@@ -118,7 +118,9 @@ const char * get_client_type(int inType)
   switch(inType)
   {
     case kClientPHP:       return "PHP";
-    case kClientSmart:     return "Smart";
+    case kClientStudent:   return "Student";
+    case kClientTeacher:   return "Teacher";
+    case kClientUdpServer: return "UdpServer";
     case kClientScreen:    return "Screen";
   }
   return "unknown";

@@ -88,6 +88,159 @@ class MiniAction extends Action
     $this->m_weMini = C('HAOYI_MINI');
   }
   //
+  // 处理终端发起的获取登录用户详情的命令接口...
+  public function getLoginUser()
+  {
+    // 准备返回结果状态...
+    $arrErr['err_code'] = false;
+    $arrErr['err_msg'] = 'ok';
+    // 注意：这里使用的是 $_POST 数据...
+    do {
+      // 判断输入的参数是否有效...
+      if( !isset($_POST['user_id']) || !isset($_POST['room_id']) || !isset($_POST['type_id']) ) {
+        $arrErr['err_code'] = true;
+        $arrErr['err_msg'] = '输入参数无效！';
+        break;
+      }
+      // 首先，查找用户，如果没有找到，返回错误...
+      $condition['user_id'] = $_POST['user_id'];
+      $dbUser = D('user')->where($condition)->find();
+      if( !isset($dbUser['user_id']) ) {
+        $arrErr['err_code'] = true;
+        $arrErr['err_msg'] = '无法找到指定的用户记录！';
+        break;
+      }
+      // 保存用户记录到集合当中...
+      $arrErr['user'] = $dbUser;
+      // 修改房间编号 => 减去房间偏移号码...
+      $myQuery['room_id'] = $_POST['room_id'] - LIVE_BEGIN_ID;
+      $dbRoom = D('RoomView')->where($myQuery)->find();
+      if( !isset($dbRoom['room_id']) ) {
+        $arrErr['err_code'] = true;
+        $arrErr['err_msg'] = '无法找到指定的房间记录！';
+        break;
+      }
+      // 保存房间记录到集合当中...
+      $arrErr['room'] = $dbRoom;
+      // 讲师端|学生端都要创建新的流量统计记录...
+      $dbFlow['type_id'] = $_POST['type_id'];
+      $dbFlow['room_id'] = $dbRoom['room_id'];
+      $dbFlow['user_id'] = $dbUser['user_id'];
+      $dbFlow['created'] = date('Y-m-d H:i:s');
+      $dbFlow['updated'] = date('Y-m-d H:i:s');
+      $arrErr['flow_id'] = D('flow')->add($dbFlow);
+    } while ( false );
+    // 返回json编码数据包...
+    echo json_encode($arrErr);
+  }
+  //
+  // 处理来自Smart|Screen终端的登录事件...
+  public function loginRoom()
+  {
+    // 准备返回数据结构...
+    $arrErr['err_code'] = false;
+    $arrErr['err_msg'] = "OK";
+    // 将获得的数据进行判断和处理...$_GET;//
+    $arrPost = $_POST;
+    do {
+      // 判断输入参数是否有效...
+      if( !isset($arrPost['room_id']) ) {
+        $arrErr['err_code'] = true;
+        $arrErr['err_msg'] = '请输入有效的云教室号码，号码从10001开始！';
+        break;
+      }
+      // 获取是否是调试模式的学生端或讲师端对象...
+      $bIsDebugMode = ((intval($arrPost['debug_mode']) > 0) ? 1 : 0);
+      // 计算有效的的直播间的数据库的编号 => 减去数字前缀偏移...
+      $nRoomID = intval($arrPost['room_id']) - LIVE_BEGIN_ID;
+      if( $nRoomID <= 0 ) {
+        $arrErr['err_code'] = true;
+        $arrErr['err_msg'] = '请输入有效的云教室号码，号码从10001开始！';
+        break;
+      }
+      // 验证云教室是否存在...
+      $condition['room_id'] = $nRoomID;
+      $dbRoom = D('room')->where($condition)->field('room_id,room_pass')->find();
+      if( !isset($dbRoom['room_id']) ) {
+        $arrErr['err_code'] = true;
+        $arrErr['err_msg'] = '没有找到指定的云教室号码，请确认后重新输入！';
+        break;
+      }
+      // 验证发送的终端类型是否正确...
+      $nClientType = intval($arrPost['type_id']);
+      if(($nClientType != kClientStudent) && ($nClientType != kClientStudent) && ($nClientType != kClientScreen)) {
+        $arrErr['err_code'] = true;
+        $arrErr['err_msg'] = '不是合法的终端类型，请确认后重新登录！';
+        break;
+      }
+      // 如果是屏幕终端，需要判断密码是否正确...
+      if(($nClientType == kClientScreen) && ($arrPost['room_pass'] != $dbRoom['room_pass'])) {
+        $arrErr['err_code'] = true;
+        $arrErr['err_msg'] = '房间密码错误，请确认后重新登录！';
+        break;
+      }
+      // 读取系统配置数据库记录...
+      $dbSys = D('system')->find();
+      // 构造UDP中心服务器需要的参数 => 房间编号 => LIVE_BEGIN_ID + room_id
+      $dbParam['room_id'] = LIVE_BEGIN_ID + $dbRoom['room_id'];
+      $dbParam['debug_mode'] = $bIsDebugMode;
+      // 从UDP中心服务器获取UDP直播地址和UDP中转地址...
+      $dbResult = $this->getUdpServerFromUdpCenter($dbSys['udpcenter_addr'], $dbSys['udpcenter_port'], $dbParam);
+      // 如果获取连接中转服务器失败...
+      if( $dbResult['err_code'] > 0 ) {
+        $arrErr['err_code'] = $dbResult['err_code'];
+        $arrErr['err_msg'] = $dbResult['err_msg'];
+        break;
+      }
+      // 注意：需要将数字转换成字符串...
+      // 填充跟踪服务器的地址和端口...
+      $arrErr['tracker_addr'] = $dbSys['tracker_addr'];
+      $arrErr['tracker_port'] = strval($dbSys['tracker_port']);
+      // 填充udp远程服务器的地址和端口 => 从UDPCenter获取的来自UDPServer的汇报...
+      $arrErr['remote_addr'] = $dbResult['remote_addr'];
+      $arrErr['remote_port'] = strval($dbResult['remote_port']);
+      // 填充udp服务器的地址和端口 => 从UDPCenter获取的来自UDPServer的汇报...
+      $arrErr['udp_addr'] = $dbResult['udp_addr'];
+      $arrErr['udp_port'] = strval($dbResult['udp_port']);
+      // 获取当前指定通道上的讲师端和学生端在线数量...
+      $arrErr['teacher'] = strval($dbResult['teacher']);
+      $arrErr['student'] = strval($dbResult['student']);
+      // 注意：房间状态不要通过数据库，直接通过udpserver获取...
+    } while( false );
+    // 直接反馈最终验证的结果...
+    echo json_encode($arrErr);
+  }
+  // 从udp中心服务器获取udp中转服务器和udp直播服务器地址...
+  // 成功 => array()
+  // 失败 => false
+  private function getUdpServerFromUdpCenter($inUdpCenterAddr, $inUdpCenterPort, &$dbParam)
+  {
+    // 通过php扩展插件连接中转服务器 => 性能高...
+    $transmit = transmit_connect_server($inUdpCenterAddr, $inUdpCenterPort);
+    // 链接中转服务器失败，直接返回...
+    if( !$transmit ) {
+      $arrData['err_code'] = true;
+      $arrData['err_msg'] = '无法连接直播中心服务器。';
+      return $arrData;
+    }
+    // 获取当前房间所在UDP直播服务器地址和端口、中转服务器地址和端口...
+    $saveJson = json_encode($dbParam);
+    $json_data = transmit_command(kClientPHP, kCmd_PHP_GetUdpServer, $transmit, $saveJson);
+    // 关闭中转服务器链接...
+    transmit_disconnect_server($transmit);
+    // 获取的JSON数据有效，转成数组，直接返回...
+    $arrData = json_decode($json_data, true);
+    if( !$arrData ) {
+      $arrData['err_code'] = true;
+      $arrData['err_msg'] = '从直播中心服务器获取数据失败。';
+      return $arrData;
+    }
+    // 通过错误码，获得错误信息...
+    $arrData['err_msg'] = getTransmitErrMsg($arrData['err_code']);
+    // 将整个数组返回...
+    return $arrData;
+  }
+  //
   // 获取小程序的access_token的值...
   public function getToken($useEcho = true)
   {

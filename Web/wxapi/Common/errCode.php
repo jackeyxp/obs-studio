@@ -78,29 +78,27 @@ define('ERR_TYPE_MATCH',          10006);
 define('ERR_TIME_MATCH',          10007);
 define('ERR_HAS_TEACHER',         10008);
 
-// 定义UDP服务器可以执行的命令列表...
+// 定义UDP服务器可以执行的命令列表 => 从1开始编号...
 define('CMD_LINE_START',              __LINE__);
-define('kCmd_Student_Login',          CMD_LINE_START - 1);
-define('kCmd_Student_OnLine',         CMD_LINE_START - 1);
-define('kCmd_Teacher_Login',          CMD_LINE_START - 1);
-define('kCmd_Teacher_OnLine',         CMD_LINE_START - 1);
-define('kCmd_UdpServer_Login',        CMD_LINE_START - 1);
-define('kCmd_UdpServer_OnLine',       CMD_LINE_START - 1);
-define('kCmd_UdpServer_AddTeacher',   CMD_LINE_START - 1);
-define('kCmd_UdpServer_DelTeacher',   CMD_LINE_START - 1);
-define('kCmd_UdpServer_AddStudent',   CMD_LINE_START - 1);
-define('kCmd_UdpServer_DelStudent',   CMD_LINE_START - 1);
-define('kCmd_PHP_GetUdpServer',       CMD_LINE_START - 1);
-define('kCmd_PHP_GetAllServer',       CMD_LINE_START - 1);
-define('kCmd_PHP_GetAllClient',       CMD_LINE_START - 1);
-define('kCmd_PHP_GetRoomList',        CMD_LINE_START - 1);
-define('kCmd_PHP_GetPlayerList',      CMD_LINE_START - 1);
-define('kCmd_PHP_Bind_Mini',          CMD_LINE_START - 1);
-define('kCmd_PHP_GetRoomFlow',        CMD_LINE_START - 1);
-define('kCmd_Screen_Login',           CMD_LINE_START - 1);
-define('kCmd_Screen_OnLine',          CMD_LINE_START - 1);
-define('kCmd_Screen_Packet',          CMD_LINE_START - 1);
-define('kCmd_Screen_Finish',          CMD_LINE_START - 1);
+define('kCmd_Smart_Login',            __LINE__ - CMD_LINE_START);
+define('kCmd_Smart_OnLine',           __LINE__ - CMD_LINE_START);
+define('kCmd_UdpServer_Login',        __LINE__ - CMD_LINE_START);
+define('kCmd_UdpServer_OnLine',       __LINE__ - CMD_LINE_START);
+define('kCmd_UdpServer_AddTeacher',   __LINE__ - CMD_LINE_START);
+define('kCmd_UdpServer_DelTeacher',   __LINE__ - CMD_LINE_START);
+define('kCmd_UdpServer_AddStudent',   __LINE__ - CMD_LINE_START);
+define('kCmd_UdpServer_DelStudent',   __LINE__ - CMD_LINE_START);
+define('kCmd_PHP_GetUdpServer',       __LINE__ - CMD_LINE_START);
+define('kCmd_PHP_GetAllServer',       __LINE__ - CMD_LINE_START);
+define('kCmd_PHP_GetAllClient',       __LINE__ - CMD_LINE_START);
+define('kCmd_PHP_GetRoomList',        __LINE__ - CMD_LINE_START);
+define('kCmd_PHP_GetPlayerList',      __LINE__ - CMD_LINE_START);
+define('kCmd_PHP_Bind_Mini',          __LINE__ - CMD_LINE_START);
+define('kCmd_PHP_GetRoomFlow',        __LINE__ - CMD_LINE_START);
+define('kCmd_Screen_Login',           __LINE__ - CMD_LINE_START);
+define('kCmd_Screen_OnLine',          __LINE__ - CMD_LINE_START);
+define('kCmd_Screen_Packet',          __LINE__ - CMD_LINE_START);
+define('kCmd_Screen_Finish',          __LINE__ - CMD_LINE_START);
 
 //////////////////////////////////////////////////////
 // 定义一组通用的公用函数列表...

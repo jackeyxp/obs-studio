@@ -87,7 +87,7 @@ private:
 	int                            m_nFlowTimer;               // 流量统计检测时钟...
 	int                            m_nOnLineTimer;             // 中转服务器在线检测时钟...
 	int                            m_nRtpTCPSockFD;            // CRemoteSession在服务器端的套接字号码...
-	int                            m_nClientType;              // 当前终端的类型 => Smart
+	CLIENT_TYPE                    m_nClientType;              // 当前终端的类型 => Smart
 	bool                           m_bIsDebugMode;             // 是否是调试模式 => 挂载到调试服务器...
 	bool                           m_bIsMiniMode;              // 是否是小程序模式 => 挂载到阿里云服务器...
 	std::string                    locale;
@@ -124,7 +124,6 @@ public:
 public:
 	bool     IsMiniMode() { return m_bIsMiniMode; }
 	bool     IsDebugMode() { return m_bIsDebugMode; }
-	int      GetClientType() { return m_nClientType; }
 	int      GetRtpTCPSockFD() { return m_nRtpTCPSockFD; }
 	int      GetDBFlowID() { return m_nDBFlowID; }
 	int      GetDBUserID() { return m_nDBUserID; }
@@ -132,6 +131,7 @@ public:
 	string & GetLocalMacAddr() { return m_strMacAddr; }
 	string & GetRoomIDStr() { return m_strRoomID; }
 	string & GetUserNameStr() { return m_strUserName; }
+	CLIENT_TYPE GetClientType() { return m_nClientType; }
 
 	string & GetWebCenterAddr() { return m_strWebCenterAddr; }
 
