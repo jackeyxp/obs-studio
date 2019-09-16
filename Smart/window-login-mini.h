@@ -38,10 +38,14 @@ private slots:
 	void onTriggerTcpConnect();
 	void onButtonMinClicked();
 	void onButtonCloseClicked();
+	void onButtonTypeClicked();
+	void onChangeToStudent();
+	void onChangeToTeacher();
 	void onReplyFinished(QNetworkReply *reply);
 	void onTriggerBindMini(int nUserID, int nBindCmd, int nRoomID);
 private:
 	void initWindow();
+	void doUpdateTitle();
 	bool doCheckOnLine();
 	void doCheckSession();
 	void doWebGetCenterAddr();
@@ -50,6 +54,7 @@ private:
 	void doWebGetMiniQRCode();
 	void doWebGetMiniUserInfo();
 	void doWebGetMiniLoginRoom();
+	void doChangedNewType(int nNewType);
 	void timerEvent(QTimerEvent * inEvent);
 	void onProcCenterAddr(QNetworkReply *reply);
 	void onProcMiniToken(QNetworkReply *reply);

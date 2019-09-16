@@ -1,0 +1,55 @@
+
+*{font-family:Microsoft YaHei;}
+
+/*标题文字颜色*/
+QLabel#titleName {
+	color: white;
+	font-size: 16px;
+	font-weight: 400;
+}
+
+QLabel#titleVer {
+  color: #d0d0d0;
+}
+
+/* error notice */
+QLabel#titleQR,#titleScan {
+	color: yellow;
+	font-size: 18px;
+}
+
+/*关闭按钮*/
+QPushButton#btnClose {
+  border-image:url(:/mini/images/mini/close.png) 0 60 0 0 ;
+  border-top-right-radius:4;
+}
+QPushButton#btnClose:hover {
+  border-image:url(:/mini/images/mini/close.png) 0 30 0 30 ;
+  border-top-right-radius:4;
+}
+QPushButton#btnClose:pressed {
+  border-image:url(:/mini/images/mini/close.png) 0 0 0 60 ;
+  border-top-right-radius:4;
+}
+
+/*button min*/
+QPushButton#btnMin {
+  border-image:url(:/mini/images/mini/min.png) 0 60 0 0 ;
+}
+QPushButton#btnMin:hover {
+  border-image:url(:/mini/images/mini/min.png) 0 30 0 30 ;
+}
+QPushButton#btnMin:pressed {
+  border-image:url(:/mini/images/mini/min.png) 0 0 0 60 ;
+}
+
+/*button arrow*/
+QPushButton#btnArrow {
+  border-image:url(:/mini/images/mini/arrow.png) 0 60 0 0 ;
+}
+QPushButton#btnArrow:hover {
+  border-image:url(:/mini/images/mini/arrow.png) 0 30 0 30 ;
+}
+QPushButton#btnArrow:pressed {
+  border-image:url(:/mini/images/mini/arrow.png) 0 0 0 60 ;
+}

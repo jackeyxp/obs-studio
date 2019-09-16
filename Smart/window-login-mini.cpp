@@ -8,6 +8,7 @@
 #include <QPainter>
 #include <QBitmap>
 #include <QMovie>
+#include <QMenu>
 #include <time.h>
 
 #include "win-update.hpp"
@@ -181,12 +182,67 @@ void CLoginMini::initWindow()
 	// 关联点击最小化按钮|关闭按钮的信号槽事件...
 	connect(ui->btnMin, SIGNAL(clicked()), this, SLOT(onButtonMinClicked()));
 	connect(ui->btnClose, SIGNAL(clicked()), this, SLOT(onButtonCloseClicked()));
+	connect(ui->btnArrow, SIGNAL(clicked()), this, SLOT(onButtonTypeClicked()));
 	// 关联网络信号槽反馈结果事件...
 	connect(&m_objNetManager, SIGNAL(finished(QNetworkReply *)), this, SLOT(onReplyFinished(QNetworkReply *)));
+	// 更新标题栏名称 => 根据终端类型进行调整...
+	this->doUpdateTitle();
 	// 发起获取中心服务器的TCP地址和端口的命令...
 	this->doWebGetCenterAddr();
 	// 只进行一次更新状态检测...
 	//this->TimedCheckForUpdates();
+}
+
+void CLoginMini::doUpdateTitle()
+{
+	QString strTitle, strName;
+	switch (App()->GetClientType()) {
+	case kClientStudent: strName = QStringLiteral("学生端"); break;
+	case kClientTeacher: strName = QStringLiteral("讲师端"); break;
+	}
+	// 重新组合标题栏名称，更新到界面当中...
+	strTitle = QString("%1 - %2").arg(QTStr("MINI.Window.Title")).arg(strName);
+	ui->titleName->setText(strTitle);
+	// 如果是外部参数模式，需要修改标题栏名称...
+	//ui->titleName->setText(QTStr("MINI.Window.Normal"));
+}
+
+void CLoginMini::onButtonTypeClicked()
+{
+	QMenu popup(this);
+	QAction * actionStudent = NULL; QAction * actionTeacher = NULL;
+	actionStudent = popup.addAction(QTStr("MINI.Menu.Student"), this, SLOT(onChangeToStudent()));
+	actionTeacher = popup.addAction(QTStr("MINI.Menu.Teacher"), this, SLOT(onChangeToTeacher()));
+	actionStudent->setCheckable(true); actionTeacher->setCheckable(true);
+	switch (App()->GetClientType()) {
+	case kClientStudent: actionStudent->setChecked(true); actionTeacher->setChecked(false); break;
+	case kClientTeacher: actionStudent->setChecked(false); actionTeacher->setChecked(true); break;
+	}
+	popup.exec(QCursor::pos());
+}
+
+void CLoginMini::onChangeToStudent()
+{
+	this->doChangedNewType(kClientStudent);
+}
+
+void CLoginMini::onChangeToTeacher()
+{
+	this->doChangedNewType(kClientTeacher);
+}
+
+void CLoginMini::doChangedNewType(int nNewType)
+{
+	// 如果终端类型没有发生变化，直接返回...
+	if (App()->GetClientType() == nNewType)
+		return;
+	// 保存终端类型，更新标题，保存配置到 global.ini当中...
+	config_set_int(GetGlobalConfig(), "General", "ClientType", (int64_t)nNewType);
+	config_save_safe(GetGlobalConfig(), "tmp", nullptr);
+	App()->SetClientType((CLIENT_TYPE)nNewType);
+	this->doUpdateTitle();
+	// 重新连接中心服务器...
+	this->doWebGetCenterAddr();
 }
 
 void CLoginMini::doWebGetCenterAddr()
@@ -215,9 +271,6 @@ void CLoginMini::doWebGetCenterAddr()
 	m_eMiniState = kCenterAddr;
 	m_strQRNotice = QStringLiteral("正在获取中心服务器地址...");
 	ui->titleScan->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-	ui->titleName->setText(QTStr("MINI.Window.Title"));
-	// 如果是外部参数模式，需要修改标题栏名称...
-	//ui->titleName->setText(QTStr("MINI.Window.Normal"));
 	// 构造凭证访问地址，发起网络请求...
 	QNetworkReply * lpNetReply = NULL;
 	QNetworkRequest theQTNetRequest;

@@ -154,6 +154,7 @@ public:
 	void     SetTrackerPort(int nPort) { m_nTrackerPort = nPort; }
 	void	 SetTcpCenterAddr(const string & strAddr) { m_strCenterTcpAddr = strAddr; }
 	void     SetTcpCenterPort(int nPort) { m_nCenterTcpPort = nPort; }
+	void     SetClientType(CLIENT_TYPE inType) { m_nClientType = inType; }
 public:
 	OBSApp(int &argc, char **argv, profiler_name_store_t *store);
 	~OBSApp();

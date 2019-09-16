@@ -718,8 +718,18 @@ bool OBSApp::InitGlobalConfig()
 		changed = true;
 	}
 
-	if (changed)
+	// 配置文件中没有终端类型配置参数，设置默认的终端类型配置参数...
+	if (!config_has_user_value(globalConfig, "General", "ClientType")) {
+		config_set_int(globalConfig, "General", "ClientType", (int64_t)m_nClientType);
+		changed = true;
+	}
+	// 从配置文件中更新终端类型到本地变量当中...
+	m_nClientType = (CLIENT_TYPE)config_get_int(globalConfig, "General", "ClientType");
+
+	// 配置有变化，存盘到global.ini配置文件当中...
+	if (changed) {
 		config_save_safe(globalConfig, "tmp", nullptr);
+	}
 
 	return InitGlobalConfigDefaults();
 }

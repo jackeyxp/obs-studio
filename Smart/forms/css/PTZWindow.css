@@ -1,0 +1,171 @@
+
+*{font-family:Microsoft YaHei;}
+
+/*下拉列表框*/
+QComboBox
+{
+	font-size: 14px;
+	background: white;
+    padding-left: 5px;
+    border-radius: 3px;
+    border: 1px solid rgb(209 , 209 , 209);
+}
+QComboBox:hover
+{
+    border: 1px solid rgb(21 , 131 , 221);
+}
+QComboBox QAbstractItemView::item
+{
+    height:40px;
+}
+QComboBox::down-arrow
+{
+    border-image:url(:/login/images/login/drop_down_Button.png) 0 34 0 0 ;
+}
+QComboBox::down-arrow:hover
+{
+    border-image:url(:/login/images/login/drop_down_Button.png) 0 17 0 17 ;
+}
+QComboBox::down-arrow:on
+{
+    border-image:url(:/login/images/login/drop_down_Button.png) 0 0 0 34 ;
+}
+QComboBox::drop-down
+{
+    width:20px;
+    padding-right:5px;
+    background:transparent; /*不加此句下拉箭头背景色为灰色与整体样式不一致，也可设置 border:0px; border-radius:0px; background:white; border-left:0px ; 即设置为无边框*/
+}
+
+/*标题文字颜色*/
+QLabel#titleName {
+	color: white;
+	font-size: 14px;
+	font-weight: 500;
+}
+
+/* error notice */
+QLabel#errTitle {
+	color: red;
+	font-size: 14px;
+	font-weight: 500;
+}
+
+/* speed controls */
+QLabel#speedTitle,#speedNum,#titleZoom,#titleFocus,#titleIris,#titleFlip {
+	color: #B0B0B0;
+	font-size: 14px;
+	font-weight: 500;
+}
+QSlider#speedSlider:groove:horizontal {
+	top: 2px;
+	border-image: url(:/ptz/images/ptz/speed-black.png);
+}
+QSlider#speedSlider:sub-page:horizontal {
+	top: 2px;
+	border-image: url(:/ptz/images/ptz/speed-blue.png);
+}
+QSlider#speedSlider:handle:horizontal {
+	width: 16px;
+	height: 16px;
+	border-radius: 16px;
+	border-image: url(:/ptz/images/ptz/speed-circle.png);
+}
+
+/*关闭按钮*/
+QPushButton#btnClose {
+    border-image:url(:/ptz/images/ptz/close.png) 0 60 0 0 ;
+    border-top-right-radius:3;
+}
+QPushButton#btnClose:hover {
+    border-image:url(:/ptz/images/ptz/close.png) 0 30 0 30 ;
+    border-top-right-radius:3 ;
+}
+QPushButton#btnClose:pressed {
+    border-image:url(:/ptz/images/ptz/close.png) 0 0 0 60 ;
+    border-top-right-radius:3 ;
+}
+
+/*button top*/
+QPushButton#btnTop {
+    border-image:url(:/ptz/images/ptz/up.png) 0 60 0 0 ;
+    border-top-right-radius:3;
+}
+QPushButton#btnTop:hover {
+    border-image:url(:/ptz/images/ptz/up.png) 0 30 0 30 ;
+    border-top-right-radius:3 ;
+}
+QPushButton#btnTop:pressed {
+    border-image:url(:/ptz/images/ptz/up.png) 0 0 0 60 ;
+    border-top-right-radius:3 ;
+}
+
+/*button bottom*/
+QPushButton#btnBot {
+    border-image:url(:/ptz/images/ptz/down.png) 0 60 0 0 ;
+    border-top-right-radius:3;
+}
+QPushButton#btnBot:hover {
+    border-image:url(:/ptz/images/ptz/down.png) 0 30 0 30 ;
+    border-top-right-radius:3 ;
+}
+QPushButton#btnBot:pressed {
+    border-image:url(:/ptz/images/ptz/down.png) 0 0 0 60 ;
+    border-top-right-radius:3 ;
+}
+
+/*button left*/
+QPushButton#btnLeft {
+    border-image:url(:/ptz/images/ptz/left.png) 0 60 0 0 ;
+    border-top-right-radius:3;
+}
+QPushButton#btnLeft:hover {
+    border-image:url(:/ptz/images/ptz/left.png) 0 30 0 30 ;
+    border-top-right-radius:3 ;
+}
+QPushButton#btnLeft:pressed {
+    border-image:url(:/ptz/images/ptz/left.png) 0 0 0 60 ;
+    border-top-right-radius:3 ;
+}
+
+/*button right*/
+QPushButton#btnRight {
+    border-image:url(:/ptz/images/ptz/right.png) 0 60 0 0 ;
+    border-top-right-radius:3;
+}
+QPushButton#btnRight:hover {
+    border-image:url(:/ptz/images/ptz/right.png) 0 30 0 30 ;
+    border-top-right-radius:3 ;
+}
+QPushButton#btnRight:pressed {
+    border-image:url(:/ptz/images/ptz/right.png) 0 0 0 60 ;
+    border-top-right-radius:3 ;
+}
+
+/*button add*/
+QPushButton#addZoom,#addFocus,#addIris {
+    border-image:url(:/ptz/images/ptz/add.png) 0 60 0 0 ;
+    border-top-right-radius:3;
+}
+QPushButton#addZoom:hover,#addFocus:hover,#addIris:hover {
+    border-image:url(:/ptz/images/ptz/add.png) 0 30 0 30 ;
+    border-top-right-radius:3 ;
+}
+QPushButton#addZoom:pressed,#addFocus:pressed,#addIris:pressed {
+    border-image:url(:/ptz/images/ptz/add.png) 0 0 0 60 ;
+    border-top-right-radius:3 ;
+}
+
+/*button sub*/
+QPushButton#subZoom,#subFocus,#subIris {
+    border-image:url(:/ptz/images/ptz/sub.png) 0 60 0 0 ;
+    border-top-right-radius:3;
+}
+QPushButton#subZoom:hover,#subFocus:hover,#subIris:hover {
+    border-image:url(:/ptz/images/ptz/sub.png) 0 30 0 30 ;
+    border-top-right-radius:3 ;
+}
+QPushButton#subZoom:pressed,#subFocus:pressed,#subIris:pressed {
+    border-image:url(:/ptz/images/ptz/sub.png) 0 0 0 60 ;
+    border-top-right-radius:3 ;
+}

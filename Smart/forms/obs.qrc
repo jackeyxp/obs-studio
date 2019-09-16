@@ -58,5 +58,6 @@
     <file>images/mini/close.png</file>
     <file>images/mini/loading.gif</file>
     <file>images/mini/scan.png</file>
+    <file>images/mini/arrow.png</file>
   </qresource>
 </RCC>
