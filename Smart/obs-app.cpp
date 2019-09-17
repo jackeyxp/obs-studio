@@ -1103,6 +1103,102 @@ char * OBSApp::GetServerDNSName()
 }
 
 // 注意：统一返回UTF8格式...
+char * OBSApp::GetServerOS()
+{
+	static char szBuffer[MAX_PATH] = { 0 };
+	if (strlen(szBuffer) > 0)
+		return szBuffer;
+	::sprintf(szBuffer, "%s", OBSApp::GetSystemVer().c_str());
+	assert(::strlen(szBuffer) <= MAX_PATH);
+	return szBuffer;
+}
+
+// 注意：统一返回UTF8格式...
+string OBSApp::GetSystemVer()
+{
+	string	strVersion = "Windows Unknown";
+	OSVERSIONINFO osv = { 0 };
+	static char szBuffer[MAX_PATH] = { 0 };
+	osv.dwOSVersionInfoSize = sizeof(osv);
+	if (!GetVersionEx(&osv))
+		return strVersion;
+	static char szTempVer[MAX_PATH] = { 0 };
+	os_wcs_to_utf8(osv.szCSDVersion, 128, szTempVer, MAX_PATH);
+	sprintf(szBuffer, "Windows %ld.%ld.%ld %s", osv.dwMajorVersion, osv.dwMinorVersion, osv.dwBuildNumber, szTempVer);
+	strVersion = szBuffer;
+	return strVersion;
+}
+
+// 对特殊字符进行编码，便于网络传输...
+int OBSApp::EncodeURI(const char* inSrc, int inSrcLen, char* ioDest, int inDestLen)
+{
+	// return the number of chars written to ioDest
+	int theLengthWritten = 0;
+	while (inSrcLen > 0) {
+		if (theLengthWritten == inDestLen) {
+			return -1;
+		}
+		// Always encode 8-bit characters
+		if ((unsigned char)*inSrc > 127) {
+			if (inDestLen - theLengthWritten < 3) {
+				return -1;
+			}
+			sprintf(ioDest, "%%%X", (BYTE)*inSrc);
+			ioDest += 3;
+			theLengthWritten += 3;
+			inSrc++;
+			inSrcLen--;
+			continue;
+		}
+		// Only encode certain 7-bit characters
+		switch (*inSrc) {
+			// This is the URL RFC list of illegal characters.
+			case (' '):
+			case ('\r'):
+			case ('\n'):
+			case ('\t'):
+			case ('<'):
+			case ('>'):
+			case ('#'):
+			case ('%'):
+			case ('{'):
+			case ('}'):
+			case ('|'):
+			case ('\\'):
+			case ('^'):
+			case ('~'):
+			case ('['):
+			case (']'):
+			case ('`'):
+			case (';'):
+			//case ('/'):
+			case ('?'):
+			case ('@'):
+			case ('='):
+			case ('&'):
+			case ('$'):
+			case ('"'): {
+				if ((inDestLen - theLengthWritten) < 3) {
+					return -1;
+				}
+				sprintf(ioDest, "%%%X", (BYTE)*inSrc);
+				ioDest += 3;
+				theLengthWritten += 3;
+				break;
+			}
+			default: {
+				*ioDest = *inSrc;
+				ioDest++;
+				theLengthWritten++;
+			}
+		}
+		inSrc++;
+		inSrcLen--;
+	}
+	return theLengthWritten;
+}
+
+// 注意：统一返回UTF8格式...
 string OBSApp::getJsonString(Json::Value & inValue)
 {
 	string strReturn;
@@ -1110,8 +1206,7 @@ string OBSApp::getJsonString(Json::Value & inValue)
 	if (inValue.isInt()) {
 		sprintf(szBuffer, "%d", inValue.asInt());
 		strReturn = szBuffer;
-	}
-	else if (inValue.isString()) {
+	} else if (inValue.isString()) {
 		strReturn = inValue.asString();
 	}
 	return strReturn;
@@ -1151,8 +1246,10 @@ OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
 	m_nOnLineTimer = -1;
 	m_nFlowTimer = -1;
 	m_nDBFlowID = 0;
-	m_nRtpTCPSockFD = 0;
+	m_nDBUserID = 0;
+	m_nDBSmartID = 0;
 	m_LoginMini = NULL;
+	m_nRemoteTcpSockFD = 0;
 	m_RemoteSession = NULL;
 	m_bIsDebugMode = false;
 	m_bIsMiniMode = true;

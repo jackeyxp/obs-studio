@@ -641,8 +641,8 @@ bool CRemoteSession::doCmdSmartLogin(const char * lpData, int nSize)
 	int nDBCameraID = atoi(OBSApp::getJsonString(value["camera_id"]).c_str());
 	bool bIsCameraOnLine = atoi(OBSApp::getJsonString(value["udp_camera"]).c_str());
 	// 将获取的TCP套接字更新到系统变量当中 => 在创建UDP连接时会用到...
-	if (App()->GetRtpTCPSockFD() != nTCPSocketFD) {
-		App()->SetRtpTCPSockFD(nTCPSocketFD);
+	if (App()->GetRemoteTcpSockFD() != nTCPSocketFD) {
+		App()->SetRemoteTcpSockFD(nTCPSocketFD);
 	}
 	// 打印命令反馈详情信息 => 只有摄像头通道编号大于0时，才需要反馈给主界面进行拉流或断流操作...
 	blog(LOG_INFO, "[RemoteSession] doCmdSmartLogin => tcp_socket: %d, CameraID: %d, OnLine: %d", nTCPSocketFD, nDBCameraID, bIsCameraOnLine);

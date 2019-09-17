@@ -87,6 +87,50 @@ class MiniAction extends Action
     // 支持多个小程序的接入...
     $this->m_weMini = C('HAOYI_MINI');
   }
+  // 注意：这是所有终端登录后的第一个命令...
+  // 注册Smart主机，返回UDPCenter的TCP地址和端口...
+  public function regSmart()
+  {
+    // 准备返回数据结构...
+    $arrErr['err_code'] = false;
+    $arrErr['err_msg'] = "OK";
+    // 将获得的数据进行判断和处理 => 测试 => $_GET;
+    $arrData = $_POST;
+    do {
+      // 判断输入数据是否有效...
+      if( !isset($arrData['mac_addr']) || !isset($arrData['ip_addr']) ) {
+        $arrErr['err_code'] = true;
+        $arrErr['err_msg'] = "MAC地址或IP地址为空！";
+        break;
+      }
+      // 根据MAC地址获取smart记录信息...
+      $mapFind['mac_addr'] = $arrData['mac_addr'];
+      $dbSmart = D('smart')->where($mapFind)->find();
+      if( count($dbSmart) <= 0 ) {
+        // 没有找到记录，直接创建一个新记录...
+        $arrData['created'] = date('Y-m-d H:i:s');
+        $arrData['updated'] = date('Y-m-d H:i:s');
+        $arrErr['smart_id'] = D('smart')->add($arrData);
+        // 从数据库中再次获取新增的终端记录...
+        //$condition['smart_id'] = $arrErr['smart_id'];
+        //$dbSmart = D('smart')->where($condition)->find();
+      } else {
+        // 找到了记录，直接更新记录...
+        $arrData['smart_id'] = $dbSmart['smart_id'];
+        $arrData['updated'] = date('Y-m-d H:i:s');
+        D('smart')->save($arrData);
+        // 准备需要返回的终端编号记录内容...
+        $arrErr['smart_id'] = $dbSmart['smart_id'];
+      }
+      // 获取系统配置信息...
+      $dbSys = D('system')->find();
+      // 填充UDPCenter的地址和端口...
+      $arrErr['udpcenter_addr'] = $dbSys['udpcenter_addr'];
+      $arrErr['udpcenter_port'] = $dbSys['udpcenter_port'];
+    } while ( false );
+    // 直接反馈查询结果...
+    echo json_encode($arrErr);
+  }
   //
   // 处理终端发起的获取登录用户详情的命令接口...
   public function getLoginUser()
@@ -96,8 +140,8 @@ class MiniAction extends Action
     $arrErr['err_msg'] = 'ok';
     // 注意：这里使用的是 $_POST 数据...
     do {
-      // 判断输入的参数是否有效...
-      if( !isset($_POST['user_id']) || !isset($_POST['room_id']) || !isset($_POST['type_id']) ) {
+      // 判断输入的参数是否有效 => user_id|room_id|type_id|smart_id...
+      if( !isset($_POST['user_id']) || !isset($_POST['room_id']) || !isset($_POST['type_id']) || !isset($_POST['smart_id']) ) {
         $arrErr['err_code'] = true;
         $arrErr['err_msg'] = '输入参数无效！';
         break;
@@ -123,6 +167,7 @@ class MiniAction extends Action
       // 保存房间记录到集合当中...
       $arrErr['room'] = $dbRoom;
       // 讲师端|学生端都要创建新的流量统计记录...
+      $dbFlow['smart_id'] = $_POST['smart_id'];
       $dbFlow['type_id'] = $_POST['type_id'];
       $dbFlow['room_id'] = $dbRoom['room_id'];
       $dbFlow['user_id'] = $dbUser['user_id'];
@@ -134,7 +179,7 @@ class MiniAction extends Action
     echo json_encode($arrErr);
   }
   //
-  // 处理来自Smart|Screen终端的登录事件...
+  // 处理来自Student|Teacher|Screen终端的登录房间事件...
   public function loginRoom()
   {
     // 准备返回数据结构...
@@ -168,7 +213,7 @@ class MiniAction extends Action
       }
       // 验证发送的终端类型是否正确...
       $nClientType = intval($arrPost['type_id']);
-      if(($nClientType != kClientStudent) && ($nClientType != kClientStudent) && ($nClientType != kClientScreen)) {
+      if(($nClientType != kClientStudent) && ($nClientType != kClientTeacher) && ($nClientType != kClientScreen)) {
         $arrErr['err_code'] = true;
         $arrErr['err_msg'] = '不是合法的终端类型，请确认后重新登录！';
         break;
@@ -278,21 +323,6 @@ class MiniAction extends Action
     }
     // 返回普通数据...
     return $arrErr;
-  }
-  //
-  // 获取UDPCenter的TCP地址和端口...
-  public function getUDPCenter()
-  {
-    // 获取系统配置信息...
-    $dbSys = D('system')->find();
-    // 准备返回数据结构...
-    $arrErr['err_code'] = false;
-    $arrErr['err_msg'] = "OK";
-    // 填充UDPCenter的地址和端口...
-    $arrErr['udpcenter_addr'] = $dbSys['udpcenter_addr'];
-    $arrErr['udpcenter_port'] = $dbSys['udpcenter_port'];
-    // 直接反馈查询结果...
-    echo json_encode($arrErr);   
   }
   //
   // 获取房间列表 => 分页显示...

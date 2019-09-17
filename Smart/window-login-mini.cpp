@@ -12,6 +12,7 @@
 #include <time.h>
 
 #include "win-update.hpp"
+#include <windows.h>
 
 #define UPDATE_CHECK_INTERVAL (60*60*24*4) /* 4 days */
 
@@ -55,9 +56,10 @@ void CLoginMini::updateCheckFinished()
 
 CLoginMini::CLoginMini(QWidget *parent)
   : QDialog(parent)
+  , m_uTcpTimeID(0)
   , m_nDBUserID(-1)
   , m_nDBRoomID(-1)
-  , m_uTcpTimeID(0)
+  , m_nDBSmartID(-1)
   , m_lpMovieGif(NULL)
   , m_lpLoadBack(NULL)
   , m_nOnLineTimer(-1)
@@ -245,43 +247,6 @@ void CLoginMini::doChangedNewType(int nNewType)
 	this->doWebGetCenterAddr();
 }
 
-void CLoginMini::doWebGetCenterAddr()
-{
-	// 中心会话对象有效，需要重建之...
-	if (m_CenterSession != NULL) {
-		delete m_CenterSession;
-		m_CenterSession = NULL;
-	}
-	// 显示加载动画...
-	m_lpLoadBack->show();
-	// 更新扫码状态栏...
-	m_strScan.clear();
-	ui->iconScan->hide();
-	// 删除中心连接检测时钟对象...
-	if (m_nCenterTimer != -1) {
-		this->killTimer(m_nCenterTimer);
-		m_nCenterTimer = -1;
-	}
-	// 删除中心在线心跳包检测对象...
-	if (m_nOnLineTimer != -1) {
-		this->killTimer(m_nOnLineTimer);
-		m_nOnLineTimer = -1;
-	}
-	// 修改获取中心服务器TCP地址状态...
-	m_eMiniState = kCenterAddr;
-	m_strQRNotice = QStringLiteral("正在获取中心服务器地址...");
-	ui->titleScan->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-	// 构造凭证访问地址，发起网络请求...
-	QNetworkReply * lpNetReply = NULL;
-	QNetworkRequest theQTNetRequest;
-	string & strWebCenter = App()->GetWebCenterAddr();
-	QString strRequestURL = QString("%1%2").arg(strWebCenter.c_str()).arg("/wxapi.php/Mini/getUDPCenter");
-	theQTNetRequest.setUrl(QUrl(strRequestURL));
-	lpNetReply = m_objNetManager.get(theQTNetRequest);
-	// 更新显示界面内容...
-	this->update();
-}
-
 void CLoginMini::doWebGetMiniToken()
 {
 	// 修改获取小程序token状态...
@@ -296,6 +261,26 @@ void CLoginMini::doWebGetMiniToken()
 	lpNetReply = m_objNetManager.get(theQTNetRequest);
 	// 更新显示界面内容...
 	this->update();
+}
+
+void CLoginMini::onProcMiniToken(QNetworkReply *reply)
+{
+	Json::Value value;
+	ASSERT(m_eMiniState == kMiniToken);
+	QByteArray & theByteArray = reply->readAll();
+	string & strData = theByteArray.toStdString();
+	// 如果是获取token状态，解析获取到json数据...
+	blog(LOG_DEBUG, "QT Reply Data => %s", strData.c_str());
+	if (!this->parseJson(strData, value, false)) {
+		m_lpLoadBack->hide();
+		this->update();
+		return;
+	}
+	// 解析json成功，保存token与路径...
+	m_strMiniToken = OBSApp::getJsonString(value["access_token"]);
+	m_strMiniPath = OBSApp::getJsonString(value["mini_path"]);
+	// 发起获取小程序二维码的操作...
+	this->doWebGetMiniQRCode();
 }
 
 void CLoginMini::doWebGetMiniQRCode()
@@ -325,6 +310,34 @@ void CLoginMini::doWebGetMiniQRCode()
 	theQTNetRequest.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
 	lpNetReply = m_objNetManager.post(theQTNetRequest, strContentVal.toUtf8());
 	// 更新显示界面内容...
+	this->update();
+}
+
+void CLoginMini::onProcMiniQRCode(QNetworkReply *reply)
+{
+	// 无论对错，都要关闭加载动画...
+	m_lpLoadBack->hide();
+	// 读取获取到的网络数据内容...
+	ASSERT(m_eMiniState == kMiniQRCode);
+	QByteArray & theByteArray = reply->readAll();
+	// 从网路数据直接构造二维码的图片信息|设定默认扫码信息...
+	if (m_QPixQRCode.loadFromData(theByteArray)) {
+		m_strScan = QStringLiteral("请使用微信扫描二维码登录");
+		m_strQRNotice.clear();
+		this->update();
+		return;
+	}
+	// 解除位图显示对象...
+	Json::Value value;
+	m_QPixQRCode.detach();
+	// 构造二维码图片对象失败，进行错误解析...
+	string & strData = theByteArray.toStdString();
+	if (!this->parseJson(strData, value, true)) {
+		this->update();
+		return;
+	}
+	// 解析json数据包仍然失败，显示特定的错误信息...
+	m_strQRNotice = QStringLiteral("解析获取到的JSON数据失败");
 	this->update();
 }
 
@@ -385,23 +398,23 @@ void CLoginMini::onProcMiniLoginRoom(QNetworkReply *reply)
 			bIsError = true;
 			break;
 		}
-		// 计算并判断房间里的讲师数量，大于0，不能登录...
-		int nTeacherCount = atoi(strTeacherCount.c_str());
-		int nStudentCount = atoi(strStudentCount.c_str());
-		if (nTeacherCount > 0) {
+		// 计算并判断房间里的讲师数量，大于0并且是讲师终端，不能登录...
+		int  nTeacherCount = atoi(strTeacherCount.c_str());
+		int  nStudentCount = atoi(strStudentCount.c_str());
+		bool bIsTeacher = ((App()->GetClientType() == kClientTeacher) ? true : false);
+		// 如果房间里已经有讲师，并且自己也是讲师，需要弹框警告...
+		if (bIsTeacher && nTeacherCount > 0) {
 			m_strScan = QTStr("Teacher.Room.Login");
 			bIsError = true;
 			break;
 		}
-		// 获取到直播的分解数据，并将直播地址保存到 => obs-teacher/global.ini...
-		/*config_set_int(App()->GlobalConfig(), "General", "LiveRoomID", m_nDBRoomID);
 		// 将获取到的相关地址信息存放到全局对象当中...
 		App()->SetTrackerAddr(strTrackerAddr);
 		App()->SetTrackerPort(atoi(strTrackerPort.c_str()));
 		App()->SetRemoteAddr(strRemoteAddr);
 		App()->SetRemotePort(atoi(strRemotePort.c_str()));
 		App()->SetUdpAddr(strUdpAddr);
-		App()->SetUdpPort(atoi(strUdpPort.c_str()));*/
+		App()->SetUdpPort(atoi(strUdpPort.c_str()));
 	} while (false);
 	// 发生错误，关闭动画，显示图标|信息，文字左对齐...
 	if (bIsError) {
@@ -430,7 +443,8 @@ void CLoginMini::doWebGetMiniUserInfo()
 	QNetworkReply * lpNetReply = NULL;
 	QNetworkRequest theQTNetRequest;
 	string & strWebCenter = App()->GetWebCenterAddr();
-	QString strContentVal = QString("user_id=%1&room_id=%2&type_id=%3").arg(m_nDBUserID).arg(m_nDBRoomID).arg(App()->GetClientType());
+	QString strContentVal = QString("user_id=%1&room_id=%2&type_id=%3&smart_id=%4")
+		.arg(m_nDBUserID).arg(m_nDBRoomID).arg(App()->GetClientType()).arg(m_nDBSmartID);
 	QString strRequestURL = QString("%1%2").arg(strWebCenter.c_str()).arg("/wxapi.php/Mini/getLoginUser");
 	theQTNetRequest.setUrl(QUrl(strRequestURL));
 	theQTNetRequest.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
@@ -517,6 +531,53 @@ void CLoginMini::onReplyFinished(QNetworkReply *reply)
 	}
 }
 
+void CLoginMini::doWebGetCenterAddr()
+{
+	// 中心会话对象有效，需要重建之...
+	if (m_CenterSession != NULL) {
+		delete m_CenterSession;
+		m_CenterSession = NULL;
+	}
+	// 显示加载动画...
+	m_lpLoadBack->show();
+	// 更新扫码状态栏...
+	m_strScan.clear();
+	ui->iconScan->hide();
+	// 删除中心连接检测时钟对象...
+	if (m_nCenterTimer != -1) {
+		this->killTimer(m_nCenterTimer);
+		m_nCenterTimer = -1;
+	}
+	// 删除中心在线心跳包检测对象...
+	if (m_nOnLineTimer != -1) {
+		this->killTimer(m_nOnLineTimer);
+		m_nOnLineTimer = -1;
+	}
+	// 修改获取中心服务器TCP地址状态...
+	m_eMiniState = kCenterAddr;
+	m_strQRNotice = QStringLiteral("正在获取中心服务器地址...");
+	ui->titleScan->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+	// 准备需要的汇报数据 => POST数据包...
+	// 注意：不能用 Json::Value 模式，QT会对POST数据编码，造成PHP无法辨认...
+	// 注意：采用了组合模式，没有采用json数据包格式，获取微信二维码时没有问题，微信接口估计处理了这种被编码的情况，详见doWebGetMiniQRCode
+	char szDNS[MAX_PATH] = { 0 };
+	string strUTF8DNS = OBSApp::GetServerDNSName();
+	OBSApp::EncodeURI(strUTF8DNS.c_str(), strUTF8DNS.size(), szDNS, MAX_PATH);
+	QString strContentVal = QString("mac_addr=%1&ip_addr=%2&os_name=%3&version=%4&name_pc=%5")
+		.arg(App()->GetLocalMacAddr().c_str()).arg(App()->GetLocalIPAddr().c_str())
+		.arg(OBSApp::GetServerOS()).arg(OBS_VERSION).arg(szDNS);
+	// 构造连接网站需要的URL地址和POST请求数据包...
+	QNetworkReply * lpNetReply = NULL;
+	QNetworkRequest theQTNetRequest;
+	string & strWebCenter = App()->GetWebCenterAddr();
+	QString strRequestURL = QString("%1%2").arg(strWebCenter.c_str()).arg("/wxapi.php/Mini/regSmart");
+	theQTNetRequest.setUrl(QUrl(strRequestURL));
+	theQTNetRequest.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
+	lpNetReply = m_objNetManager.post(theQTNetRequest, strContentVal.toUtf8());
+	// 更新显示界面内容...
+	this->update();
+}
+
 void CLoginMini::onProcCenterAddr(QNetworkReply *reply)
 {
 	Json::Value value;
@@ -529,12 +590,14 @@ void CLoginMini::onProcCenterAddr(QNetworkReply *reply)
 		this->update();
 		return;
 	}
-	// 解析json成功，保存UDPCenter的TCP地址和端口...
+	// 解析json成功，保存smart_id和UDPCenter的TCP地址和端口...
+	m_nDBSmartID = atoi(OBSApp::getJsonString(value["smart_id"]).c_str());
 	m_strCenterTcpAddr = OBSApp::getJsonString(value["udpcenter_addr"]);
 	m_nCenterTcpPort = atoi(OBSApp::getJsonString(value["udpcenter_port"]).c_str());
 	// 将中心服务器地址和端口保存到App当中备用...
 	App()->SetTcpCenterAddr(m_strCenterTcpAddr);
 	App()->SetTcpCenterPort(m_nCenterTcpPort);
+	App()->SetDBSmartID(m_nDBSmartID);
 	// 发起连接中心服务器的会话对象...
 	this->doTcpConnCenterAddr();
 }
@@ -576,6 +639,7 @@ void CLoginMini::onTriggerTcpConnect()
 		return;
 	ASSERT(m_eMiniState == kCenterConn);
 	// 将中心会话在服务器上的套接字编号进行保存...
+	// 注意：CApp当中保存的是CRemoteSession的套接字...
 	m_nTcpSocketFD = m_CenterSession->GetTcpSocketFD();
 	m_uTcpTimeID = m_CenterSession->GetTcpTimeID();
 	// 每隔30秒检测一次，终端在中心服务器上在线汇报通知...
@@ -650,54 +714,6 @@ bool CLoginMini::doCheckOnLine()
 	if (m_CenterSession == NULL)
 		return false;
 	return m_CenterSession->doSendOnLineCmd();
-}
-
-void CLoginMini::onProcMiniToken(QNetworkReply *reply)
-{
-	Json::Value value;
-	ASSERT(m_eMiniState == kMiniToken);
-	QByteArray & theByteArray = reply->readAll();
-	string & strData = theByteArray.toStdString();
-	// 如果是获取token状态，解析获取到json数据...
-	blog(LOG_DEBUG, "QT Reply Data => %s", strData.c_str());
-	if (!this->parseJson(strData, value, false)) {
-		m_lpLoadBack->hide();
-		this->update();
-		return;
-	}
-	// 解析json成功，保存token与路径...
-	m_strMiniToken = OBSApp::getJsonString(value["access_token"]);
-	m_strMiniPath = OBSApp::getJsonString(value["mini_path"]);
-	// 发起获取小程序二维码的操作...
-	this->doWebGetMiniQRCode();
-}
-
-void CLoginMini::onProcMiniQRCode(QNetworkReply *reply)
-{
-	// 无论对错，都要关闭加载动画...
-	m_lpLoadBack->hide();
-	// 读取获取到的网络数据内容...
-	ASSERT(m_eMiniState == kMiniQRCode);
-	QByteArray & theByteArray = reply->readAll();
-	// 从网路数据直接构造二维码的图片信息|设定默认扫码信息...
-	if (m_QPixQRCode.loadFromData(theByteArray)) {
-		m_strScan = QStringLiteral("请使用微信扫描二维码登录");
-		m_strQRNotice.clear();
-		this->update();
-		return;
-	}
-	// 解除位图显示对象...
-	Json::Value value;
-	m_QPixQRCode.detach();
-	// 构造二维码图片对象失败，进行错误解析...
-	string & strData = theByteArray.toStdString();
-	if (!this->parseJson(strData, value, true)) {
-		this->update();
-		return;
-	}
-	// 解析json数据包仍然失败，显示特定的错误信息...
-	m_strQRNotice = QStringLiteral("解析获取到的JSON数据失败");
-	this->update();
 }
 
 bool CLoginMini::parseJson(string & inData, Json::Value & outValue, bool bIsWeiXin)

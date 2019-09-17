@@ -75,10 +75,12 @@ private:
 	int                            m_nTrackerPort;             // FDFS-Tracker的端口地址...
 	std::string                    m_strRemoteAddr;            // 远程UDPServer的TCP地址...
 	int                            m_nRemotePort;              // 远程UDPServer的TCP端口...
+	int                            m_nRemoteTcpSockFD;         // CRemoteSession在服务器端的套接字号码...
 	std::string                    m_strUdpAddr;               // 远程UDPServer的UDP地址...
 	int                            m_nUdpPort;                 // 远程UDPServer的UDP端口...
 	int                            m_nDBFlowID;                // 从服务器获取到的流量统计数据库编号...
 	int                            m_nDBUserID;                // 已登录用户的数据库编号...
+	int                            m_nDBSmartID;               // 本机在网站端数据库中的编号...
 	std::string                    m_strUserName;              // 已登录用户的用户名称...
 	std::string                    m_strRoomID;                // 登录的房间号...
 	std::string                    m_strMacAddr;               // 本机MAC地址...
@@ -86,7 +88,6 @@ private:
 	int                            m_nFastTimer;               // 分布式存储、中转链接检测时钟...
 	int                            m_nFlowTimer;               // 流量统计检测时钟...
 	int                            m_nOnLineTimer;             // 中转服务器在线检测时钟...
-	int                            m_nRtpTCPSockFD;            // CRemoteSession在服务器端的套接字号码...
 	CLIENT_TYPE                    m_nClientType;              // 当前终端的类型 => Smart
 	bool                           m_bIsDebugMode;             // 是否是调试模式 => 挂载到调试服务器...
 	bool                           m_bIsMiniMode;              // 是否是小程序模式 => 挂载到阿里云服务器...
@@ -117,16 +118,19 @@ private:
 	inline void ResetHotkeyState(bool inFocus);
 	void ParseExtraThemeData(const char *path);
 	bool UpdatePre22MultiviewLayout(const char *layout);
-	void AddExtraThemeColor(QPalette &pal, int group, const char *name,	uint32_t color);
+	void AddExtraThemeColor(QPalette &pal, int group, const char *name, uint32_t color);
 public:
+	static int EncodeURI(const char* inSrc, int inSrcLen, char* ioDest, int inDestLen);
 	static string getJsonString(Json::Value & inValue);
 	static char * GetServerDNSName();
+	static char * GetServerOS();
+	static string GetSystemVer();
 public:
 	bool     IsMiniMode() { return m_bIsMiniMode; }
 	bool     IsDebugMode() { return m_bIsDebugMode; }
-	int      GetRtpTCPSockFD() { return m_nRtpTCPSockFD; }
 	int      GetDBFlowID() { return m_nDBFlowID; }
 	int      GetDBUserID() { return m_nDBUserID; }
+	int      GetDBSmartID() { return m_nDBSmartID; }
 	string & GetLocalIPAddr() { return m_strIPAddr; }
 	string & GetLocalMacAddr() { return m_strMacAddr; }
 	string & GetRoomIDStr() { return m_strRoomID; }
@@ -139,15 +143,16 @@ public:
 	int      GetTcpCenterPort() { return m_nCenterTcpPort; }
 	string & GetTrackerAddr() { return m_strTrackerAddr; }
 	int		 GetTrackerPort() { return m_nTrackerPort; }
+	int      GetRemoteTcpSockFD() { return m_nRemoteTcpSockFD; }
 	string & GetRemoteAddr() { return m_strRemoteAddr; }
 	int		 GetRemotePort() { return m_nRemotePort; }
 	string & GetUdpAddr() { return m_strUdpAddr; }
 	int		 GetUdpPort() { return m_nUdpPort; }
 
 	void     SetDBFlowID(int nDBFlowID) { m_nDBFlowID = nDBFlowID; }
-	void     SetRtpTCPSockFD(int nTCPSockFD) { m_nRtpTCPSockFD = nTCPSockFD; }
 	void	 SetUdpAddr(const string & strAddr) { m_strUdpAddr = strAddr; }
 	void     SetUdpPort(int nPort) { m_nUdpPort = nPort; }
+	void     SetRemoteTcpSockFD(int nTCPSockFD) { m_nRemoteTcpSockFD = nTCPSockFD; }
 	void	 SetRemoteAddr(const string & strAddr) { m_strRemoteAddr = strAddr; }
 	void     SetRemotePort(int nPort) { m_nRemotePort = nPort; }
 	void	 SetTrackerAddr(const string & strAddr) { m_strTrackerAddr = strAddr; }
@@ -155,6 +160,7 @@ public:
 	void	 SetTcpCenterAddr(const string & strAddr) { m_strCenterTcpAddr = strAddr; }
 	void     SetTcpCenterPort(int nPort) { m_nCenterTcpPort = nPort; }
 	void     SetClientType(CLIENT_TYPE inType) { m_nClientType = inType; }
+	void     SetDBSmartID(int nDBSmartID) { m_nDBSmartID = nDBSmartID; }
 public:
 	OBSApp(int &argc, char **argv, profiler_name_store_t *store);
 	~OBSApp();
