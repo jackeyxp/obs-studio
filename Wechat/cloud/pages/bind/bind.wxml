@@ -1,0 +1,29 @@
+
+<van-notify id="van-notify" />
+
+<block wx:if="{{m_show_auth == 0}}">
+  <view style="margin-top:120px;">
+    <i-load-more loading="true" tip="正在加载..." />
+  </view>
+</block>
+<block wx:elif="{{m_show_auth == 1}}">
+  <wux-result
+      icon="{{ icon }}"
+      title="{{ m_title }}"
+      label="{{ m_label }}"
+      buttons="{{ buttons }}"
+      extra="Copyright © 2019 双师课堂"
+      fixed="true"
+      bind:click="{{m_btnClick}}"
+      bind:getuserinfo="getUserInfo"
+  />
+</block>
+<block wx:elif="{{m_show_auth == 2}}">
+  <view class="feed-head">
+    <image mode="aspectFill" lazy-load="true" src="../../images/lock.png"></image>
+  </view>
+  <wux-keyboard id="wux-keyboard" wux-class="feed-keyboard" />
+  <view class="wux-result__ft">
+    <text>Copyright © 2019 双师课堂</text>
+  </view>
+</block>

@@ -1,0 +1,14 @@
+{
+  "navigationBarTitleText": "扫码登录",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "i-load-more": "../../view-weapp/load-more/index",
+    "wux-keyboard": "../../wux-weapp/keyboard/index",
+    "van-notify": "../../vant-weapp/notify/index",
+    "wux-result": "../../wux-weapp/result/index",
+    "van-card": "../../vant-weapp/card/index",
+    "van-icon": "../../vant-weapp/icon/index",
+    "van-cell": "../../vant-weapp/cell/index",
+    "van-tag": "../../vant-weapp/tag/index"
+  }
+}

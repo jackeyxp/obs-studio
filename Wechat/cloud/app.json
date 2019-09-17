@@ -3,6 +3,7 @@
     "pages/home/home",
     "pages/room/room",
     "pages/shop/shop",
+    "pages/bind/bind",
     "pages/live/live",
     "pages/about/about",
     "pages/agent/agent",

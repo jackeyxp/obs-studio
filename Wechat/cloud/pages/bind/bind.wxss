@@ -1,0 +1,42 @@
+
+page {
+  background-color: #fff;
+}
+.feed-head {
+  text-align: center;
+  margin: 60rpx auto 20rpx;
+}
+.feed-head image {
+  vertical-align: middle;
+  display: inline-block;
+  border-radius: 10rpx;
+  margin-bottom: 10rpx;
+  border: none;
+  width: 120rpx;
+  height: 120rpx;
+}
+.feed-keyboard {
+  border-bottom: 2rpx solid #e9e9e9;
+}
+.room-area {
+  height: 15rpx;
+  background: #eee;
+}
+.room-icon {
+  color:#ef473a;
+}
+.room-card {
+  font-size: 14px !important;
+  border-bottom: 1px solid #eee;
+}
+.wux-result__ft {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding: 30rpx;
+  text-align: center;
+  box-sizing: border-box;
+  font-size: 28rpx;
+  position: fixed;
+  color: grey;
+}
