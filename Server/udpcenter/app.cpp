@@ -293,7 +293,7 @@ void CUdpServer::doAddTeacher(int nRoomID)
     ++lpRoom->m_nTeacherCount;
     int nTeacherCount = lpRoom->GetTeacherCount();
     int nStudentCount = lpRoom->GetStudentCount();
-    log_trace("[Add-Teacher] RoomID: %d, Teacher: %d, Student: %d", nRoomID, nTeacherCount, nStudentCount);
+    log_trace("[UdpServer-Add-Teacher] RoomID: %d, Teacher: %d, Student: %d", nRoomID, nTeacherCount, nStudentCount);
   }
 }
 
@@ -311,7 +311,7 @@ void CUdpServer::doDelTeacher(int nRoomID)
     }
     int nTeacherCount = lpRoom->GetTeacherCount();
     int nStudentCount = lpRoom->GetStudentCount();
-    log_trace("[Del-Teacher] RoomID: %d, Teacher: %d, Student: %d", nRoomID, nTeacherCount, nStudentCount);
+    log_trace("[UdpServer-Del-Teacher] RoomID: %d, Teacher: %d, Student: %d", nRoomID, nTeacherCount, nStudentCount);
     // 如果房间里的讲师和学生都为0，则发起房间删除操作...
     if((nTeacherCount <= 0) && (nStudentCount <= 0)) {
       GetApp()->doDeleteRoom(nRoomID);
@@ -329,7 +329,7 @@ void CUdpServer::doAddStudent(int nRoomID)
     ++lpRoom->m_nStudentCount;
     int nTeacherCount = lpRoom->GetTeacherCount();
     int nStudentCount = lpRoom->GetStudentCount();
-    log_trace("[Add-Student] RoomID: %d, Teacher: %d, Student: %d", nRoomID, nTeacherCount, nStudentCount);
+    log_trace("[UdpServer-Add-Student] RoomID: %d, Teacher: %d, Student: %d", nRoomID, nTeacherCount, nStudentCount);
   }
 }
 
@@ -347,7 +347,7 @@ void CUdpServer::doDelStudent(int nRoomID)
     }
     int nTeacherCount = lpRoom->GetTeacherCount();
     int nStudentCount = lpRoom->GetStudentCount();
-    log_trace("[Del-Student] RoomID: %d, Teacher: %d, Student: %d", nRoomID, nTeacherCount, nStudentCount);
+    log_trace("[UdpServer-Del-Student] RoomID: %d, Teacher: %d, Student: %d", nRoomID, nTeacherCount, nStudentCount);
     // 如果房间里的讲师和学生都为0，则发起房间删除操作...
     if((nTeacherCount <= 0) && (nStudentCount <= 0)) {
       GetApp()->doDeleteRoom(nRoomID);
