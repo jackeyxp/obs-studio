@@ -47,7 +47,7 @@
 					"id": 0,
 					"name": "扫码登录",
 					"pathName": "pages/bind/bind",
-					"query": "scene=3_10_18",
+					"query": "scene=3_10_25",
 					"scene": null
 				}
 			]

@@ -181,8 +181,9 @@ Page({
   onClickRoom: function(event) {
     // 打印房间索引编号，保存房间内容到全局变量...
     console.log(event.currentTarget.id);
-    g_app.globalData.m_curRoomItem = this.data.m_arrRoom[event.currentTarget.id]
-    // 如果用户编号和用户信息有效，直接跳转到房间聊天页面，使用可返回的wx.navigateTo...
+    g_app.globalData.m_curRoomItem = this.data.m_arrRoom[event.currentTarget.id];
+    wx.navigateTo({ url: '../room/room' });
+    /*// 如果用户编号和用户信息有效，直接跳转到房间聊天页面，使用可返回的wx.navigateTo...
     if (g_app.globalData.m_nUserID > 0 && g_app.globalData.m_userInfo != null) {
       wx.navigateTo({url: '../room/room'})
       return;
@@ -214,6 +215,6 @@ Page({
           }
         })
       }
-    })
+    })*/
   }
 })
