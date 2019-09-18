@@ -516,6 +516,55 @@ void CRemoteSession::onReadyRead()
 	}
 }
 
+bool CRemoteSession::doCmdSmartLogin(const char * lpData, int nSize)
+{
+	Json::Value value;
+	// 进行Json数据包的内容解析...
+	if (!this->doParseJson(lpData, nSize, value)) {
+		blog(LOG_INFO, "CRemoteSession::doParseJson Error!");
+		return false;
+	}
+	// 获取远程连接在服务器端的TCP套接字 => 讲师端|学生端都会收到...
+	int nTCPSocketFD = atoi(OBSApp::getJsonString(value["tcp_socket"]).c_str());
+	// 将获取的TCP套接字更新到系统变量当中 => 在创建UDP连接时会用到...
+	if (App()->GetRemoteTcpSockFD() != nTCPSocketFD) {
+		App()->SetRemoteTcpSockFD(nTCPSocketFD);
+	}
+	// 打印获取到的远程tcp套接字的编号...
+	blog(LOG_INFO, "[RemoteSession] doCmdSmartLogin => tcp_socket: %d", nTCPSocketFD);
+	// 如果是讲师端，可以直接返回了...
+	if (App()->GetClientType() == kClientTeacher)
+		return true;
+	// 针对学生端，需要获取更多的信息 => TCP讲师端和UDP讲师端是否在线...
+	bool bIsTCPTeacherOnLine = atoi(OBSApp::getJsonString(value["tcp_teacher"]).c_str());
+	bool bIsUDPTeacherOnLine = atoi(OBSApp::getJsonString(value["udp_teacher"]).c_str());
+	int  nDBFlowTeacherID = atoi(OBSApp::getJsonString(value["flow_teacher"]).c_str());
+	// 保存关联的讲师流量记录编号 => 不一致，并且有效时才更新...
+	if (nDBFlowTeacherID > 0 && App()->GetDBFlowTeacherID() != nDBFlowTeacherID) {
+		App()->SetDBFlowTeacherID(nDBFlowTeacherID);
+	}
+	return true;
+
+	/*int nDBCameraID = atoi(OBSApp::getJsonString(value["camera_id"]).c_str());
+	bool bIsCameraOnLine = atoi(OBSApp::getJsonString(value["udp_camera"]).c_str());
+	// 打印命令反馈详情信息 => 只有摄像头通道编号大于0时，才需要反馈给主界面进行拉流或断流操作...
+	blog(LOG_INFO, "[RemoteSession] doCmdSmartLogin => tcp_socket: %d, CameraID: %d, OnLine: %d", nTCPSocketFD, nDBCameraID, bIsCameraOnLine);
+	// 根据摄像头在线状态，进行rtp_source资源拉流线程的创建或删除...
+	if (nDBCameraID > 0) {
+		emit this->doTriggerRtpSource(nDBCameraID, bIsCameraOnLine);
+	}return true;*/
+}
+
+bool CRemoteSession::doCmdSmartOnLine(const char * lpData, int nSize)
+{
+	// 如果是讲师端，可以直接返回了...
+	if (App()->GetClientType() == kClientTeacher)
+		return true;
+	// 针对学生端，需要获取更多的信息...
+
+	return true;
+}
+
 /*bool CRemoteSession::doCmdScreenPacket(const char * lpData, Cmd_Header * lpCmdHeader)
 {
 	if (lpData == NULL || lpCmdHeader == NULL)
@@ -626,37 +675,6 @@ bool CRemoteSession::doCmdUdpLogout(const char * lpData, int nSize)
 	emit this->doTriggerUdpLogout(tmTag, idTag, nDBCameraID);
 	return true;
 }*/
-
-bool CRemoteSession::doCmdSmartLogin(const char * lpData, int nSize)
-{
-	Json::Value value;
-	// 进行Json数据包的内容解析...
-	if (!this->doParseJson(lpData, nSize, value)) {
-		blog(LOG_INFO, "CRemoteSession::doParseJson Error!");
-		return false;
-	}
-	// 获取远程连接在服务器端的TCP套接字...
-	//int nSceneItemID = atoi(OBSApp::getJsonString(value["sitem_id"]).c_str());
-	int nTCPSocketFD = atoi(OBSApp::getJsonString(value["tcp_socket"]).c_str());
-	int nDBCameraID = atoi(OBSApp::getJsonString(value["camera_id"]).c_str());
-	bool bIsCameraOnLine = atoi(OBSApp::getJsonString(value["udp_camera"]).c_str());
-	// 将获取的TCP套接字更新到系统变量当中 => 在创建UDP连接时会用到...
-	if (App()->GetRemoteTcpSockFD() != nTCPSocketFD) {
-		App()->SetRemoteTcpSockFD(nTCPSocketFD);
-	}
-	// 打印命令反馈详情信息 => 只有摄像头通道编号大于0时，才需要反馈给主界面进行拉流或断流操作...
-	blog(LOG_INFO, "[RemoteSession] doCmdSmartLogin => tcp_socket: %d, CameraID: %d, OnLine: %d", nTCPSocketFD, nDBCameraID, bIsCameraOnLine);
-	// 根据摄像头在线状态，进行rtp_source资源拉流线程的创建或删除...
-	if ( nDBCameraID > 0 ) {
-		emit this->doTriggerRtpSource(nDBCameraID, bIsCameraOnLine);
-	}
-	return true;
-}
-
-bool CRemoteSession::doCmdSmartOnLine(const char * lpData, int nSize)
-{
-	return true;
-}
 
 void CRemoteSession::onDisConnected()
 {
