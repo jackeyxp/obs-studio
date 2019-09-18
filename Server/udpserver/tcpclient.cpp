@@ -36,7 +36,7 @@ CTCPClient::~CTCPClient()
   /*// 如果是屏幕端，从房间当中删除之...
   if( m_lpRoom != NULL && m_nClientType == kClientScreen ) {
     m_lpRoom->doTcpDeleteScreen(this);
-  }*/
+  }
   // 如果是学生端，从房间当中删除之...
   if( m_lpRoom != NULL && m_nClientType == kClientStudent ) {
     m_lpRoom->doTcpDeleteStudent(this);
@@ -45,6 +45,10 @@ CTCPClient::~CTCPClient()
   if( m_lpRoom != NULL && m_nClientType == kClientTeacher ) {
     //GetApp()->GetUdpThread()->ResetRoomExFlow(m_nRoomID);
     m_lpRoom->doTcpDeleteTeacher(this);
+  }*/
+  // 使用统一的接口进行房间内的终端删除操作...
+  if ( m_lpRoom != NULL ) {
+    m_lpRoom->doTcpDeleteSmart(this);
   }
   // 打印终端退出后剩余的链接数量...
   m_lpTCPThread->doDecreaseClient(this->m_nHostPort, this->m_strSinAddr);
@@ -245,8 +249,9 @@ int CTCPClient::doSendPHPResponse(const char * lpJsonPtr, int nJsonSize)
   long2buff(nBodyLen, theTracker.pkg_len);
   memcpy(szSendBuf, &theTracker, sizeof(theTracker));
   memcpy(szSendBuf+sizeof(theTracker), lpJsonPtr, nBodyLen);
-  // 将发送数据包缓存起来，等待发送事件到来...
-  m_strSend.assign(szSendBuf, nBodyLen+sizeof(theTracker));
+  // 注意：之前使用assign重建模式，避免命令被冲掉，需要改成append模式...
+  // 将发送数据包缓存起来，等待发送事件到来 => 注意是append追加字符串...
+  m_strSend.append(szSendBuf, nBodyLen+sizeof(theTracker));
   // 向当前终端对象发起发送数据事件...
   epoll_event evClient = {0};
   evClient.data.fd = m_nConnFD;
@@ -260,27 +265,41 @@ int CTCPClient::doSendPHPResponse(const char * lpJsonPtr, int nJsonSize)
   return 0;
 }
 
-// 处理Student事件...
-int CTCPClient::doStudentClient(Cmd_Header * lpHeader, const char * lpJsonPtr)
+// 处理Teacher命令事件...
+int CTCPClient::doTeacherClient(Cmd_Header * lpHeader, const char * lpJsonPtr)
 {
   int nResult = -1;
   switch(lpHeader->m_cmd)
   {
-    case kCmd_Smart_Login:      nResult = this->doCmdStudentLogin(); break;
-    case kCmd_Smart_OnLine:     nResult = this->doCmdStudentOnLine(); break;
+    case kCmd_Smart_Login:      nResult = this->doCmdSmartLogin(); break;
+    case kCmd_Smart_OnLine:     nResult = this->doCmdSmartOnLine(); break;
   }
   // 默认全部返回正确...
   return 0;
 }
 
-// 处理Student登录事件...
-int CTCPClient::doCmdStudentLogin()
+// 处理Student命令事件...
+int CTCPClient::doStudentClient(Cmd_Header * lpHeader, const char * lpJsonPtr)
 {
-  // 处理学生端登录过程 => 判断传递JSON数据有效性...
+  int nResult = -1;
+  switch(lpHeader->m_cmd)
+  {
+    case kCmd_Smart_Login:      nResult = this->doCmdSmartLogin(); break;
+    case kCmd_Smart_OnLine:     nResult = this->doCmdSmartOnLine(); break;
+  }
+  // 默认全部返回正确...
+  return 0;
+}
+
+// 处理Student|Teacher登录事件...
+int CTCPClient::doCmdSmartLogin()
+{
+  // 处理终端登录过程 => 判断传递JSON数据有效性...
   if( m_MapJson.find("mac_addr") == m_MapJson.end() ||
+    m_MapJson.find("pc_name") == m_MapJson.end() ||
     m_MapJson.find("ip_addr") == m_MapJson.end() ||
     m_MapJson.find("room_id") == m_MapJson.end() ||
-    m_MapJson.find("pc_name") == m_MapJson.end() ) {
+    m_MapJson.find("flow_id") == m_MapJson.end() ) {
     return -1;
   }
   // 保存解析到的有效JSON数据项...
@@ -288,21 +307,39 @@ int CTCPClient::doCmdStudentLogin()
   m_strIPAddr  = m_MapJson["ip_addr"];
   m_strRoomID  = m_MapJson["room_id"];
   m_strPCName  = m_MapJson["pc_name"];
-  m_nRoomID = atoi(m_strRoomID.c_str());
-  // 创建或更新房间，更新房间里的学生端...
+  m_nRoomID    = atoi(m_strRoomID.c_str());
+  m_nDBFlowID  = atoi(m_MapJson["flow_id"].c_str());
+  // 创建或更新房间，更新房间里的讲师端|学生端...
   m_lpRoom = GetApp()->doCreateRoom(m_nRoomID);
-  m_lpRoom->doTcpCreateStudent(this);
-  // 当前房间里的TCP讲师端是否在线 和 UDP讲师端是否在线...
-  bool bIsTCPTeacherOnLine = m_lpRoom->IsTcpTeacherClientOnLine();
-  bool bIsUDPTeacherOnLine = m_lpRoom->IsUdpTeacherPusherOnLine();
-  int  nTeacherFlowID = m_lpRoom->GetTcpTeacherDBFlowID();
-  // 发送反馈命令信息给学生端长链接对象...
-  return this->doSendCmdLoginForStudent(bIsTCPTeacherOnLine, bIsUDPTeacherOnLine, nTeacherFlowID);
+  m_lpRoom->doTcpCreateSmart(this);
+
+  int nResult = -1;
+  // 根据终端类型，需要进行不同的处理过程...
+  if (m_nClientType == kClientTeacher) {
+    // 讲师端 => 构造转发JSON数据块，只返回套接字...
+    json_object * new_obj = json_object_new_object();
+    json_object_object_add(new_obj, "tcp_socket", json_object_new_int(m_nConnFD));
+    // 转换成json字符串，获取字符串长度...
+    char * lpNewJson = (char*)json_object_to_json_string(new_obj);
+    // 使用统一的通用命令发送接口函数...
+    nResult = this->doSendCommonCmd(kCmd_Smart_Login, lpNewJson, strlen(lpNewJson));
+    // json对象引用计数减少...
+    json_object_put(new_obj);
+  } else if (m_nClientType == kClientStudent) {
+    // 学生端 => 当前房间里的TCP讲师端是否在线 和 UDP讲师端是否在线...
+    bool bIsTCPTeacherOnLine = m_lpRoom->IsTcpTeacherClientOnLine();
+    bool bIsUDPTeacherOnLine = m_lpRoom->IsUdpTeacherPusherOnLine();
+    int  nTeacherFlowID = m_lpRoom->GetTcpTeacherDBFlowID();
+    // 发送反馈命令信息给学生端长链接对象...
+    nResult = this->doSendCmdLoginForStudent(bIsTCPTeacherOnLine, bIsUDPTeacherOnLine, nTeacherFlowID);
+  }
+  // 返回执行结果...
+  return nResult;
 }
 
 int CTCPClient::doSendCmdLoginForStudent(bool bIsTCPOnLine, bool bIsUDPOnLine, int nTeacherFlowID)
 {
-  // 构造转发JSON数据块 => 返回套接字|TCP讲师|UDP讲师...
+  // 构造转发JSON数据块 => 返回套接字|TCP讲师|UDP讲师|流量编号...
   json_object * new_obj = json_object_new_object();
   json_object_object_add(new_obj, "tcp_socket", json_object_new_int(m_nConnFD));
   json_object_object_add(new_obj, "tcp_teacher", json_object_new_int(bIsTCPOnLine));
@@ -318,11 +355,13 @@ int CTCPClient::doSendCmdLoginForStudent(bool bIsTCPOnLine, bool bIsUDPOnLine, i
   return nResult;
 }
 
-int CTCPClient::doCmdStudentOnLine()
+// 处理Student|Teacher在线汇报命令...
+int CTCPClient::doCmdSmartOnLine()
 {
   // 如果不是学生端对象，直接返回...
-  /*if( m_nClientType != kClientStudent )
+  if( m_nClientType != kClientStudent )
     return 0;
+  assert( m_nClientType == kClientStudent );
   // 当前房间里的TCP讲师端的流量编号 => 内部需要用互斥保护资源...
   int nTeacherFlowID = ((m_lpRoom != NULL) ? m_lpRoom->GetTcpTeacherDBFlowID() : 0);
   // 构造转发JSON数据块 => 返回套TCP讲师流量编号...
@@ -331,66 +370,14 @@ int CTCPClient::doCmdStudentOnLine()
   // 转换成json字符串，获取字符串长度...
   char * lpNewJson = (char*)json_object_to_json_string(new_obj);
   // 使用统一的通用命令发送接口函数...
-  int nResult = this->doSendCommonCmd(kCmd_Student_OnLine, lpNewJson, strlen(lpNewJson));
-  // json对象引用计数减少...
-  json_object_put(new_obj);
-  // 返回执行结果...
-  return nResult;*/
-  return 0;
-}
-
-// 处理Teacher事件...
-int CTCPClient::doTeacherClient(Cmd_Header * lpHeader, const char * lpJsonPtr)
-{
-  int nResult = -1;
-  switch(lpHeader->m_cmd)
-  {
-    case kCmd_Smart_Login:      nResult = this->doCmdTeacherLogin(); break;
-    case kCmd_Smart_OnLine:     nResult = this->doCmdTeacherOnLine(); break;
-  }
-  // 默认全部返回正确...
-  return 0;
-}
-
-// 处理Teacher登录事件...
-int CTCPClient::doCmdTeacherLogin()
-{
-  // 处理讲师端登录过程 => 判断传递JSON数据有效性...
-  if( m_MapJson.find("mac_addr") == m_MapJson.end() ||
-    m_MapJson.find("ip_addr") == m_MapJson.end() ||
-    m_MapJson.find("room_id") == m_MapJson.end() ||
-    m_MapJson.find("flow_id") == m_MapJson.end() ) {
-    return -1;
-  }
-  // 保存解析到的有效JSON数据项...
-  m_strMacAddr = m_MapJson["mac_addr"];
-  m_strIPAddr  = m_MapJson["ip_addr"];
-  m_strRoomID  = m_MapJson["room_id"];
-  m_nRoomID    = atoi(m_strRoomID.c_str());
-  m_nDBFlowID  = atoi(m_MapJson["flow_id"].c_str());
-  // 创建或更新房间，更新房间里的讲师端...
-  m_lpRoom = GetApp()->doCreateRoom(m_nRoomID);
-  m_lpRoom->doTcpCreateTeacher(this);
-  // 构造转发JSON数据块，只返回套接字...
-  json_object * new_obj = json_object_new_object();
-  json_object_object_add(new_obj, "tcp_socket", json_object_new_int(m_nConnFD));
-  // 转换成json字符串，获取字符串长度...
-  char * lpNewJson = (char*)json_object_to_json_string(new_obj);
-  // 使用统一的通用命令发送接口函数...
-  int nResult = this->doSendCommonCmd(kCmd_Smart_Login, lpNewJson, strlen(lpNewJson));
+  int nResult = this->doSendCommonCmd(kCmd_Smart_OnLine, lpNewJson, strlen(lpNewJson));
   // json对象引用计数减少...
   json_object_put(new_obj);
   // 返回执行结果...
   return nResult;
 }
 
-// 处理Teacher在线汇报命令...
-int CTCPClient::doCmdTeacherOnLine()
-{
-  return 0;
-}
-
-// 处理Teacher事件...
+// 处理Screen事件...
 int CTCPClient::doScreenClient(Cmd_Header * lpHeader, const char * lpJsonPtr)
 {
   /*int nResult = -1;
@@ -670,8 +657,9 @@ int CTCPClient::doSendCommonCmd(int nCmdID, const char * lpJsonPtr/* = NULL*/, i
   theHeader.m_type = m_nClientType;
   theHeader.m_cmd  = nCmdID;
   theHeader.m_sock = nSockID;
-  // 先填充名头头结构数据内容 => 注意是assign重建字符串...
-  m_strSend.assign((char*)&theHeader, sizeof(theHeader));
+  // 注意：之前使用assign重建模式，避免命令被冲掉，需要改成append模式...
+  // 先填充名头头结构数据内容 => 注意是append重建字符串...
+  m_strSend.append((char*)&theHeader, sizeof(theHeader));
   // 如果传入的数据内容有效，才进行数据的填充...
   if( lpJsonPtr != NULL && nJsonSize > 0 ) {
     m_strSend.append(lpJsonPtr, nJsonSize);

@@ -600,13 +600,6 @@ void CApp::doTagDelete(int nHostPort)
   m_MapUdpConn.erase(itorItem++);  
 }
 
-int CApp::doTcpRoomCommand(int inRoomID, int inCmdID)
-{
-  if( m_lpTCPThread == NULL || this->IsSignalQuit() )
-    return -1;
-  return m_lpTCPThread->doRoomCommand(inRoomID, inCmdID);
-}
-
 string CApp::GetAllRoomList()
 {
   string strRoomList;
@@ -644,7 +637,7 @@ CRoom * CApp::doCreateRoom(int inRoomID)
     lpRoom = itorRoom->second;
   } else {
     // 如果没有找到房间，创建一个新的房间...
-    lpRoom = new CRoom(inRoomID);
+    lpRoom = new CRoom(inRoomID, m_lpTCPThread);
     m_MapRoom[inRoomID] = lpRoom;
   }
   // 释放互斥保护，返回房间查找结果...

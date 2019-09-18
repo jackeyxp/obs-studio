@@ -233,11 +233,11 @@ int CTCPClient::doTransferBindMini(const char * lpJsonPtr, int nJsonSize)
       break;
     }
     // 如果是讲师端登录，需要验证当前选择的房间是否已经有讲师登录...
-    /*CTCPRoom * lpTCPRoom = GetApp()->doFindTCPRoom(nRoomID);
+    CTCPRoom * lpTCPRoom = GetApp()->doFindTCPRoom(nRoomID);
     if (nTypeID == kClientTeacher && lpTCPRoom != NULL && lpTCPRoom->GetTeacherCount() > 0) {
       nErrCode = ERR_HAS_TEACHER;
       break;
-    }*/
+    }
     // 直接调用该有效终端的转发命令接口...
     int nReturn = lpTCPClient->doSendCommonCmd(kCmd_PHP_Bind_Mini, lpJsonPtr, nJsonSize);
   } while ( false );
@@ -705,8 +705,9 @@ int CTCPClient::doSendPHPResponse(const char * lpJsonPtr, int nJsonSize)
   long2buff(nBodyLen, theTracker.pkg_len);
   memcpy(szSendBuf, &theTracker, sizeof(theTracker));
   memcpy(szSendBuf+sizeof(theTracker), lpJsonPtr, nBodyLen);
-  // 将发送数据包缓存起来，等待发送事件到来...
-  m_strSend.assign(szSendBuf, nBodyLen+sizeof(theTracker));
+  // 注意：之前使用assign重建模式，避免命令被冲掉，需要改成append模式...
+  // 将发送数据包缓存起来，等待发送事件到来 => 注意是append重建字符串...
+  m_strSend.append(szSendBuf, nBodyLen+sizeof(theTracker));
   // 向当前终端对象发起发送数据事件...
   epoll_event evClient = {0};
   evClient.data.fd = m_nConnFD;
@@ -732,8 +733,9 @@ int CTCPClient::doSendCommonCmd(int nCmdID, const char * lpJsonPtr/* = NULL*/, i
   theHeader.m_pkg_len = ((lpJsonPtr != NULL) ? nJsonSize : 0);
   theHeader.m_type = m_nClientType;
   theHeader.m_cmd  = nCmdID;
-  // 先填充名头头结构数据内容 => 注意是assign重建字符串...
-  m_strSend.assign((char*)&theHeader, sizeof(theHeader));
+  // 注意：之前使用assign重建模式，避免命令被冲掉，需要改成append模式...
+  // 先填充名头头结构数据内容 => 注意是append重建字符串...
+  m_strSend.append((char*)&theHeader, sizeof(theHeader));
   // 如果传入的数据内容有效，才进行数据的填充...
   if( lpJsonPtr != NULL && nJsonSize > 0 ) {
     m_strSend.append(lpJsonPtr, nJsonSize);

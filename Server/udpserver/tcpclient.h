@@ -31,10 +31,8 @@ private:
   int       doTeacherClient(Cmd_Header * lpHeader, const char * lpJsonPtr);  // 处理Teacher事件...
   int       doScreenClient(Cmd_Header * lpHeader, const char * lpJsonPtr);   // 处理Screen事件...
 private:
-  int       doCmdStudentLogin();
-  int       doCmdStudentOnLine();
-  int       doCmdTeacherLogin();
-  int       doCmdTeacherOnLine();
+  int       doCmdSmartLogin();
+  int       doCmdSmartOnLine();
   int       doSendCmdLoginForStudent(bool bIsTCPOnLine, bool bIsUDPOnLine, int nTeacherFlowID);
   int       doSendCommonCmd(int nCmdID, const char * lpJsonPtr = NULL, int nJsonSize = 0, int nSockID = 0);
   int       doSendPHPResponse(const char * lpJsonPtr, int nJsonSize);

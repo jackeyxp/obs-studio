@@ -1,14 +1,17 @@
 
 #include "app.h"
 #include "room.h"
+#include "tcpthread.h"
 #include "tcpclient.h"
 #include "udpclient.h"
 
-CRoom::CRoom(int inRoomID)
-  : m_nRoomID(inRoomID)
+CRoom::CRoom(int inRoomID, CTCPThread * lpTcpThread)
+  : m_lpTCPThread(lpTcpThread)
   , m_lpTCPTeacher(NULL)
+  , m_nRoomID(inRoomID)
 {
   assert(m_nRoomID > 0);
+  assert(m_lpTCPThread != NULL);
   // 初始化线程互斥对象 => 互斥TCP资源...
   pthread_mutex_init(&m_tcp_mutex, NULL);
 }
@@ -78,18 +81,30 @@ bool CRoom::IsUdpTeacherPusherOnLine()
   return ((lpUdpPusher != NULL) ? true : false);
 }
 
+void CRoom::doTcpCreateSmart(CTCPClient * lpSmart)
+{
+  switch( lpSmart->GetClientType() ) {
+    case kClientStudent: this->doTcpCreateStudent(lpSmart); break;
+    case kClientTeacher: this->doTcpCreateTeacher(lpSmart); break;
+  }
+}
+
+void CRoom::doTcpDeleteSmart(CTCPClient * lpSmart)
+{
+  switch( lpSmart->GetClientType() ) {
+    case kClientStudent: this->doTcpDeleteStudent(lpSmart); break;
+    case kClientTeacher: this->doTcpDeleteTeacher(lpSmart); break;
+  }
+}
+
 void CRoom::doTcpCreateTeacher(CTCPClient * lpTeacher)
 {
   // 利用构造函数|析构函数进行互斥保护...
   OSMutexLocker theLocker(&m_tcp_mutex);
-  // 如果终端类型不是讲师端，直接返回...
-  int nClientType = lpTeacher->GetClientType();
-  if( nClientType != kClientTeacher )
-    return;
   // 注意：这里只有当讲师端为空时，才发送通知，否则，会造成计数器增加，造成后续讲师端无法登陆的问题...
   // 只有当讲师端对象为空时，才转发计数器变化通知...
-  if( m_lpTCPTeacher == NULL ) {
-    GetApp()->doTcpRoomCommand(m_nRoomID, kCmd_UdpServer_AddTeacher);
+  if( m_lpTCPTeacher == NULL && m_lpTCPThread != NULL ) {
+    m_lpTCPThread->doRoomCommand(m_nRoomID, kCmd_UdpServer_AddTeacher);
   }
   // 更新讲师端连接对象...
   m_lpTCPTeacher = lpTeacher;
@@ -103,7 +118,7 @@ void CRoom::doTcpDeleteTeacher(CTCPClient * lpTeacher)
   if( m_lpTCPTeacher == lpTeacher ) {
     m_lpTCPTeacher = NULL;
     // 获取TCP线程对象，转发计数器变化通知...
-    GetApp()->doTcpRoomCommand(kCmd_UdpServer_DelTeacher, m_nRoomID);
+    m_lpTCPThread->doRoomCommand(m_nRoomID, kCmd_UdpServer_DelTeacher);
     return;
   }
 }
@@ -121,7 +136,7 @@ void CRoom::doTcpCreateStudent(CTCPClient * lpStudent)
   // 将学生观看到更新到观看列表...
   m_MapTCPStudent[nConnFD] = lpStudent;
   // 获取TCP线程对象，转发计数器变化通知...
-  GetApp()->doTcpRoomCommand(m_nRoomID, kCmd_UdpServer_AddStudent);
+  m_lpTCPThread->doRoomCommand(m_nRoomID, kCmd_UdpServer_AddStudent);
 }
 
 void CRoom::doTcpDeleteStudent(CTCPClient * lpStudent)
@@ -134,7 +149,7 @@ void CRoom::doTcpDeleteStudent(CTCPClient * lpStudent)
   if( itorItem != m_MapTCPStudent.end() ) {
     m_MapTCPStudent.erase(itorItem);
     // 获取TCP线程对象，转发计数器变化通知...
-    GetApp()->doTcpRoomCommand(m_nRoomID, kCmd_UdpServer_DelStudent);
+    m_lpTCPThread->doRoomCommand(m_nRoomID, kCmd_UdpServer_DelStudent);
     return;
   }
   // 如果通过FD方式没有找到，通过指针遍历查找...
@@ -144,7 +159,7 @@ void CRoom::doTcpDeleteStudent(CTCPClient * lpStudent)
     if(itorItem->second == lpStudent) {
       m_MapTCPStudent.erase(itorItem);
       // 获取TCP线程对象，转发计数器变化通知...
-      GetApp()->doTcpRoomCommand(m_nRoomID, kCmd_UdpServer_DelStudent);
+      m_lpTCPThread->doRoomCommand(m_nRoomID, kCmd_UdpServer_DelStudent);
       return;
     }
     // 2018.09.12 - by jackey => 造成过严重问题...

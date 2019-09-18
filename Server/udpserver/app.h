@@ -19,7 +19,6 @@ public:
   bool        doInitRLimit();
   void        doWaitForExit();
   bool        doProcessCmdLine(int argc, char * argv[]);
-  int         doTcpRoomCommand(int inRoomID, int inCmdID);
 public:
   bool        onRecvEvent(uint32_t inHostAddr, uint16_t inHostPort, char * lpBuffer, int inBufSize);
 public:
