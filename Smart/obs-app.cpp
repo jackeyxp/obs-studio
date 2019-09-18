@@ -1239,21 +1239,8 @@ CLoginMini * OBSApp::GetLoginMini() const {
 OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
 	: QApplication(argc, argv), profilerNameStore(store)
 {
-	m_nUdpPort = 0;
-	m_nRemotePort = 0;
-	m_nTrackerPort = 0;
-	m_nFastTimer = -1;
-	m_nOnLineTimer = -1;
-	m_nFlowTimer = -1;
-	m_nDBFlowID = 0;
-	m_nDBUserID = 0;
-	m_nDBSmartID = 0;
 	m_LoginMini = NULL;
-	m_nRemoteTcpSockFD = 0;
 	m_RemoteSession = NULL;
-	m_bIsDebugMode = false;
-	m_bIsMiniMode = true;
-	m_nCenterTcpPort = 0;
 	m_nClientType = kClientStudent;
 	m_strWebCenterAddr = DEF_WEB_CENTER;
 	// 注意：所有配置都通过网站接口获取，而不是从默认值当中获取...
@@ -1572,18 +1559,6 @@ void OBSApp::onTriggerMiniSuccess()
 	this->doCheckRemote();
 }
 
-void OBSApp::onReplyFinished(QNetworkReply *reply)
-{
-	// 如果发生网络错误，打印错误信息，跳出循环...
-	if (reply->error() != QNetworkReply::NoError) {
-		blog(LOG_INFO, "QT error => %d, %s", reply->error(), reply->errorString().toStdString().c_str());
-		return;
-	}
-	QByteArray & theByteArray = reply->readAll();
-	string & strData = theByteArray.toStdString();
-	//blog(LOG_DEBUG, "QT Reply Data => %s", strData.c_str());
-}
-
 // 时钟定时执行过程...
 void OBSApp::timerEvent(QTimerEvent *inEvent)
 {
@@ -1593,7 +1568,7 @@ void OBSApp::timerEvent(QTimerEvent *inEvent)
 	} else if (nTimerID == m_nOnLineTimer) {
 		this->doCheckOnLine();
 	} else if (nTimerID == m_nFlowTimer) {
-		this->doCheckRoomFlow();
+		this->doCheckSmartFlow();
 	}
 }
 
@@ -1640,21 +1615,39 @@ void OBSApp::doCheckRemote()
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerScreenFinish(int, QString, QString)), lpBasicWnd, SLOT(onTriggerScreenFinish(int, QString, QString)), Qt::QueuedConnection);
 }
 
-// 通过Web转发统计已登录房间流量...
-void OBSApp::doCheckRoomFlow()
+// 通知网站端当前终端已使用的上下行流量...
+void OBSApp::doCheckSmartFlow()
 {
-	if (m_strRoomID.size() <= 0 || m_nDBFlowID <= 0 || m_strRemoteAddr.size() <= 0)
+	// 数据库流量编号和终端编号必须有效...
+	if (m_nDBFlowID <= 0 || m_nDBSmartID <= 0)
 		return;
-	/*QNetworkReply * lpNetReply = NULL;
+	// 计算终端上行和下行的流量 => 单位MB...
+	int nUpFlowMB = m_nUpFlowByte / 1000 / 1000;
+	int nDownFlowMB = m_nDownFlowByte / 1000 / 1000;
+	// 与讲师关联的流量编号只在学生端模式下才有效，如果不是学生端终端，直接赋值为0...
+	int nDBFlowTeacherID = ((m_nClientType == kClientStudent) ? m_nDBFlowTeacherID : 0);
+	QNetworkReply * lpNetReply = NULL;
 	QNetworkRequest theQTNetRequest;
-	string & strWebClass = App()->GetWebClass();
-	QString strContentVal = QString("user_id=%1&room_id=%2&flow_id=%3&remote_addr=%4&remote_port=%5")
-		.arg(m_nDBUserID).arg(m_strRoomID.c_str()).arg(m_nDBFlowID)
-		.arg(m_strRemoteAddr.c_str()).arg(m_nRemotePort);
-	QString strRequestURL = QString("%1%2").arg(strWebClass.c_str()).arg("/wxapi.php/Mini/roomFlow");
+	string & strWebCenter = App()->GetWebCenterAddr();
+	QString strContentVal = QString("flow_id=%1&smart_id=%2&flow_teacher=%3&up_flow=%4&down_flow=%5")
+		.arg(m_nDBFlowID).arg(m_nDBSmartID).arg(nDBFlowTeacherID).arg(nUpFlowMB).arg(nDownFlowMB);
+	QString strRequestURL = QString("%1%2").arg(strWebCenter.c_str()).arg("/wxapi.php/Mini/smartFlow");
 	theQTNetRequest.setUrl(QUrl(strRequestURL));
 	theQTNetRequest.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
-	lpNetReply = m_objNetManager.post(theQTNetRequest, strContentVal.toUtf8());*/
+	lpNetReply = m_objNetManager.post(theQTNetRequest, strContentVal.toUtf8());
+}
+
+// 流量统计的反馈，不做处理...
+void OBSApp::onReplyFinished(QNetworkReply *reply)
+{
+	// 如果发生网络错误，打印错误信息，跳出循环...
+	if (reply->error() != QNetworkReply::NoError) {
+		blog(LOG_INFO, "QT error => %d, %s", reply->error(), reply->errorString().toStdString().c_str());
+		return;
+	}
+	QByteArray & theByteArray = reply->readAll();
+	string & strData = theByteArray.toStdString();
+	//blog(LOG_DEBUG, "QT Reply Data => %s", strData.c_str());
 }
 
 string OBSApp::GetVersionString() const
