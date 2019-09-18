@@ -1545,7 +1545,7 @@ void OBSApp::doLoginInit()
 	m_LoginMini->show();
 	// 建立登录窗口与应用对象的信号槽关联函数...
 	connect(m_LoginMini, SIGNAL(doTriggerMiniSuccess()), this, SLOT(onTriggerMiniSuccess()));
-	// 关联网络信号槽反馈结果事件...
+	// 关联网络信号槽反馈结果事件 => 主要用来替换curl与web服务器进行信息交互...
 	connect(&m_objNetManager, SIGNAL(finished(QNetworkReply *)), this, SLOT(onReplyFinished(QNetworkReply *)));
 }
 
@@ -1590,11 +1590,9 @@ void OBSApp::timerEvent(QTimerEvent *inEvent)
 	int nTimerID = inEvent->timerId();
 	if (nTimerID == m_nFastTimer) {
 		this->doCheckFDFS();
-	}
-	else if (nTimerID == m_nOnLineTimer) {
+	} else if (nTimerID == m_nOnLineTimer) {
 		this->doCheckOnLine();
-	}
-	else if (nTimerID == m_nFlowTimer) {
+	} else if (nTimerID == m_nFlowTimer) {
 		this->doCheckRoomFlow();
 	}
 }
@@ -1623,7 +1621,7 @@ void OBSApp::doCheckRemote()
 	// 如果远程会话已经存在，并且已经连接，直接返回...
 	if (m_RemoteSession != NULL && !m_RemoteSession->IsCanReBuild())
 		return;
-	// 判断存储服务器地址是否有效...
+	// 判断存储服务器地址是否有效 => 必须通过登录界面获取到...
 	if (m_strRemoteAddr.size() <= 0 || m_nRemotePort <= 0)
 		return;
 	// 如果会话有效，先删除之...

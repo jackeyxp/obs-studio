@@ -538,7 +538,8 @@ void CLoginMini::doWebGetCenterAddr()
 		delete m_CenterSession;
 		m_CenterSession = NULL;
 	}
-	// 显示加载动画...
+	// 显示加载动画，重构二维码...
+	m_QPixQRCode = QPixmap();
 	m_lpLoadBack->show();
 	// 更新扫码状态栏...
 	m_strScan.clear();
@@ -562,6 +563,7 @@ void CLoginMini::doWebGetCenterAddr()
 	// 注意：采用了组合模式，没有采用json数据包格式，获取微信二维码时没有问题，微信接口估计处理了这种被编码的情况，详见doWebGetMiniQRCode
 	char szDNS[MAX_PATH] = { 0 };
 	string strUTF8DNS = OBSApp::GetServerDNSName();
+	// 注意：因为是HTTP协议传输，需要对传输数据进行网络编码，防止传输时中断...
 	OBSApp::EncodeURI(strUTF8DNS.c_str(), strUTF8DNS.size(), szDNS, MAX_PATH);
 	QString strContentVal = QString("mac_addr=%1&ip_addr=%2&os_name=%3&version=%4&name_pc=%5")
 		.arg(App()->GetLocalMacAddr().c_str()).arg(App()->GetLocalIPAddr().c_str())
@@ -645,13 +647,13 @@ void CLoginMini::onTriggerTcpConnect()
 	// 每隔30秒检测一次，终端在中心服务器上在线汇报通知...
 	m_nOnLineTimer = this->startTimer(30 * 1000);
 	// 发起获取小程序Token值的网络命令...
-	//this->doWebGetMiniToken();
+	this->doWebGetMiniToken();
 	
 	/*== 仅供快速测试 ==*/
-	m_nDBUserID = 1;
-	m_nDBRoomID = 10001;
+	//m_nDBUserID = 1;
+	//m_nDBRoomID = 10001;
 	// 一切正常，开始登录指定的房间...
-	this->doWebGetMiniLoginRoom();  
+	//this->doWebGetMiniLoginRoom();  
 }
 
 // 响应中心会话反馈的小程序绑定登录信号槽事件通知...
