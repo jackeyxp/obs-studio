@@ -146,6 +146,51 @@ class MiniAction extends Action
     // 将整个数组返回...
     return $arrData;
   }
+  //
+  // 终端每隔15秒发起的更新上下行流量统计...
+  public function smartFlow()
+  {
+    // 准备返回结果状态...
+    $arrErr['err_code'] = false;
+    $arrErr['err_msg'] = 'ok';
+    // 注意：这里使用的是 $_POST 数据...
+    do {
+      // 判断输入的参数是否有效...
+      if (!isset($_POST['flow_id']) || !isset($_POST['smart_id'])) {
+        $arrErr['err_code'] = true;
+        $arrErr['err_msg'] = '输入参数无效！';
+        break;
+      }
+      // 先查找流量记录，没有直接返回...
+      $condition['flow_id'] = $_POST['flow_id'];
+      $dbFind = D('FlowView')->where($condition)->find();
+      if( !isset($dbFind['flow_id']) ) {
+        $arrErr['err_code'] = true;
+        $arrErr['err_msg'] = '没有找到流量记录！';
+        break;
+      }
+      // 更新数据库流量记录...
+      $dbFlow['updated'] = date('Y-m-d H:i:s');
+      $dbFlow['flow_id'] = $_POST['flow_id'];
+      $dbFlow['smart_id'] = $_POST['smart_id'];
+      $dbFlow['up_flow'] = (isset($_POST['up_flow']) ? $_POST['up_flow'] : 0);
+      $dbFlow['down_flow'] = (isset($_POST['down_flow']) ? $_POST['down_flow'] : 0);
+      $dbFlow['flow_teacher'] = (isset($_POST['flow_teacher']) ? $_POST['flow_teacher'] : 0);
+      // 计算按时间计费的花费 => 计算持续分钟数量 => 向上取整...
+      // 注意：终端只要上线之后就开始计费，不管是否推流或拉流...
+      $nMinute = ceil((strtotime($dbFlow['updated']) - strtotime($dbFind['created'])) / 60);
+      if ($nMinute > 0 && $dbFind['cpm'] > 0 ) {
+        $dbFlow['cost'] = $nMinute * $dbFind['cpm'];
+        $dbFlow['cpm'] = $dbFind['cpm'];
+      }
+      // 只存放更大的流量记录 => 避免流量异常时的错误记录...
+      $dbFlow['up_flow'] = max($dbFlow['up_flow'], $dbFind['up_flow']);
+      $dbFlow['down_flow'] = max($dbFlow['down_flow'], $dbFind['down_flow']);
+      D('flow')->save($dbFlow);
+    } while( false );
+    // 返回json编码数据包...
+    echo json_encode($arrErr);
+  }
   // 注意：这是所有终端登录后的第一个命令...
   // 注册Smart主机，返回UDPCenter的TCP地址和端口...
   public function regSmart()
@@ -289,7 +334,7 @@ class MiniAction extends Action
       $dbParam['room_id'] = LIVE_BEGIN_ID + $dbRoom['room_id'];
       $dbParam['debug_mode'] = $bIsDebugMode;
       // 从UDP中心服务器获取UDP直播地址和UDP中转地址...
-      $dbResult = $this->getUdpServerFromUdpCenter($dbSys['udpcenter_addr'], $dbSys['udpcenter_port'], $dbParam);
+      $dbResult = $this->doTrasmitCmdToServer($dbSys['udpcenter_addr'], $dbSys['udpcenter_port'], kCmd_PHP_GetUdpServer, $dbParam);
       // 如果获取连接中转服务器失败...
       if( $dbResult['err_code'] > 0 ) {
         $arrErr['err_code'] = $dbResult['err_code'];
@@ -313,36 +358,6 @@ class MiniAction extends Action
     } while( false );
     // 直接反馈最终验证的结果...
     echo json_encode($arrErr);
-  }
-  // 从udp中心服务器获取udp中转服务器和udp直播服务器地址...
-  // 成功 => array()
-  // 失败 => false
-  private function getUdpServerFromUdpCenter($inUdpCenterAddr, $inUdpCenterPort, &$dbParam)
-  {
-    // 通过php扩展插件连接中转服务器 => 性能高...
-    $transmit = transmit_connect_server($inUdpCenterAddr, $inUdpCenterPort);
-    // 链接中转服务器失败，直接返回...
-    if( !$transmit ) {
-      $arrData['err_code'] = true;
-      $arrData['err_msg'] = '无法连接直播中心服务器。';
-      return $arrData;
-    }
-    // 获取当前房间所在UDP直播服务器地址和端口、中转服务器地址和端口...
-    $saveJson = json_encode($dbParam);
-    $json_data = transmit_command(kClientPHP, kCmd_PHP_GetUdpServer, $transmit, $saveJson);
-    // 关闭中转服务器链接...
-    transmit_disconnect_server($transmit);
-    // 获取的JSON数据有效，转成数组，直接返回...
-    $arrData = json_decode($json_data, true);
-    if( !$arrData ) {
-      $arrData['err_code'] = true;
-      $arrData['err_msg'] = '从直播中心服务器获取数据失败。';
-      return $arrData;
-    }
-    // 通过错误码，获得错误信息...
-    $arrData['err_msg'] = getTransmitErrMsg($arrData['err_code']);
-    // 将整个数组返回...
-    return $arrData;
   }
   //
   // 获取小程序的access_token的值...
