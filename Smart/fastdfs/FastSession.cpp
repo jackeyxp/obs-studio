@@ -561,7 +561,18 @@ bool CRemoteSession::doCmdSmartOnLine(const char * lpData, int nSize)
 	if (App()->GetClientType() == kClientTeacher)
 		return true;
 	// 针对学生端，需要获取更多的信息...
-
+	Json::Value value;
+	// 进行Json数据包的内容解析...
+	if (!this->doParseJson(lpData, nSize, value)) {
+		blog(LOG_INFO, "CRemoteSession::doParseJson Error!");
+		return false;
+	}
+	// 获取关联的TCP讲师端的流量编号...
+	int  nDBFlowTeacherID = atoi(OBSApp::getJsonString(value["flow_teacher"]).c_str());
+	// 保存关联的讲师流量记录编号 => 不一致，并且有效时才更新...
+	if (nDBFlowTeacherID > 0 && App()->GetDBFlowTeacherID() != nDBFlowTeacherID) {
+		App()->SetDBFlowTeacherID(nDBFlowTeacherID);
+	}
 	return true;
 }
 
