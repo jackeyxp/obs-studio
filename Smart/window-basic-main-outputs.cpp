@@ -685,8 +685,8 @@ bool SimpleOutput::StartStreaming(obs_service_t *service)
 	/*Auth *auth = main->GetAuth();
 	if (auth) auth->OnStreamConfig();*/
 
-	// 注意：这里直接指定使用rtp输出流...
-	const char * type = "rtp_output";
+	// 注意：这里直接指定使用smart输出流...
+	const char * type = "smart_output";
 
 	////////////////////////////////////////////////////////////////////
 	/*// obs采用默认的rtmp输出流...
@@ -776,12 +776,14 @@ bool SimpleOutput::StartStreaming(obs_service_t *service)
 	obs_data_set_string(settings, "bind_ip", bindIP);
 	obs_data_set_bool(settings, "new_socket_loop_enabled", enableNewSocketLoop);
 	obs_data_set_bool(settings, "low_latency_mode_enabled", enableLowLatencyMode);
-	// 设置rtp推流输出需要的特殊变量 => room_id | udp_addr | udp_port | tcp_socket
-	/*int nLiveRoomID = atoi(App()->GetRoomIDStr().c_str());
-	obs_data_set_int(settings, "room_id", nLiveRoomID);
+	obs_data_set_bool(settings, "dyn_bitrate", enableDynBitrate);
+	// 设置smart推流输出需要的特殊变量 => room_id | udp_addr | udp_port | tcp_socket | client_type
+	int nRoomID = atoi(App()->GetRoomIDStr().c_str());
+	obs_data_set_int(settings, "room_id", nRoomID);
 	obs_data_set_int(settings, "udp_port", App()->GetUdpPort());
-	obs_data_set_int(settings, "tcp_socket", App()->GetRtpTCPSockFD());
-	obs_data_set_string(settings, "udp_addr", App()->GetUdpAddr().c_str());*/
+	obs_data_set_string(settings, "udp_addr", App()->GetUdpAddr().c_str());
+	obs_data_set_int(settings, "tcp_socket", App()->GetRemoteTcpSockFD());
+	obs_data_set_int(settings, "client_type", App()->GetClientType());
 	// rtp模式下阻止重连，重连次数修改为0...
 	reconnect = false; maxRetries = 0;
 	// 将新的输出配置应用到当前输出对象当中...
@@ -1503,8 +1505,8 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 	// 获得当前配置的声音轨道编号 => 始终默认选择 轨道1 和 轨道2 进行音频流压缩输出...
 	int trackIndex = config_get_int(main->Config(), "AdvOut", "TrackIndex");
 
-	// 注意：这里直接指定使用rtp输出流...
-	const char * type = "rtp_output";
+	// 注意：这里直接指定使用smart输出流...
+	const char * type = "smart_output";
 
 	////////////////////////////////////////////////////////////////////
 	/*// obs采用默认的rtmp输出流...
@@ -1595,12 +1597,13 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 	obs_data_set_bool(settings, "new_socket_loop_enabled", enableNewSocketLoop);
 	obs_data_set_bool(settings, "low_latency_mode_enabled", enableLowLatencyMode);
 	obs_data_set_bool(settings, "dyn_bitrate", enableDynBitrate);
-	/*// 设置rtp推流输出需要的特殊变量 => room_id | udp_addr | udp_port | tcp_socket
-	int nLiveRoomID = atoi(App()->GetRoomIDStr().c_str());
-	obs_data_set_int(settings, "room_id", nLiveRoomID);
+	// 设置smart推流输出需要的特殊变量 => room_id | udp_addr | udp_port | tcp_socket | client_type
+	int nRoomID = atoi(App()->GetRoomIDStr().c_str());
+	obs_data_set_int(settings, "room_id", nRoomID);
 	obs_data_set_int(settings, "udp_port", App()->GetUdpPort());
-	obs_data_set_int(settings, "tcp_socket", App()->GetRtpTCPSockFD());
-	obs_data_set_string(settings, "udp_addr", App()->GetUdpAddr().c_str());*/
+	obs_data_set_string(settings, "udp_addr", App()->GetUdpAddr().c_str());
+	obs_data_set_int(settings, "tcp_socket", App()->GetRemoteTcpSockFD());
+	obs_data_set_int(settings, "client_type", App()->GetClientType());
 	// rtp模式下阻止重连，重连次数修改为0...
 	reconnect = false; maxRetries = 0;
 	// 将新的输出配置应用到当前输出对象当中...

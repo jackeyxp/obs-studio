@@ -121,8 +121,9 @@ typedef struct {
   unsigned char   tm:2;         // terminate type => TM_TAG_STUDENT | TM_TAG_TEACHER
   unsigned char   id:2;         // identify type => ID_TAG_PUSHER | ID_TAG_LOOKER
   unsigned char   pt:4;         // payload type => PT_TAG_CREATE
-  unsigned char   noset;        // 保留 => 字节对齐
-  unsigned short  liveID;       // 学生端摄像头编号
+  unsigned char   noset1;       // 保留 => 字节对齐
+  unsigned short  noset2;       // 保留 => 字节对齐
+  unsigned int    liveID;       // 推流编号或观看编号
   unsigned int    roomID;       // 教室房间编号
   unsigned int    tcpSock;      // 关联的TCP套接字
 }rtp_create_t;
@@ -132,8 +133,9 @@ typedef struct {
   unsigned char   tm:2;         // terminate type => TM_TAG_STUDENT | TM_TAG_TEACHER
   unsigned char   id:2;         // identify type => ID_TAG_PUSHER | ID_TAG_LOOKER
   unsigned char   pt:4;         // payload type => PT_TAG_DELETE
-  unsigned char   noset;        // 保留 => 字节对齐
-  unsigned short  liveID;       // 学生端摄像头编号
+  unsigned char   noset1;       // 保留 => 字节对齐
+  unsigned short  noset2;       // 保留 => 字节对齐
+  unsigned int    liveID;       // 推流编号或观看编号
   unsigned int    roomID;       // 教室房间编号
 }rtp_delete_t;
 //

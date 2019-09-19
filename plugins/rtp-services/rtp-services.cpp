@@ -14,8 +14,8 @@ MODULE_EXPORT const char *obs_module_description(void)
 void InitModule();
 void UnInitModule();
 
+void RegisterSmartOutput();
 //void RegisterTeacherSource();
-void RegisterTeacherOutput();
 //void RegisterStudentSource();
 //void RegisterStudentOutput();
 
@@ -24,8 +24,8 @@ bool obs_module_load(void)
 	// 初始化模块...
 	InitModule();
 	// 注册数据源和输出...
+	RegisterSmartOutput();
 	//RegisterTeacherSource();
-	RegisterTeacherOutput();
 	//RegisterStudentSource();
 	//RegisterStudentOutput();
 	return true;

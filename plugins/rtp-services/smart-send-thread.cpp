@@ -2,7 +2,7 @@
 #include <obs-avc.h>
 #include "UDPSocket.h"
 #include "SocketUtils.h"
-#include "teacher-send-thread.h"
+#include "smart-send-thread.h"
 
 #define MILLISECOND_DEN   1000
 static int32_t get_ms_time(struct encoder_packet *packet, int64_t val)
@@ -10,7 +10,7 @@ static int32_t get_ms_time(struct encoder_packet *packet, int64_t val)
 	return (int32_t)(val * MILLISECOND_DEN / packet->timebase_den);
 }
 
-CTeacherSendThread::CTeacherSendThread(int nTCPSockFD, int nDBRoomID)
+CSmartSendThread::CSmartSendThread(CLIENT_TYPE inType, int nTCPSockFD, int nDBRoomID)
   : m_total_output_bytes(0)
   , m_audio_output_bytes(0)
   , m_video_output_bytes(0)
@@ -39,6 +39,19 @@ CTeacherSendThread::CTeacherSendThread(int nTCPSockFD, int nDBRoomID)
   , m_server_rtt_ms(-1)
   , m_start_dts_ms(-1)
 {
+	m_nClientType = inType;
+	m_idTag = ID_TAG_PUSHER;
+	// 保存数据源终端的内部名称...
+	switch (m_nClientType) {
+	case kClientStudent:
+		m_strInnerName = ST_SEND_NAME;
+		m_tmTag = TM_TAG_STUDENT;
+		break;
+	case kClientTeacher:
+		m_strInnerName = TH_SEND_NAME;
+		m_tmTag = TM_TAG_TEACHER;
+		break;
+	}
 	// 初始化发包路线 => 服务器方向...
 	m_dt_to_dir = DT_TO_SERVER;
 	// 初始化命令状态...
@@ -53,9 +66,9 @@ CTeacherSendThread::CTeacherSendThread(int nTCPSockFD, int nDBRoomID)
 	circlebuf_init(&m_video_circle);
 	circlebuf_reserve(&m_audio_circle, DEF_CIRCLE_SIZE);
 	circlebuf_reserve(&m_video_circle, DEF_CIRCLE_SIZE);
-	// 设置终端类型和结构体类型 => 老师推流者身份...
-	m_rtp_detect.tm = m_rtp_create.tm = m_rtp_delete.tm = m_rtp_header.tm = TM_TAG_TEACHER;
-	m_rtp_detect.id = m_rtp_create.id = m_rtp_delete.id = m_rtp_header.id = ID_TAG_PUSHER;
+	// 设置终端类型和结构体类型 => 推流者身份...
+	m_rtp_detect.tm = m_rtp_create.tm = m_rtp_delete.tm = m_rtp_header.tm = m_tmTag;
+	m_rtp_detect.id = m_rtp_create.id = m_rtp_delete.id = m_rtp_header.id = m_idTag;
 	m_rtp_detect.pt = PT_TAG_DETECT;
 	m_rtp_create.pt = PT_TAG_CREATE;
 	m_rtp_delete.pt = PT_TAG_DELETE;
@@ -71,9 +84,9 @@ CTeacherSendThread::CTeacherSendThread(int nTCPSockFD, int nDBRoomID)
 	pthread_mutex_init_value(&m_Mutex);
 }
 
-CTeacherSendThread::~CTeacherSendThread()
+CSmartSendThread::~CSmartSendThread()
 {
-	blog(LOG_INFO, "%s == [~CTeacherSendThread Thread] - Exit Start ==", TH_SEND_NAME);
+	blog(LOG_INFO, "%s == [~CSmartSendThread Thread] - Exit Start ==", m_strInnerName.c_str());
 	// 未知状态，阻止继续塞包...
 	m_nCmdState = kCmdUnkownState;
 	// 停止线程，等待退出...
@@ -85,10 +98,10 @@ CTeacherSendThread::~CTeacherSendThread()
 	circlebuf_free(&m_video_circle);
 	// 释放互斥对象...
 	pthread_mutex_destroy(&m_Mutex);
-	blog(LOG_INFO, "%s == [~CTeacherSendThread Thread] - Exit End ==", TH_SEND_NAME);
+	blog(LOG_INFO, "%s == [~CSmartSendThread Thread] - Exit End ==", m_strInnerName.c_str());
 }
 
-void CTeacherSendThread::CloseSocket()
+void CSmartSendThread::CloseSocket()
 {
 	if( m_lpUDPSocket != NULL ) {
 		m_lpUDPSocket->Close();
@@ -97,7 +110,7 @@ void CTeacherSendThread::CloseSocket()
 	}
 }
 
-BOOL CTeacherSendThread::InitVideo(string & inSPS, string & inPPS, int nWidth, int nHeight, int nFPS)
+BOOL CSmartSendThread::InitVideo(string & inSPS, string & inPPS, int nWidth, int nHeight, int nFPS)
 {
 	// 设置视频标志...
 	m_rtp_header.hasVideo = true;
@@ -109,13 +122,13 @@ BOOL CTeacherSendThread::InitVideo(string & inSPS, string & inPPS, int nWidth, i
 	m_rtp_header.ppsSize = (uint16_t)inPPS.size();
 	m_strSPS = inSPS; m_strPPS = inPPS;
 	// 打印已初始化视频信息...
-	blog(LOG_INFO, "%s InitVideo OK", TH_SEND_NAME);
+	blog(LOG_INFO, "%s InitVideo OK", m_strInnerName.c_str());
 	// 线程一定要确认音视频都准备好之后才能启动...
 	ASSERT( this->GetThreadHandle() == NULL );
 	return true;
 }
 
-BOOL CTeacherSendThread::InitAudio(int inAudioRate, int inAudioChannel)
+BOOL CSmartSendThread::InitAudio(int inAudioRate, int inAudioChannel)
 {
 	int	audio_rate_index = 0;
 	// 首先解析并存储传递过来的参数...
@@ -143,13 +156,13 @@ BOOL CTeacherSendThread::InitAudio(int inAudioRate, int inAudioChannel)
 	m_rtp_header.rateIndex = audio_rate_index;
 	m_rtp_header.channelNum = inAudioChannel;
 	// 打印已初始化音频信息...
-	blog(LOG_INFO, "%s InitAudio OK", TH_SEND_NAME);
+	blog(LOG_INFO, "%s InitAudio OK", m_strInnerName.c_str());
 	// 线程一定要确认音视频都准备好之后才能启动...
 	ASSERT( this->GetThreadHandle() == NULL );
 	return true;
 }
 
-BOOL CTeacherSendThread::ParseAVHeader()
+BOOL CSmartSendThread::ParseAVHeader()
 {
 	// 判断obs输出对象是否有效...
 	if (m_lpObsOutput == NULL)
@@ -162,22 +175,22 @@ BOOL CTeacherSendThread::ParseAVHeader()
 	string strSPS, strPPS;
 	// 如果没有获取到有效的视频格式头对象，直接返回...
 	if (lpVideo == NULL || lpVEncoder == NULL) {
-		blog(LOG_INFO, "%s ParseAVHeader Failed.", TH_SEND_NAME);
+		blog(LOG_INFO, "%s ParseAVHeader Failed.", m_strInnerName.c_str());
 		return false;
 	}
 	// 如果获取视频扩展格式头信息失败，返回错误...
 	if (!obs_encoder_get_extra_data(lpVEncoder, &lpVHeader, &v_size)) {
-		blog(LOG_INFO, "%s ParseAVHeader Failed.", TH_SEND_NAME);
+		blog(LOG_INFO, "%s ParseAVHeader Failed.", m_strInnerName.c_str());
 		return false;
 	}
 	// 判断获取的视频扩展格式头信息是否有效...
 	if (lpVHeader == NULL || v_size <= 0) {
-		blog(LOG_INFO, "%s ParseAVHeader Failed.", TH_SEND_NAME);
+		blog(LOG_INFO, "%s ParseAVHeader Failed.", m_strInnerName.c_str());
 		return false;
 	}
 	// 解析视频的sps和pps格式信息，解析失败，直接返回...
 	if (!obs_get_sps_pps(lpVHeader, v_size, &lpSPS, &sps_size, &lpPPS, &pps_size)) {
-		blog(LOG_INFO, "%s ParseAVHeader Failed.", TH_SEND_NAME);
+		blog(LOG_INFO, "%s ParseAVHeader Failed.", m_strInnerName.c_str());
 		return false;
 	}
 	// 将SPS和PPS保存为string对象...
@@ -187,7 +200,7 @@ BOOL CTeacherSendThread::ParseAVHeader()
 	obs_encoder_t * lpAEncoder = obs_output_get_audio_encoder(m_lpObsOutput, 0);
 	audio_output_info * lpAudio = (audio_output_info*)obs_encoder_audio(lpAEncoder);
 	if( lpAEncoder == NULL || lpAudio == NULL ) {
-		blog(LOG_INFO, "%s ParseAVHeader Failed.", TH_SEND_NAME);
+		blog(LOG_INFO, "%s ParseAVHeader Failed.", m_strInnerName.c_str());
 		return false;
 	}
 	// 根据获取的音视频格式头，进行音视频对象的初始化工作...
@@ -196,7 +209,7 @@ BOOL CTeacherSendThread::ParseAVHeader()
 	return true;
 }
 
-BOOL CTeacherSendThread::InitThread(obs_output_t * lpObsOutput, const char * lpUdpAddr, int nUdpPort)
+BOOL CSmartSendThread::InitThread(obs_output_t * lpObsOutput, const char * lpUdpAddr, int nUdpPort)
 {
 	// 保存并解析obs音视频格式头信息...
 	m_lpObsOutput = lpObsOutput;
@@ -264,16 +277,16 @@ static void DoSaveSendSeq(uint32_t inPSeq, int inPSize, bool inPST, bool inPED, 
 }
 #endif // DEBUG_FRAME
 
-BOOL CTeacherSendThread::PushFrame(encoder_packet * lpEncPacket)
+BOOL CSmartSendThread::PushFrame(encoder_packet * lpEncPacket)
 {
 	// 判断线程是否已经退出...
 	if( this->IsStopRequested() ) {
-		blog(LOG_INFO, "%s Error => Send Thread has been stoped", TH_SEND_NAME);
+		blog(LOG_INFO, "%s Error => Send Thread has been stoped", m_strInnerName.c_str());
 		return false;
 	}
 	// 如果数据帧的长度为0，打印错误，直接返回...
 	if( lpEncPacket->size <= 0 ) {
-		blog(LOG_INFO, "%s Error => Input Frame Size is Zero", TH_SEND_NAME);
+		blog(LOG_INFO, "%s Error => Input Frame Size is Zero", m_strInnerName.c_str());
 		return false;
 	}
 
@@ -303,7 +316,7 @@ BOOL CTeacherSendThread::PushFrame(encoder_packet * lpEncPacket)
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 	// 处于不能发包的状态时，打印所有的音视频数据帧...
 	if( m_nCmdState == kCmdUnkownState || m_nCmdState <= kCmdSendHeader ) {
-		blog(LOG_INFO, "%s Frame => PTS: %lu, Type: %d, Key: %d, Size: %d", TH_SEND_NAME, dwSendTime, pt_type, is_keyframe, nDataSize);
+		blog(LOG_INFO, "%s Frame => PTS: %lu, Type: %d, Key: %d, Size: %d", m_strInnerName.c_str(), dwSendTime, pt_type, is_keyframe, nDataSize);
 	}
 
 	// 保存输入音视频字节总数，用于计算音视频输入码率...
@@ -317,10 +330,10 @@ BOOL CTeacherSendThread::PushFrame(encoder_packet * lpEncPacket)
 	uint32_t & nCurPackSeq = (pt_type == PT_TAG_AUDIO) ? m_nAudioCurPackSeq : m_nVideoCurPackSeq;
 	circlebuf & cur_circle = (pt_type == PT_TAG_AUDIO) ? m_audio_circle : m_video_circle;
 
-	// 构造RTP包头结构体 => 老师推流者...
+	// 构造RTP包头结构体 => 推流者...
 	rtp_hdr_t rtpHeader = {0};
-	rtpHeader.tm  = TM_TAG_TEACHER;
-	rtpHeader.id  = ID_TAG_PUSHER;
+	rtpHeader.tm  = this->GetTmTag();
+	rtpHeader.id  = this->GetIdTag();
 	rtpHeader.pt  = pt_type;
 	rtpHeader.pk  = is_keyframe;
 	rtpHeader.ts  = dwSendTime;
@@ -350,7 +363,7 @@ BOOL CTeacherSendThread::PushFrame(encoder_packet * lpEncPacket)
 			circlebuf_push_back_zero(&cur_circle, nZeroSize);
 		}
 		// 打印调试信息...
-		//blog(LOG_INFO, "%s Seq: %lu, Type: %d, Key: %d, Size: %d, TS: %lu", TH_SEND_NAME,
+		//blog(LOG_INFO, "%s Seq: %lu, Type: %d, Key: %d, Size: %d, TS: %lu", m_strInnerName.c_str(),
 		//		rtpHeader.seq, rtpHeader.pt, rtpHeader.pk, rtpHeader.psize, rtpHeader.ts);
 	}
 	// 对环形队列相关资源互斥保护结束...
@@ -358,7 +371,7 @@ BOOL CTeacherSendThread::PushFrame(encoder_packet * lpEncPacket)
 	return true;
 }
 
-void CTeacherSendThread::doCalcAVBitRate()
+void CSmartSendThread::doCalcAVBitRate()
 {
 	// 设定码率的检测刻度值 => 越小越精确，可以判断瞬时码率...
 	int rate_tick_ms = 1000;
@@ -378,11 +391,11 @@ void CTeacherSendThread::doCalcAVBitRate()
 	m_video_output_kbps = (int)(m_video_output_bytes * 8) / 1024; m_video_output_bytes = 0;
 	m_total_output_kbps = (int)(m_total_output_bytes * 8) / 1024; m_total_output_bytes = 0;
 	// 打印计算获得的音视频输入输出平均码流值...
-	//blog(LOG_INFO, "%s AVBitRate =>  audio_input: %d kbps,  video_input: %d kbps", TH_SEND_NAME, m_audio_input_kbps, m_video_input_kbps);
-	//blog(LOG_INFO, "%s AVBitRate => audio_output: %d kbps, video_output: %d kbps, total_output: %d kbps", TH_SEND_NAME, m_audio_output_kbps, m_video_output_kbps, m_total_output_kbps);
+	//blog(LOG_INFO, "%s AVBitRate =>  audio_input: %d kbps,  video_input: %d kbps", m_strInnerName.c_str(), m_audio_input_kbps, m_video_input_kbps);
+	//blog(LOG_INFO, "%s AVBitRate => audio_output: %d kbps, video_output: %d kbps, total_output: %d kbps", m_strInnerName.c_str(), m_audio_output_kbps, m_video_output_kbps, m_total_output_kbps);
 }
 
-void CTeacherSendThread::Entry()
+void CSmartSendThread::Entry()
 {
 	// 码率计算计时起点...
 	m_start_time_ns = os_gettime_ns();
@@ -415,7 +428,7 @@ void CTeacherSendThread::Entry()
 	this->doSendDeleteCmd();
 }
 
-void CTeacherSendThread::doSendDeleteCmd()
+void CSmartSendThread::doSendDeleteCmd()
 {
 	GM_Error theErr = GM_NoErr;
 	if( m_lpUDPSocket == NULL )
@@ -426,10 +439,10 @@ void CTeacherSendThread::doSendDeleteCmd()
 	// 累加总的输出字节数，便于计算输出平均码流...
 	m_total_output_bytes += sizeof(m_rtp_delete);
 	// 打印已发送删除命令包...
-	blog(LOG_INFO, "%s Send Delete RoomID: %lu", TH_SEND_NAME, m_rtp_delete.roomID);
+	blog(LOG_INFO, "%s Send Delete RoomID: %lu", m_strInnerName.c_str(), m_rtp_delete.roomID);
 }
 
-void CTeacherSendThread::doSendCreateCmd()
+void CSmartSendThread::doSendCreateCmd()
 {
 	// 如果命令状态不是创建命令，不发送命令，直接返回...
 	if( m_nCmdState != kCmdSendCreate )
@@ -447,14 +460,14 @@ void CTeacherSendThread::doSendCreateCmd()
 	// 累加总的输出字节数，便于计算输出平均码流...
 	m_total_output_bytes += sizeof(m_rtp_create);
 	// 打印已发送创建命令包 => 第一个包有可能没有发送出去，也返回正常...
-	blog(LOG_INFO, "%s Send Create RoomID: %lu", TH_SEND_NAME, m_rtp_create.roomID);
+	blog(LOG_INFO, "%s Send Create RoomID: %lu", m_strInnerName.c_str(), m_rtp_create.roomID);
 	// 计算下次发送创建命令的时间戳...
 	m_next_create_ns = os_gettime_ns() + period_ns;
 	// 修改休息状态 => 已经有发包，不能休息...
 	m_bNeedSleep = false;
 }
 
-void CTeacherSendThread::doSendHeaderCmd()
+void CSmartSendThread::doSendHeaderCmd()
 {
 	// 如果命令状态不是序列头命令，不发送命令，直接返回...
 	if( m_nCmdState != kCmdSendHeader )
@@ -483,14 +496,14 @@ void CTeacherSendThread::doSendHeaderCmd()
 	// 累加总的输出字节数，便于计算输出平均码流...
 	m_total_output_bytes += strSeqHeader.size();
 	// 打印已发送序列头命令包...
-	blog(LOG_INFO, "%s Send Header SPS: %lu, PPS: %d", TH_SEND_NAME, m_strSPS.size(), m_strPPS.size());
+	blog(LOG_INFO, "%s Send Header SPS: %lu, PPS: %d", m_strInnerName.c_str(), m_strSPS.size(), m_strPPS.size());
 	// 计算下次发送创建命令的时间戳...
 	m_next_header_ns = os_gettime_ns() + period_ns;
 	// 修改休息状态 => 已经有发包，不能休息...
 	m_bNeedSleep = false;
 }
 
-void CTeacherSendThread::doSendDetectCmd()
+void CSmartSendThread::doSendDetectCmd()
 {
 	// 每隔1秒发送一个探测命令包 => 必须转换成有符号...
 	int64_t cur_time_ns = os_gettime_ns();
@@ -508,25 +521,25 @@ void CTeacherSendThread::doSendDetectCmd()
 	m_rtp_detect.dtDir  = DT_TO_SERVER;
 	m_rtp_detect.dtNum += 1;
 
-	// 注意：老师推流端不会用来进行补包，补包都放到服务器端完成...
+	// 注意：推流端本身不会用来针对观看者进行补包，补包都放到服务器端完成...
 	// 因此，采用了根据探测结果进行丢包的处理方法，而不是固定缓存的方法...
 	// 采用了新的拥塞处理 => 删除指定缓存时间点之前的音视频数据包...
 	//this->doCalcAVJamStatus();
 
-	// 调用接口发送探测命令包 => 老师推流端只有一个服务器探测方向...
+	// 调用接口发送探测命令包 => 推流端只有一个服务器探测方向...
 	GM_Error theErr = m_lpUDPSocket->SendTo((void*)&m_rtp_detect, sizeof(m_rtp_detect));
 	(theErr != GM_NoErr) ? MsgLogGM(theErr) : NULL;
 	// 累加总的输出字节数，便于计算输出平均码流...
 	m_total_output_bytes += sizeof(m_rtp_detect);
 	// 打印已发送探测命令包...
-	//blog(LOG_INFO, "%s Send Detect dtNum: %d", TH_SEND_NAME, m_rtp_detect.dtNum);
+	//blog(LOG_INFO, "%s Send Detect dtNum: %d", m_strInnerName.c_str(), m_rtp_detect.dtNum);
 	// 计算下次发送探测命令的时间戳...
 	m_next_detect_ns = os_gettime_ns() + period_ns;
 	// 修改休息状态 => 已经有发包，不能休息...
 	m_bNeedSleep = false;
 }
 
-void CTeacherSendThread::doSendLosePacket(bool bIsAudio)
+void CSmartSendThread::doSendLosePacket(bool bIsAudio)
 {
 	if( m_lpUDPSocket == NULL )
 		return;
@@ -562,7 +575,7 @@ void CTeacherSendThread::doSendLosePacket(bool bIsAudio)
 		lpFrontHeader = (rtp_hdr_t*)szPacketBuffer;
 		// 如果要补充的数据包序号比最小序号还要小 => 没有找到，直接返回...
 		if( rtpLose.lose_seq < lpFrontHeader->seq ) {
-			blog(LOG_INFO, "%s Supply Error => lose: %lu, min: %lu, Type: %d", TH_SEND_NAME, rtpLose.lose_seq, lpFrontHeader->seq, rtpLose.lose_type);
+			blog(LOG_INFO, "%s Supply Error => lose: %lu, min: %lu, Type: %d", m_strInnerName.c_str(), rtpLose.lose_seq, lpFrontHeader->seq, rtpLose.lose_type);
 			break;
 		}
 		ASSERT( rtpLose.lose_seq >= lpFrontHeader->seq );
@@ -571,7 +584,7 @@ void CTeacherSendThread::doSendLosePacket(bool bIsAudio)
 		nSendPos = (rtpLose.lose_seq - lpFrontHeader->seq) * nPerPackSize;
 		// 如果补包位置大于或等于环形队列长度 => 补包越界...
 		if( nSendPos >= cur_circle.size ) {
-			blog(LOG_INFO, "%s Supply Error => Position Excessed", TH_SEND_NAME);
+			blog(LOG_INFO, "%s Supply Error => Position Excessed", m_strInnerName.c_str());
 			break;
 		}
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -583,12 +596,12 @@ void CTeacherSendThread::doSendLosePacket(bool bIsAudio)
 		lpSendHeader = (rtp_hdr_t*)szPacketBuffer;
 		// 如果找到的序号位置不对 => 缓存里面的所有包都是有效包，因为是数据源头...
 		if( lpSendHeader->seq != rtpLose.lose_seq ) {
-			blog(LOG_INFO, "%s Supply Error => Seq: %lu, Find: %lu, Type: %d", TH_SEND_NAME, rtpLose.lose_seq, lpSendHeader->seq, rtpLose.lose_type);
+			blog(LOG_INFO, "%s Supply Error => Seq: %lu, Find: %lu, Type: %d", m_strInnerName.c_str(), rtpLose.lose_seq, lpSendHeader->seq, rtpLose.lose_type);
 			break;
 		}
 		// 获取有效的数据区长度 => 包头 + 数据...
 		nSendSize = sizeof(rtp_hdr_t) + lpSendHeader->psize;
-		// 注意：老师推流端只能有一个服务器方向的补包路线...
+		// 注意：推流端只能有一个服务器方向的补包路线...
 		ASSERT(m_dt_to_dir == DT_TO_SERVER);
 		theErr = m_lpUDPSocket->SendTo((void*)lpSendHeader, nSendSize);
 		// 如果有错误发生，打印出来...
@@ -596,7 +609,7 @@ void CTeacherSendThread::doSendLosePacket(bool bIsAudio)
 		// 累加总的输出字节数，便于计算输出平均码流...
 		m_total_output_bytes += nSendSize;
 		// 打印已经发送补包信息...
-		blog(LOG_INFO, "%s Supply Send => Dir: %d, Seq: %lu, TS: %lu, Slice: %d, Type: %d", TH_SEND_NAME, m_dt_to_dir, lpSendHeader->seq, lpSendHeader->ts, lpSendHeader->psize, lpSendHeader->pt);
+		blog(LOG_INFO, "%s Supply Send => Dir: %d, Seq: %lu, TS: %lu, Slice: %d, Type: %d", m_strInnerName.c_str(), m_dt_to_dir, lpSendHeader->seq, lpSendHeader->ts, lpSendHeader->psize, lpSendHeader->pt);
 		// 修改休息状态 => 已经有发包，不能休息...
 		m_bNeedSleep = false;
 	} while (false);
@@ -604,7 +617,7 @@ void CTeacherSendThread::doSendLosePacket(bool bIsAudio)
 	pthread_mutex_unlock(&m_Mutex);
 }
 
-void CTeacherSendThread::doSendPacket(bool bIsAudio)
+void CSmartSendThread::doSendPacket(bool bIsAudio)
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 2018.10.10 - by jackey => 之前是对收包限制状态，限制是对发包限制状态，可以避免数据帧由于状态原因而丢失...
@@ -612,7 +625,7 @@ void CTeacherSendThread::doSendPacket(bool bIsAudio)
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 如果命令状态不对，打印已缓存的音视频数据帧信息，并返回，不发包...
 	if (m_nCmdState == kCmdUnkownState || m_nCmdState <= kCmdSendHeader) {
-		//blog(LOG_INFO, "%s State Error => VideoSize: %d, AudioSize: %d", TH_SEND_NAME, m_video_circle.size, m_audio_circle.size);
+		//blog(LOG_INFO, "%s State Error => VideoSize: %d, AudioSize: %d", m_strInnerName.c_str(), m_video_circle.size, m_audio_circle.size);
 		return;
 	}
 	// 对环形队列相关资源进行互斥保护...
@@ -667,7 +680,7 @@ void CTeacherSendThread::doSendPacket(bool bIsAudio)
 			break;
 		// 获取有效的数据区长度 => 包头 + 数据...
 		nSendSize = sizeof(rtp_hdr_t) + lpSendHeader->psize;
-		// 注意：老师推流端只能有一个服务器方向的发包路线...
+		// 注意：推流端只能有一个服务器方向的发包路线...
 		ASSERT(m_dt_to_dir == DT_TO_SERVER);
 		theErr = m_lpUDPSocket->SendTo((void*)lpSendHeader, nSendSize);
 		// 如果有错误发生，打印出来...
@@ -695,13 +708,13 @@ void CTeacherSendThread::doSendPacket(bool bIsAudio)
 
 		// 打印调试信息 => 刚刚发送的数据包...
 		//int nZeroSize = DEF_MTU_SIZE - lpSendHeader->psize;
-		//blog(LOG_INFO, "%s Size: %d, Type: %d, Seq: %lu, TS: %lu, pst: %d, ped: %d, Slice: %d, Zero: %d", TH_SEND_NAME, nSendSize, lpSendHeader->pt, lpSendHeader->seq, lpSendHeader->ts, lpSendHeader->pst, lpSendHeader->ped, lpSendHeader->psize, nZeroSize);
+		//blog(LOG_INFO, "%s Size: %d, Type: %d, Seq: %lu, TS: %lu, pst: %d, ped: %d, Slice: %d, Zero: %d", m_strInnerName.c_str(), nSendSize, lpSendHeader->pt, lpSendHeader->seq, lpSendHeader->ts, lpSendHeader->pst, lpSendHeader->ped, lpSendHeader->psize, nZeroSize);
 	} while (false);
 	// 对环形队列相关资源互斥保护结束...
 	pthread_mutex_unlock(&m_Mutex);
 }
 
-void CTeacherSendThread::doRecvPacket()
+void CSmartSendThread::doRecvPacket()
 {
 	if( m_lpUDPSocket == NULL )
 		return;
@@ -746,7 +759,7 @@ void CTeacherSendThread::doRecvPacket()
 	pthread_mutex_unlock(&m_Mutex);
 }
 
-void CTeacherSendThread::doTagCreateProcess(char * lpBuffer, int inRecvLen)
+void CSmartSendThread::doTagCreateProcess(char * lpBuffer, int inRecvLen)
 {
 	// 通过 rtp_hdr_t 做为载体发送过来的...
 	if( m_lpUDPSocket == NULL || lpBuffer == NULL || inRecvLen <= 0 || inRecvLen < sizeof(rtp_hdr_t) )
@@ -760,10 +773,10 @@ void CTeacherSendThread::doTagCreateProcess(char * lpBuffer, int inRecvLen)
 	// 修改命令状态 => 开始发送序列头...
 	m_nCmdState = kCmdSendHeader;
 	// 打印收到服务器反馈的创建命令包...
-	blog(LOG_INFO, "%s Recv Create from Server", TH_SEND_NAME);
+	blog(LOG_INFO, "%s Recv Create from Server", m_strInnerName.c_str());
 }
 
-void CTeacherSendThread::doTagHeaderProcess(char * lpBuffer, int inRecvLen)
+void CSmartSendThread::doTagHeaderProcess(char * lpBuffer, int inRecvLen)
 {
 	// 通过 rtp_hdr_t 做为载体发送过来的...
 	if( m_lpUDPSocket == NULL || lpBuffer == NULL || inRecvLen <= 0 || inRecvLen < sizeof(rtp_hdr_t) )
@@ -777,12 +790,12 @@ void CTeacherSendThread::doTagHeaderProcess(char * lpBuffer, int inRecvLen)
 	// 修改命令状态 => 可以发送数据包了...
 	m_nCmdState = kCmdSendAVPack;
 	// 打印收到服务器反馈的序列头命令包...
-	blog(LOG_INFO, "%s Recv Header from Server", TH_SEND_NAME);
+	blog(LOG_INFO, "%s Recv Header from Server", m_strInnerName.c_str());
 	// 立即通知上层可以捕捉音视频数据了，之后才会产生压缩数据帧...
 	obs_output_begin_data_capture(m_lpObsOutput, 0);
 }
 
-void CTeacherSendThread::doTagSupplyProcess(char * lpBuffer, int inRecvLen)
+void CSmartSendThread::doTagSupplyProcess(char * lpBuffer, int inRecvLen)
 {
 	if( m_lpUDPSocket == NULL || lpBuffer == NULL || inRecvLen <= 0 || inRecvLen < sizeof(rtp_supply_t) )
 		return;
@@ -828,10 +841,10 @@ void CTeacherSendThread::doTagSupplyProcess(char * lpBuffer, int inRecvLen)
 		nDataSize -= sizeof(int);
 	}
 	// 打印已收到补包命令...
-	blog(LOG_INFO, "%s Supply Recv => Count: %d, Type: %d", TH_SEND_NAME, rtpSupply.suSize / sizeof(int), rtpSupply.suType);
+	blog(LOG_INFO, "%s Supply Recv => Count: %d, Type: %d", m_strInnerName.c_str(), rtpSupply.suSize / sizeof(int), rtpSupply.suType);
 }
 
-void CTeacherSendThread::doProcMaxConSeq(bool bIsAudio, uint32_t inMaxConSeq)
+void CSmartSendThread::doProcMaxConSeq(bool bIsAudio, uint32_t inMaxConSeq)
 {
 	// 根据数据包类型，找到环形队列、最大播放序号、当前拥塞点...
 	circlebuf & cur_circle = bIsAudio ? m_audio_circle : m_video_circle;
@@ -864,12 +877,12 @@ void CTeacherSendThread::doProcMaxConSeq(bool bIsAudio, uint32_t inMaxConSeq)
 	circlebuf_pop_front(&cur_circle, NULL, nPopSize);
 	// 注意：环形队列当中的数据块大小是连续的，是一样大的...
 	// 打印环形队列删除结果，计算环形队列剩余的数据包个数...
-	//uint32_t nRemainCount = cur_circle.size / nPerPackSize;
-	//blog(LOG_INFO, "%s Detect Erase Success => %s, MaxConSeq: %lu, MinSeq: %lu, CurSendSeq: %lu, CurPackSeq: %lu, Circle: %lu", 
-	//     TH_SEND_NAME, bIsAudio ? "Audio" : "Video", inMaxConSeq, lpFrontHeader->seq, nCurSendSeq, nCurPackSeq, nRemainCount );
+	uint32_t nRemainCount = cur_circle.size / nPerPackSize;
+	blog(LOG_INFO, "%s Detect Erase Success => %s, MaxConSeq: %lu, MinSeq: %lu, CurSendSeq: %lu, CurPackSeq: %lu, Circle: %lu", 
+	     m_strInnerName.c_str(), bIsAudio ? "Audio" : "Video", inMaxConSeq, lpFrontHeader->seq, nCurSendSeq, nCurPackSeq, nRemainCount );
 }
 
-void CTeacherSendThread::doTagDetectProcess(char * lpBuffer, int inRecvLen)
+void CSmartSendThread::doTagDetectProcess(char * lpBuffer, int inRecvLen)
 {
 	GM_Error theErr = GM_NoErr;
 	if( m_lpUDPSocket == NULL || lpBuffer == NULL || inRecvLen <= 0 || inRecvLen < sizeof(rtp_detect_t) )
@@ -892,8 +905,8 @@ void CTeacherSendThread::doTagDetectProcess(char * lpBuffer, int inRecvLen)
 		this->doProcMaxConSeq(false, lpDetect->maxVConSeq);
 		return;
 	}
-	// 如果是 老师推流端 自己发出的探测包，计算网络延时...
-	if (tmTag == TM_TAG_TEACHER && idTag == ID_TAG_PUSHER) {
+	// 如果是 推流端 自己发出的探测包，计算网络延时...
+	if (tmTag == this->GetTmTag() && idTag == this->GetIdTag()) {
 		// 获取收到的探测数据包...
 		rtp_detect_t rtpDetect = { 0 };
 		memcpy(&rtpDetect, lpBuffer, sizeof(rtpDetect));
@@ -911,13 +924,13 @@ void CTeacherSendThread::doTagDetectProcess(char * lpBuffer, int inRecvLen)
 		if (m_server_rtt_var_ms < 0) { m_server_rtt_var_ms = abs(m_server_rtt_ms - keep_rtt); }
 		else { m_server_rtt_var_ms = (m_server_rtt_var_ms * 3 + abs(m_server_rtt_ms - keep_rtt)) / 4; }
 		// 打印探测结果 => 探测序号 | 网络延时(毫秒)...
-		blog(LOG_INFO, "%s Recv Detect => Dir: %d, dtNum: %d, rtt: %d ms, rtt_var: %d ms", TH_SEND_NAME, rtpDetect.dtDir, rtpDetect.dtNum, m_server_rtt_ms, m_server_rtt_var_ms);
+		blog(LOG_INFO, "%s Recv Detect => Dir: %d, dtNum: %d, rtt: %d ms, rtt_var: %d ms", m_strInnerName.c_str(), rtpDetect.dtDir, rtpDetect.dtNum, m_server_rtt_ms, m_server_rtt_var_ms);
 	}
 }
 ///////////////////////////////////////////////////////
 // 注意：没有发包，也没有收包，需要进行休息...
 ///////////////////////////////////////////////////////
-void CTeacherSendThread::doSleepTo()
+void CSmartSendThread::doSleepTo()
 {
 	// 如果不能休息，直接返回...
 	if( !m_bNeedSleep )

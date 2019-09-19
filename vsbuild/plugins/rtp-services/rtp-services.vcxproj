@@ -15,8 +15,8 @@
     <ClCompile Include="..\..\..\plugins\rtp-services\Socket.cpp" />
     <ClCompile Include="..\..\..\plugins\rtp-services\SocketUtils.cpp" />
     <ClCompile Include="..\..\..\plugins\rtp-services\StrPtrLen.cpp" />
-    <ClCompile Include="..\..\..\plugins\rtp-services\teacher-output.cpp" />
-    <ClCompile Include="..\..\..\plugins\rtp-services\teacher-send-thread.cpp" />
+    <ClCompile Include="..\..\..\plugins\rtp-services\smart-output.cpp" />
+    <ClCompile Include="..\..\..\plugins\rtp-services\smart-send-thread.cpp" />
     <ClCompile Include="..\..\..\plugins\rtp-services\UDPSocket.cpp" />
     <ClCompile Include="..\..\..\plugins\rtp-services\rtp-services.cpp" />
   </ItemGroup>
@@ -26,7 +26,7 @@
     <ClInclude Include="..\..\..\plugins\rtp-services\Socket.h" />
     <ClInclude Include="..\..\..\plugins\rtp-services\SocketUtils.h" />
     <ClInclude Include="..\..\..\plugins\rtp-services\StrPtrLen.h" />
-    <ClInclude Include="..\..\..\plugins\rtp-services\teacher-send-thread.h" />
+    <ClInclude Include="..\..\..\plugins\rtp-services\smart-send-thread.h" />
     <ClInclude Include="..\..\..\plugins\rtp-services\UDPSocket.h" />
     <ClInclude Include="..\..\..\Server\common\rtp.h" />
     <ClInclude Include="..\..\config\GMError.h" />

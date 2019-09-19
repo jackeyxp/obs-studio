@@ -2110,13 +2110,13 @@ static int run_program(fstream &logFile, int argc, char *argv[])
 
 		if (multi) {
 			blog(LOG_INFO, "User enabled --multi flag and is now "
-				"running multiple instances of OBS.");
+				"running multiple instances of Smart.");
 		} else {
 			blog(LOG_WARNING, "================================");
-			blog(LOG_WARNING, "Warning: OBS is already running!");
+			blog(LOG_WARNING, "Warning: Smart is already running!");
 			blog(LOG_WARNING, "================================");
 			blog(LOG_WARNING, "User is now running multiple "
-				"instances of OBS!");
+				"instances of Smart!");
 		}
 
 		/* --------------------------------------- */
@@ -2581,6 +2581,11 @@ int main(int argc, char *argv[])
 	base_get_log_handler(&def_log_handler, nullptr);
 
 	obs_set_cmdline_args(argc, argv);
+	
+	/////////////////////////////////////////
+	// 仅供调试使用......
+	/////////////////////////////////////////
+	multi = true;
 
 	/*for (int i = 1; i < argc; i++) {
 		if (arg_is(argv[i], "--portable", "-p")) {

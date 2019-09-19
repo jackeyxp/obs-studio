@@ -17,7 +17,7 @@ public:
   uint32_t      GetHostAddr() { return m_nHostAddr; }
   uint16_t      GetHostPort() { return m_nHostPort; }
   string    &   GetSeqHeader() { return m_strSeqHeader; }
-  int           GetDBCameraID() { return m_rtp_create.liveID; }
+  uint32_t      GetLiveID() { return m_rtp_create.liveID; }
   int           GetTCPSockID() { return m_rtp_create.tcpSock; }
   int           GetLookerCount() { return m_MapUdpLooker.size(); }
 public:
@@ -75,4 +75,6 @@ protected:
   GM_MapLose    m_AudioMapLose;			  // 推流端检测|观看端上报的音频丢包集合队列...
   GM_MapLose    m_VideoMapLose;			  // 推流端检测|观看端上报的视频丢包集合队列...
   GM_MapUDPConn m_MapUdpLooker;       // 多个UDP观看者...
+  
+  friend class CRoom;
 };

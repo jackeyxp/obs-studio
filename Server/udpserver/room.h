@@ -17,14 +17,11 @@ public:
   bool         IsUdpTeacherPusherOnLine();
 public:
   void         doDumpRoomInfo();
-  CUDPClient * doFindUdpPusher(int inDBCameraID);
-  void         doTcpCreateSmart(CTCPClient * lpSmart);
-  void         doTcpDeleteSmart(CTCPClient * lpSmart);
-
-  void         doUdpCreateTeacher(CUDPClient * lpTeacher);
-  void         doUdpCreateStudent(CUDPClient * lpStudent);
-  void         doUdpDeleteTeacher(CUDPClient * lpTeacher);
-  void         doUdpDeleteStudent(CUDPClient * lpStudent);
+  CUDPClient * doFindUdpPusher(int inLiveID);
+  void         doTcpCreateSmart(CTCPClient * lpTcpSmart);
+  void         doTcpDeleteSmart(CTCPClient * lpTcpSmart);
+  void         doUdpCreateSmart(CUDPClient * lpUdpSmart);
+  void         doUdpDeleteSmart(CUDPClient * lpUdpSmart);
 private:
   void         doTcpCreateTeacher(CTCPClient * lpTeacher);
   void         doTcpCreateStudent(CTCPClient * lpStudent);
@@ -41,6 +38,7 @@ private:
   void         doUdpDeleteStudentLooker(CUDPClient * lpStudent);
 private:
   int              m_nRoomID;           // 房间标识号码...
+  uint32_t         m_nMaxLiveID;        // 当前最大的推流编号...
   CTCPThread   *   m_lpTCPThread;       // 房间管理的TCP线程...
   CTCPClient   *   m_lpTCPTeacher;      // 只有一个老师端长链接...
   GM_MapTCPConn    m_MapTCPStudent;     // 多个学生端长链接...

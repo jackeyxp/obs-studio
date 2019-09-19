@@ -416,12 +416,15 @@ void CLoginMini::onProcMiniLoginRoom(QNetworkReply *reply)
 		App()->SetUdpAddr(strUdpAddr);
 		App()->SetUdpPort(atoi(strUdpPort.c_str()));
 	} while (false);
-	// 发生错误，关闭动画，显示图标|信息，文字左对齐...
+	// 注意：如果是微信扫码，不会显示错误，会在小程序端自动拦截...
+	// 注意：为了兼容参数模式，错误信息显示在二维码区域...
 	if (bIsError) {
-		m_lpLoadBack->hide(); ui->iconScan->show();
-		ui->titleScan->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-		QString strStyle = QString("background-image: url(:/mini/images/mini/scan.png);background-repeat: no-repeat;margin-left: 25px;margin-top: -87px;");
-		ui->iconScan->setStyleSheet(strStyle);
+		m_QPixQRCode = QPixmap();
+		m_lpLoadBack->hide(); ui->iconScan->hide();
+		m_strQRNotice = m_strScan; m_strScan.clear();
+		//ui->titleScan->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+		//QString strStyle = QString("background-image: url(:/mini/images/mini/scan.png);background-repeat: no-repeat;margin-left: 25px;margin-top: -87px;");
+		//ui->iconScan->setStyleSheet(strStyle);
 		this->update();
 		return;
 	}
@@ -647,13 +650,13 @@ void CLoginMini::onTriggerTcpConnect()
 	// 每隔30秒检测一次，终端在中心服务器上在线汇报通知...
 	m_nOnLineTimer = this->startTimer(30 * 1000);
 	// 发起获取小程序Token值的网络命令...
-	this->doWebGetMiniToken();
+	//this->doWebGetMiniToken();
 	
 	/*== 仅供快速测试 ==*/
-	//m_nDBUserID = 1;
-	//m_nDBRoomID = 10001;
+	m_nDBUserID = 1;
+	m_nDBRoomID = 10001;
 	// 一切正常，开始登录指定的房间...
-	//this->doWebGetMiniLoginRoom();  
+	this->doWebGetMiniLoginRoom();  
 }
 
 // 响应中心会话反馈的小程序绑定登录信号槽事件通知...

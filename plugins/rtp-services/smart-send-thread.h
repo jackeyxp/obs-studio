@@ -6,16 +6,18 @@
 #include "HYDefine.h"
 
 class UDPSocket;
-class CTeacherSendThread : public OSThread
+class CSmartSendThread : public OSThread
 {
 public:
-	CTeacherSendThread(int nTCPSockFD, int nDBRoomID);
-	virtual ~CTeacherSendThread();
+	CSmartSendThread(CLIENT_TYPE inType, int nTCPSockFD, int nDBRoomID);
+	virtual ~CSmartSendThread();
 	virtual void Entry();
 public:
 	BOOL			InitThread(obs_output_t * lpObsOutput, const char * lpUdpAddr, int nUdpPort);
 	BOOL			PushFrame(encoder_packet * lpEncPacket);
 protected:
+	uint8_t         GetTmTag() { return m_tmTag; }
+	uint8_t         GetIdTag() { return m_idTag; }
 	BOOL			InitVideo(string & inSPS, string & inPPS, int nWidth, int nHeight, int nFPS);
 	BOOL			InitAudio(int inAudioRate, int inAudioChannel);
 	BOOL			ParseAVHeader();
@@ -47,6 +49,11 @@ private:
 
 	string			m_strSPS;				// 视频sps
 	string			m_strPPS;				// 视频pps
+	
+	string          m_strInnerName;         // 终端内部名称...
+	CLIENT_TYPE     m_nClientType;          // 终端内部类型...
+	uint8_t         m_tmTag;                // 终端类型
+	uint8_t         m_idTag;                // 终端标识
 
 	UDPSocket	 *  m_lpUDPSocket;			// UDP对象
 	obs_output_t *  m_lpObsOutput;			// obs输出对象

@@ -35,14 +35,10 @@ CUDPClient::CUDPClient(int inUdpListenFD, uint8_t tmTag, uint8_t idTag, uint32_t
 CUDPClient::~CUDPClient()
 {
   // 打印UDP终端端被删除信息...
-  log_trace("[UDP-%s-%s-Delete] HostPort: %d, LiveID: %d", get_tm_tag(m_tmTag), get_id_tag(m_idTag), m_nHostPort, this->GetDBCameraID());
-  // 房间对象和老师端对象都有效，在房间中注销老师对象...
-  if( m_lpRoom != NULL && m_tmTag == TM_TAG_TEACHER ) {
-    m_lpRoom->doUdpDeleteTeacher(this);
-  }
-  // 房间对象和学生端对象有效，在房间中注销学生对象...
-  if( m_lpRoom != NULL && m_tmTag == TM_TAG_STUDENT ) {
-    m_lpRoom->doUdpDeleteStudent(this);
+  log_trace("[UDP-%s-%s-Delete] HostPort: %d, LiveID: %d", get_tm_tag(m_tmTag), get_id_tag(m_idTag), m_nHostPort, this->GetLiveID());
+  // 房间对象有效，在房间中注销，内部根据终端类型，自行分发处理...
+  if( m_lpRoom != NULL ) {
+    m_lpRoom->doUdpDeleteSmart(this);
   }
   // 如果是推流端，把自己从补包队列当中删除掉...
   if( this->GetIdTag() == ID_TAG_PUSHER ) {
@@ -221,7 +217,7 @@ bool CUDPClient::doTagDetect(char * lpBuffer, int inBufSize)
     if (m_server_rtt_var_ms < 0) { m_server_rtt_var_ms = abs(m_server_rtt_ms - keep_rtt); }
     else { m_server_rtt_var_ms = (m_server_rtt_var_ms * 3 + abs(m_server_rtt_ms - keep_rtt)) / 4; }
     // 打印探测结果 => 探测序号 | 网络延时(毫秒)...
-    //log_debug("[%s-%s] Recv Detect => dtNum: %d, rtt: %d ms, rtt_var: %d ms",
+    //log_trace("[%s-%s] Recv Detect => dtNum: %d, rtt: %d ms, rtt_var: %d ms",
     //          get_tm_tag(this->GetTmTag()), get_id_tag(this->GetIdTag()),
     //          rtpDetect.dtNum, m_server_rtt_ms, m_server_rtt_var_ms);    
   }
@@ -235,8 +231,8 @@ bool CUDPClient::doDetectForLooker(char * lpBuffer, int inBufSize)
   if( m_lpRoom == NULL )
     return false;
   // 获取房间里指定编号的推流者对象 => 无推流者，直接返回...
-  int nDBCameraID = this->GetDBCameraID();
-  CUDPClient * lpUdpPusher = m_lpRoom->doFindUdpPusher(nDBCameraID);
+  int nLiveID = this->GetLiveID();
+  CUDPClient * lpUdpPusher = m_lpRoom->doFindUdpPusher(nLiveID);
   if( lpUdpPusher == NULL )
     return false;
   // 注意：音视频最小序号包不用管是否是有效包，只简单获取最小包号...
@@ -273,16 +269,10 @@ bool CUDPClient::doTagCreate(char * lpBuffer, int inBufSize)
     return bResult;
   // 保存房间编号到终端对象...
   m_nRoomID = m_rtp_create.roomID;
-  // 更新创建命令包内容，创建或更新房间，更新房间里的老师端...
+  // 更新创建命令包内容，创建或更新房间，更新房间里的终端...
   m_lpRoom = GetApp()->doCreateRoom(m_nRoomID);
-  // 如果是讲师终端类型，加入到房间里面对应的讲师端...
-  if (this->GetTmTag() == TM_TAG_TEACHER ) {
-    m_lpRoom->doUdpCreateTeacher(this);
-  }
-  // 如果是讲师终端类型，加入到房间里面对应的学生端...
-  if (this->GetTmTag() == TM_TAG_STUDENT ) {
-    m_lpRoom->doUdpCreateStudent(this);
-  }
+  // 加入到房间里面对应的终端当中...
+  m_lpRoom->doUdpCreateSmart(this);
   // 回复推流端 => 房间已经创建成功，不要再发创建命令了...
   if( this->GetIdTag() == ID_TAG_PUSHER ) {
     bResult = this->doCreateForPusher(lpBuffer, inBufSize);
@@ -298,6 +288,8 @@ bool CUDPClient::doTagCreate(char * lpBuffer, int inBufSize)
 // 回复推流端 => 房间已经创建成功，不要再发创建命令了...
 bool CUDPClient::doCreateForPusher(char * lpBuffer, int inBufSize)
 {
+  // 打印推流对象创建信息 => 可能会打印多次信息 => 专门打印推流直播编号...
+  log_trace("[%s-%s] LiveID: %d", get_tm_tag(m_tmTag), get_id_tag(m_idTag), this->GetLiveID());
   // 构造反馈的数据包...
   rtp_hdr_t rtpHdr = {0};
   rtpHdr.tm = TM_TAG_SERVER;
@@ -314,8 +306,8 @@ bool CUDPClient::doCreateForLooker(char * lpBuffer, int inBufSize)
   if( m_lpRoom == NULL )
     return false;
   // 获取房间里指定编号的推流者对象 => 无推流者，直接返回...
-  int nDBCameraID = this->GetDBCameraID();
-  CUDPClient * lpUdpPusher = m_lpRoom->doFindUdpPusher(nDBCameraID);
+  int nLiveID = this->GetLiveID();
+  CUDPClient * lpUdpPusher = m_lpRoom->doFindUdpPusher(nLiveID);
   if( lpUdpPusher == NULL )
     return false;
   // 获取推流者的序列头信息 => 序列头为空，直接返回...
@@ -394,9 +386,9 @@ bool CUDPClient::doTagSupply(char * lpBuffer, int inBufSize)
   // 把自己加入到丢包对象列表当中...
   GetApp()->doAddLoseForLooker(this);
   // 打印已收到补包命令...
-  //log_debug("[%s-%s] Supply Recv => Count: %d, Type: %d",
-  //          get_tm_tag(this->GetTmTag()), get_id_tag(this->GetIdTag()),
-  //          rtpSupply.suSize / sizeof(int), rtpSupply.suType);
+  log_trace("[%s-%s] Supply Recv => Count: %d, Type: %d",
+            get_tm_tag(this->GetTmTag()), get_id_tag(this->GetIdTag()),
+            rtpSupply.suSize / sizeof(int), rtpSupply.suType);
   return true;
 }
 
@@ -406,8 +398,8 @@ bool CUDPClient::doIsPusherLose(uint8_t inPType, uint32_t inLoseSeq)
   if( m_lpRoom == NULL )
     return false;
   // 获取房间里指定编号的推流者对象 => 无推流者，直接返回...
-  int nDBCameraID = this->GetDBCameraID();
-  CUDPClient * lpUdpPusher = m_lpRoom->doFindUdpPusher(nDBCameraID);
+  int nLiveID = this->GetLiveID();
+  CUDPClient * lpUdpPusher = m_lpRoom->doFindUdpPusher(nLiveID);
   if( lpUdpPusher == NULL )
     return false;
   // 在找到的推流者当中查找是否有包丢失...
@@ -728,7 +720,7 @@ int CUDPClient::doSendSupplyCmd(bool bIsAudio)
   // 如果补包缓冲不为空，才进行补包命令发送...
   int nDataSize = nHeadSize + rtpSupply.suSize;
   // 打印已发送补包命令...
-  //log_debug("[%s-%s] Supply Send => Dir: %d, Count: %d, Audio: %d", lpTMTag, lpIDTag, DT_TO_SERVER, rtpSupply.suSize/sizeof(uint32_t), bIsAudio);
+  log_trace("[%s-%s] Supply Send => Dir: %d, Count: %d, Audio: %d", lpTMTag, lpIDTag, DT_TO_SERVER, rtpSupply.suSize/sizeof(uint32_t), bIsAudio);
   // 将补包命令转发给当前老师推流者对象...
   return this->doTransferToFrom(szPacketBuffer, nDataSize);
 }
@@ -771,8 +763,8 @@ void CUDPClient::doSendLosePacket(bool bIsAudio)
   if( m_lpRoom == NULL )
     return;
   // 获取房间里指定编号的推流者对象 => 无推流者，直接返回...
-  int nDBCameraID = this->GetDBCameraID();
-  CUDPClient * lpUdpPusher = m_lpRoom->doFindUdpPusher(nDBCameraID);
+  int nLiveID = this->GetLiveID();
+  CUDPClient * lpUdpPusher = m_lpRoom->doFindUdpPusher(nLiveID);
   if( lpUdpPusher == NULL )
     return;
   // 获取学生推流者在服务器缓存的音频或视频环形队列对象...
@@ -821,9 +813,9 @@ void CUDPClient::doSendLosePacket(bool bIsAudio)
   // 获取有效的数据区长度 => 包头 + 数据...
   nSendSize = sizeof(rtp_hdr_t) + lpSendHeader->psize;
   // 打印已经发送补包信息...
-  //log_debug("[%s-%s] Lose Send => Seq: %u, TS: %u, Slice: %d, Type: %d",
-  //          lpTMTag, lpIDTag, lpSendHeader->seq, lpSendHeader->ts,
-  //          lpSendHeader->psize, lpSendHeader->pt);
+  log_trace("[%s-%s] Lose Send => Seq: %u, TS: %u, Slice: %d, Type: %d",
+            lpTMTag, lpIDTag, lpSendHeader->seq, lpSendHeader->ts,
+            lpSendHeader->psize, lpSendHeader->pt);
   // 回复老师观看端 => 发送补包命令数据内容...
   this->doTransferToFrom((char*)lpSendHeader, nSendSize);
 }

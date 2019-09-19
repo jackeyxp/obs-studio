@@ -28,10 +28,10 @@
     <ClCompile Include="..\..\..\plugins\rtp-services\UDPSocket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\plugins\rtp-services\teacher-output.cpp">
+    <ClCompile Include="..\..\..\plugins\rtp-services\smart-send-thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\plugins\rtp-services\teacher-send-thread.cpp">
+    <ClCompile Include="..\..\..\plugins\rtp-services\smart-output.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -57,11 +57,11 @@
     <ClInclude Include="..\..\config\GMError.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\plugins\rtp-services\teacher-send-thread.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Server\common\rtp.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\plugins\rtp-services\smart-send-thread.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
