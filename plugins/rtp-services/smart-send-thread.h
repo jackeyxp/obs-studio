@@ -50,8 +50,8 @@ private:
 	string			m_strSPS;				// 视频sps
 	string			m_strPPS;				// 视频pps
 	
-	string          m_strInnerName;         // 终端内部名称...
 	CLIENT_TYPE     m_nClientType;          // 终端内部类型...
+	string          m_strInnerName;         // 终端内部名称...
 	uint8_t         m_tmTag;                // 终端类型
 	uint8_t         m_idTag;                // 终端标识
 
