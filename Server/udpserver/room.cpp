@@ -27,23 +27,26 @@ void CRoom::doDumpRoomInfo()
 {
   // 利用构造函数|析构函数进行互斥保护...
   OSMutexLocker theLocker(&m_tcp_mutex);
-  // 打印房间编号信息...
-  log_trace("\n======== RoomID: %d ========\n", m_nRoomID);
+  string strInfo; char szBuffer[256] = { 0 };
   // 打印房间里讲师端推流者个数，推流者下面的观看者个数...
   CUDPClient * lpUdpTeacherPusher = ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetUdpPusher() : NULL);
   int nTcpSockID   = ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetConnFD() : 0);
-  int nPusherCount = ((lpUdpTeacherPusher != NULL) ? 1 : 0);
+  int nLiveID = ((lpUdpTeacherPusher != NULL) ? lpUdpTeacherPusher->GetLiveID() : 0);
   int nLookerCount = ((lpUdpTeacherPusher != NULL) ? lpUdpTeacherPusher->GetLookerCount() : 0);
-  log_trace("Teacher-ID: %d, Teacher-Pusher: %d, Looker-Count: %d\n", nTcpSockID, nPusherCount, nLookerCount);
+  sprintf(szBuffer, "TCP-Teacher-ID: %d, UDPPusher-LiveID: %d, Looker-Count: %d\n", nTcpSockID, nLiveID, nLookerCount);
+  strInfo.append(szBuffer);
   GM_MapTCPConn::iterator itorItem;
   // 打印房间里学生端推流者个数，推流者下面的观看者个数...
   for(itorItem = m_MapTCPStudent.begin(); itorItem != m_MapTCPStudent.end(); ++itorItem) {
     CTCPClient * lpTcpClient = itorItem->second;
     CUDPClient * lpUdpPusher = lpTcpClient->GetUdpPusher();
-    nPusherCount = ((lpUdpPusher != NULL) ? 1 : 0);
+    nLiveID = ((lpUdpPusher != NULL) ? lpUdpPusher->GetLiveID() : 0);
     nLookerCount = ((lpUdpPusher != NULL) ? lpUdpPusher->GetLookerCount() : 0);
-    log_trace("Student-ID: %d, Student-Pusher: %d, Looker-Count: %d\n", itorItem->first, nPusherCount, nLookerCount);
-  }  
+    sprintf(szBuffer, "TCP-Student-ID: %d, UDPPusher-LiveID: %d, Looker-Count: %d\n", itorItem->first, nLiveID, nLookerCount);
+    strInfo.append(szBuffer);
+  }
+  // 打印最终组合完成后的房间内容信息 => 组合讲师终端和学生终端的信息...
+  log_trace("\n======== RoomID: %d ========\n%s", m_nRoomID, strInfo.c_str());
 }
 
 int CRoom::GetTcpTeacherCount()
@@ -144,17 +147,8 @@ void CRoom::doTcpDeleteStudent(CTCPClient * lpStudent)
 {
   // 利用构造函数|析构函数进行互斥保护...
   OSMutexLocker theLocker(&m_tcp_mutex);
-  // 找到相关观看学生端对象，直接删除返回...
-  int nConnFD = lpStudent->GetConnFD();
-  GM_MapTCPConn::iterator itorItem = m_MapTCPStudent.find(nConnFD);
-  if( itorItem != m_MapTCPStudent.end() ) {
-    m_MapTCPStudent.erase(itorItem);
-    // 获取TCP线程对象，转发计数器变化通知...
-    m_lpTCPThread->doRoomCommand(m_nRoomID, kCmd_UdpServer_DelStudent);
-    return;
-  }
-  // 如果通过FD方式没有找到，通过指针遍历查找...
-  itorItem = m_MapTCPStudent.begin();
+  // FD方式不一定有效，通过指针遍历查找...
+  GM_MapTCPConn::iterator itorItem = m_MapTCPStudent.begin();
   while(itorItem != m_MapTCPStudent.end()) {
     // 找到了相关节点 => 删除节点，返回...
     if(itorItem->second == lpStudent) {
@@ -168,7 +162,7 @@ void CRoom::doTcpDeleteStudent(CTCPClient * lpStudent)
     ++itorItem;
   }
   // 通过指针遍历也没有找到，打印错误信息...
-  log_trace("Can't find TCP-Student in CRoom, ConnFD: %d", nConnFD);
+  log_trace("Can't find TCP-Student in CRoom, ConnFD: %d", lpStudent->GetConnFD());
 }
 
 // 通过摄像头编号查找对应的推流终端 => 每个终端都只有一个推流者...
