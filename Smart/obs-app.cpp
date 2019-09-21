@@ -1608,9 +1608,9 @@ void OBSApp::doCheckRemote()
 	m_RemoteSession = new CRemoteSession();
 	m_RemoteSession->InitSession(m_strRemoteAddr.c_str(), m_nRemotePort);
 	// 关联UDP连接被服务器删除时的事件通知信号槽、获取在线通道列表的信号槽、开启或删除rtp资源的信号槽...
+	this->connect(m_RemoteSession, SIGNAL(doTriggerLiveOnLine(int, bool)), lpBasicWnd, SLOT(onTriggerLiveOnLine(int, bool)));
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerUdpLogout(int, int, int)), lpBasicWnd, SLOT(onTriggerUdpLogout(int, int, int)));
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerCameraList(Json::Value&)), lpBasicWnd, SLOT(onTriggerCameraList(Json::Value&)));
-	//this->connect(m_RemoteSession, SIGNAL(doTriggerRtpSource(int, bool)), lpBasicWnd, SLOT(onTriggerRtpSource(int, bool)));
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerCameraLiveStop(int)), lpBasicWnd, SLOT(onTriggerCameraLiveStop(int)));
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerScreenFinish(int, QString, QString)), lpBasicWnd, SLOT(onTriggerScreenFinish(int, QString, QString)), Qt::QueuedConnection);
 }
@@ -1698,7 +1698,7 @@ bool OBSApp::IsPortableMode()
 #endif
 
 #define DSHOW_INPUT_SOURCE    "dshow_input"
-#define INTERACT_RTP_SOURCE   "rtp_source"
+#define INTERACT_SMART_SOURCE "smart_source"
 #define NOISE_SUPPRESS_FILTER "noise_suppress_filter"
 
 const char *OBSApp::GetNSFilter() const
@@ -1711,9 +1711,9 @@ const char *OBSApp::DShowInputSource() const
 	return DSHOW_INPUT_SOURCE;
 }
 
-const char *OBSApp::InteractRtpSource() const
+const char *OBSApp::InteractSmartSource() const
 {
-	return INTERACT_RTP_SOURCE;
+	return INTERACT_SMART_SOURCE;
 }
 
 const char *OBSApp::InputAudioSource() const

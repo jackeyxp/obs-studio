@@ -34,6 +34,15 @@
     <ClCompile Include="..\..\..\plugins\rtp-services\smart-output.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\plugins\rtp-services\smart-source.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\plugins\rtp-services\smart-recv-thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\plugins\rtp-services\UDPPlayThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\plugins\rtp-services\OSThread.h">
@@ -48,9 +57,6 @@
     <ClInclude Include="..\..\..\plugins\rtp-services\StrPtrLen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\plugins\rtp-services\UDPSocket.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\plugins\rtp-services\HYDefine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -61,6 +67,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\plugins\rtp-services\smart-send-thread.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\plugins\rtp-services\smart-recv-thread.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\plugins\rtp-services\UDPSocket.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\plugins\rtp-services\AmfByteStream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\plugins\rtp-services\BitWritter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\plugins\rtp-services\UDPPlayThread.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

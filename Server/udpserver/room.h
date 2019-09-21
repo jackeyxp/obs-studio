@@ -36,6 +36,8 @@ private:
   void         doUdpDeleteTeacherLooker(CUDPClient * lpTeacher);
   void         doUdpDeleteStudentPusher(CUDPClient * lpStudent);
   void         doUdpDeleteStudentLooker(CUDPClient * lpStudent);
+  
+  void         doUdpLiveOnLine(CTCPClient * lpTcpExclude, int inLiveID, bool bIsOnLineFlag);
 private:
   int              m_nRoomID;           // 房间标识号码...
   uint32_t         m_nMaxLiveID;        // 当前最大的推流编号...

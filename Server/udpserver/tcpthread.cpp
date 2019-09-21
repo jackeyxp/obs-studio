@@ -208,6 +208,11 @@ void CTCPThread::doTCPListenEvent()
       close(connfd);
       break;
     }
+    // 新建客户端之前，先删除相同套接字的对象...
+    if( m_MapConnect.find(connfd) != m_MapConnect.end() ) {
+        delete m_MapConnect[connfd]; m_MapConnect.erase(connfd);
+        log_trace("=== delete same socket(%d) before create ===", connfd);
+    }
     int nSinPort = ntohs(cliaddr.sin_port);
     string strSinAddr = inet_ntoa(cliaddr.sin_addr);
     // 创建客户端对象,并保存到集合当中...

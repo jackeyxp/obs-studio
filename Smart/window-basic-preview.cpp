@@ -101,7 +101,7 @@ void OBSBasicPreview::doBuildStudentBtnMic(obs_sceneitem_t * lpSceneItem)
 	if ((flags & OBS_SOURCE_VIDEO) == 0)
 		return;
 	// 如果不是互动学生端，直接返回...
-	if (astrcmpi(lpSrcID, App()->InteractRtpSource()) != 0)
+	if (astrcmpi(lpSrcID, App()->InteractSmartSource()) != 0)
 		return;
 	// 遍历已经存在的麦克风按钮集合...
 	GM_MapBtnMic::iterator itorItem;
@@ -952,7 +952,7 @@ void OBSBasicPreview::DoSelect(const vec2 &pos, bool selectBelow/* = true*/)
 		return;
 	ASSERT(lpSource != NULL && lpSrcID != NULL);
 	// 进行ID判断，如果是rtp资源，需要获取摄像头通道编号...
-	if (astrcmpi(lpSrcID, App()->InteractRtpSource()) == 0) {
+	if (astrcmpi(lpSrcID, App()->InteractSmartSource()) == 0) {
 		obs_data_t * lpSettings = obs_source_get_settings(lpSource);
 		int theDBCameraID = obs_data_get_int(lpSettings, "camera_id");
 		// 将新的摄像头编号更新到云台控制当中...

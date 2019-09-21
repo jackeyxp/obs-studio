@@ -377,6 +377,24 @@ int CTCPClient::doCmdSmartOnLine()
   return nResult;
 }
 
+// 通知对应的Smart终端，指定编号的推流者，已经上线或下线了...
+int CTCPClient::doUdpLiveOnLine(int inLiveID, bool bIsOnLineFlag)
+{
+  // 构造转发JSON数据块 => 返回套接字|推流编号|推流通道在线状态...
+  json_object * new_obj = json_object_new_object();
+  json_object_object_add(new_obj, "tcp_socket", json_object_new_int(m_nConnFD));
+  json_object_object_add(new_obj, "live_id", json_object_new_int(inLiveID));
+  json_object_object_add(new_obj, "live_on", json_object_new_int(bIsOnLineFlag));
+  // 转换成json字符串，获取字符串长度...
+  char * lpNewJson = (char*)json_object_to_json_string(new_obj);
+  // 使用统一的通用命令发送接口函数...
+  int nResult = this->doSendCommonCmd(kCmd_Live_OnLine, lpNewJson, strlen(lpNewJson));
+  // json对象引用计数减少...
+  json_object_put(new_obj);
+  // 返回执行结果...
+  return nResult;  
+}
+
 // 处理Screen事件...
 int CTCPClient::doScreenClient(Cmd_Header * lpHeader, const char * lpJsonPtr)
 {

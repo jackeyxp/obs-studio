@@ -4698,7 +4698,7 @@ void OBSBasic::CreateSourcePopupMenu(int idx, bool preview)
 
 	OBSSceneItem sceneItem = ui->sources->Get(idx);
 	obs_source_t *source = obs_sceneitem_get_source(sceneItem);
-	bool bIsRtpSource = ((astrcmpi(obs_source_get_id(source), App()->InteractRtpSource()) == 0) ? true : false);
+	bool bIsRtpSource = ((astrcmpi(obs_source_get_id(source), App()->InteractSmartSource()) == 0) ? true : false);
 
 	// 如果数据源有效，创建一个可浮动数据源的菜单项...
 	if (source != NULL) {
@@ -6828,7 +6828,7 @@ static inline void setAudioMixer(obs_sceneitem_t *scene_item, const int mixerIdx
 	obs_data_release(lpSettings);*/
 
 	const char * lpSrcID = obs_source_get_id(source);
-	bool bIsRtpSource = ((astrcmpi(lpSrcID, App()->InteractRtpSource()) == 0) ? true : false);
+	bool bIsRtpSource = ((astrcmpi(lpSrcID, App()->InteractSmartSource()) == 0) ? true : false);
 
 	// 注意：如果是互动教室资源、第二个轨道，用来录像的音频，不用处理，默认始终录像...
 	if (bIsRtpSource && (mixerIdx == 1))
@@ -8335,4 +8335,49 @@ void OBSBasic::CheckDiskSpaceRemaining()
 
 		DiskSpaceMessage();
 	}
+}
+
+// 响应服务器发送的smart_source重建事件通知...
+void OBSBasic::onTriggerLiveOnLine(int nLiveID, bool bIsLiveOnLine)
+{
+	// 在线状态 => 直接新建数据源...
+	// 离线状态 => 直接删除数据源...
+	// 启动或退出时，全部删除已经加载的互动数据源...
+
+	/*// 通过推流编号查找场景对应的数据源...
+	for (int i = 0; i < ui->sources->count(); i++) {
+		obs_sceneitem_t * lpSceneitem = ui->sources->Get(i);
+		obs_source_t * lpFindSource = obs_sceneitem_get_source(lpSceneitem);
+		obs_data_t * lpSettings = obs_source_get_settings(lpFindSource);
+		// 场景配置无效，继续寻找...
+		if (lpSettings == NULL)
+			continue;
+		// 推流编号和场景配置不一致，需要释放引用计数器，继续寻找...
+		if (nLiveID != obs_data_get_int(lpSettings, "live_id")) {
+			obs_data_release(lpSettings);
+			continue;
+		}
+		// 如果云台窗口有效，需要更新...
+		//this->doUpdatePTZ(nDBCameraID);
+		// 将smart_source需要的参数写入配置结构当中...
+		int nRoomID = atoi(App()->GetRoomIDStr().c_str());
+		obs_data_set_int(lpSettings, "room_id", nRoomID);
+		obs_data_set_int(lpSettings, "live_id", nLiveID);
+		obs_data_set_bool(lpSettings, "live_on", bIsLiveOnLine);
+		obs_data_set_int(lpSettings, "udp_port", App()->GetUdpPort());
+		obs_data_set_string(lpSettings, "udp_addr", App()->GetUdpAddr().c_str());
+		obs_data_set_int(lpSettings, "tcp_socket", App()->GetRemoteTcpSockFD());
+		// 将新的资源配置应用到当前smart_source资源对象当中...
+		obs_source_update(lpFindSource, lpSettings);
+		// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏...
+		obs_data_release(lpSettings);
+		// 跳出查找循环...
+		return;
+	}
+	// 如果没有找到对应的数据源，并且是离线通知，直接返回...
+	if (!bIsLiveOnLine)
+		return;
+	ASSERT(bIsLiveOnLine && nLiveID);
+	// 如果没有找到对应的数据源，需要自动新建一个...
+	OBSBasicSourceSelect::AddNewSmartSource();*/
 }

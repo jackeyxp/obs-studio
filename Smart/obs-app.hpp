@@ -217,7 +217,7 @@ public:
 	const char *DShowInputSource() const;
 	const char *InputAudioSource() const;
 	const char *OutputAudioSource() const;
-	const char *InteractRtpSource() const;
+	const char *InteractSmartSource() const;
 
 	const char *GetRenderModule() const;
 

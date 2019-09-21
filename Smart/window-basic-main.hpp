@@ -462,6 +462,7 @@ public slots:
 	void PauseRecording();
 	void UnpauseRecording();
 
+	void onTriggerLiveOnLine(int nLiveID, bool bIsLiveOnLine);
 private slots:
 	void AddSceneItem(OBSSceneItem item);
 	void AddScene(OBSSource source);

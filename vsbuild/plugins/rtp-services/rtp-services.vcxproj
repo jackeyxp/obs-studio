@@ -12,21 +12,28 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\plugins\rtp-services\OSThread.cpp" />
+    <ClCompile Include="..\..\..\plugins\rtp-services\smart-recv-thread.cpp" />
+    <ClCompile Include="..\..\..\plugins\rtp-services\smart-source.cpp" />
     <ClCompile Include="..\..\..\plugins\rtp-services\Socket.cpp" />
     <ClCompile Include="..\..\..\plugins\rtp-services\SocketUtils.cpp" />
     <ClCompile Include="..\..\..\plugins\rtp-services\StrPtrLen.cpp" />
     <ClCompile Include="..\..\..\plugins\rtp-services\smart-output.cpp" />
     <ClCompile Include="..\..\..\plugins\rtp-services\smart-send-thread.cpp" />
+    <ClCompile Include="..\..\..\plugins\rtp-services\UDPPlayThread.cpp" />
     <ClCompile Include="..\..\..\plugins\rtp-services\UDPSocket.cpp" />
     <ClCompile Include="..\..\..\plugins\rtp-services\rtp-services.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\plugins\rtp-services\AmfByteStream.h" />
+    <ClInclude Include="..\..\..\plugins\rtp-services\BitWritter.h" />
     <ClInclude Include="..\..\..\plugins\rtp-services\HYDefine.h" />
     <ClInclude Include="..\..\..\plugins\rtp-services\OSThread.h" />
+    <ClInclude Include="..\..\..\plugins\rtp-services\smart-recv-thread.h" />
     <ClInclude Include="..\..\..\plugins\rtp-services\Socket.h" />
     <ClInclude Include="..\..\..\plugins\rtp-services\SocketUtils.h" />
     <ClInclude Include="..\..\..\plugins\rtp-services\StrPtrLen.h" />
     <ClInclude Include="..\..\..\plugins\rtp-services\smart-send-thread.h" />
+    <ClInclude Include="..\..\..\plugins\rtp-services\UDPPlayThread.h" />
     <ClInclude Include="..\..\..\plugins\rtp-services\UDPSocket.h" />
     <ClInclude Include="..\..\..\Server\common\rtp.h" />
     <ClInclude Include="..\..\config\GMError.h" />

@@ -37,6 +37,7 @@ const long CMD_LINE_START   = __LINE__ + 1;
 enum {
   kCmd_Smart_Login          = __LINE__ - CMD_LINE_START,
   kCmd_Smart_OnLine         = __LINE__ - CMD_LINE_START,
+  kCmd_Live_OnLine          = __LINE__ - CMD_LINE_START,
   kCmd_UdpServer_Login      = __LINE__ - CMD_LINE_START,
   kCmd_UdpServer_OnLine     = __LINE__ - CMD_LINE_START,
   kCmd_UdpServer_AddTeacher = __LINE__ - CMD_LINE_START,

@@ -100,10 +100,10 @@ public:
 	CRemoteSession();
 	virtual ~CRemoteSession();
 signals:
+	void doTriggerLiveOnLine(int nLiveID, bool bIsLiveOnLine);
 	void doTriggerCameraLiveStop(int nDBCameraID);
 	void doTriggerCameraList(Json::Value & value);
 	void doTriggerUdpLogout(int tmTag, int idTag, int nDBCameraID);
-	void doTriggerRtpSource(int nDBCameraID, bool bIsCameraOnLine);
 	void doTriggerScreenFinish(int nScreenID, QString strQUser, QString strQFile);
 public:
 	bool IsCanReBuild() { return m_bCanReBuild; }
@@ -124,6 +124,7 @@ private:
 	bool doParseJson(const char * lpData, int nSize, Json::Value & outValue);
 	bool doCmdSmartLogin(const char * lpData, int nSize);
 	bool doCmdSmartOnLine(const char * lpData, int nSize);
+	bool doCmdLiveOnLine(const char * lpData, int nSize);
 	//bool doCmdUdpLogout(const char * lpData, int nSize);
 	//bool doCmdTeacherCameraList(const char * lpData, int nSize);
 	//bool doCmdTeacherCameraLiveStop(const char * lpData, int nSize);

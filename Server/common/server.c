@@ -133,6 +133,7 @@ const char * get_command_name(int inCmd)
   {
     case kCmd_Smart_Login:          return "Smart_Login";
     case kCmd_Smart_OnLine:         return "Smart_OnLine";
+    case kCmd_Live_OnLine:          return "Live_OnLine";
     case kCmd_UdpServer_Login:      return "UdpServer_Login";
     case kCmd_UdpServer_OnLine:     return "UdpServer_OnLine";
     case kCmd_UdpServer_AddTeacher: return "UdpServer_AddTeacher";

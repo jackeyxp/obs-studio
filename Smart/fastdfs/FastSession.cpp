@@ -40,6 +40,7 @@ const char * get_command_name(int inCmd)
 	{
 	case kCmd_Smart_Login:          return "Smart_Login";
 	case kCmd_Smart_OnLine:         return "Smart_OnLine";
+	case kCmd_Live_OnLine:          return "Live_OnLine";
 	case kCmd_UdpServer_Login:      return "UdpServer_Login";
 	case kCmd_UdpServer_OnLine:     return "UdpServer_OnLine";
 	case kCmd_UdpServer_AddTeacher: return "UdpServer_AddTeacher";
@@ -504,6 +505,7 @@ void CRemoteSession::onReadyRead()
 		{
 		case kCmd_Smart_Login:         bResult = this->doCmdSmartLogin(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		case kCmd_Smart_OnLine:        bResult = this->doCmdSmartOnLine(lpDataPtr, lpCmdHeader->m_pkg_len); break;
+		case kCmd_Live_OnLine:         bResult = this->doCmdLiveOnLine(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		//case kCmd_UDP_Logout:        bResult = this->doCmdUdpLogout(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		//case kCmd_Camera_LiveStop:   bResult = this->doCmdTeacherCameraLiveStop(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		//case kCmd_Camera_OnLineList: bResult = this->doCmdTeacherCameraList(lpDataPtr, lpCmdHeader->m_pkg_len); break;
@@ -572,6 +574,32 @@ bool CRemoteSession::doCmdSmartOnLine(const char * lpData, int nSize)
 	// 保存关联的讲师流量记录编号 => 不一致，并且有效时才更新...
 	if (nDBFlowTeacherID > 0 && App()->GetDBFlowTeacherID() != nDBFlowTeacherID) {
 		App()->SetDBFlowTeacherID(nDBFlowTeacherID);
+	}
+	return true;
+}
+
+bool CRemoteSession::doCmdLiveOnLine(const char * lpData, int nSize)
+{
+	Json::Value value;
+	// 进行Json数据包的内容解析...
+	if (!this->doParseJson(lpData, nSize, value)) {
+		blog(LOG_INFO, "CRemoteSession::doParseJson Error!");
+		return false;
+	}
+	// 获取推流编号和推流状态，转换成需要的内容...
+	int  nLiveID = atoi(OBSApp::getJsonString(value["live_id"]).c_str());
+	bool bIsLiveOnLine = atoi(OBSApp::getJsonString(value["live_on"]).c_str());
+	int  nTCPSocketFD = atoi(OBSApp::getJsonString(value["tcp_socket"]).c_str());
+	// 如果当前连接对象与已经存在的连接对象不一致，直接返回失败...
+	if (App()->GetRemoteTcpSockFD() != nTCPSocketFD) {
+		blog(LOG_INFO, "[RemoteSession] TCPSocket Error => App: %d, Cur: %d", App()->GetRemoteTcpSockFD(), nTCPSocketFD);
+		return false;
+	}
+	// 打印命令反馈详情信息 => 只有推流通道编号大于0时，才需要反馈给主界面进行拉流或断流操作...
+	blog(LOG_INFO, "[RemoteSession] doCmdLiveOnLine => tcp_socket: %d, LiveID: %d, OnLine: %d", nTCPSocketFD, nLiveID, bIsLiveOnLine);
+	// 根据推流编号在线状态，进行smart_source资源拉流线程的创建或删除...
+	if (nLiveID > 0) {
+		emit this->doTriggerLiveOnLine(nLiveID, bIsLiveOnLine);
 	}
 	return true;
 }

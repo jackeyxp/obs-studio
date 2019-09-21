@@ -240,6 +240,35 @@ bool AddNew(QWidget *parent, const char *id, const char *name,
 	return success;
 }
 
+bool OBSBasicSourceSelect::AddNewSmartSource(const char *name)
+{
+	bool success = false;
+	const char *id = "smart_source";
+	obs_source_t *source = obs_source_create(id, name, NULL, nullptr);
+	OBSBasic *main = reinterpret_cast<OBSBasic *>(App()->GetMainWindow());
+	OBSScene scene = main->GetCurrentScene();
+
+	if (source != NULL) {
+		AddSourceData data;
+		data.source = source;
+		data.visible = true;
+
+		obs_enter_graphics();
+		obs_scene_atomic_update(scene, AddSource, &data);
+		obs_leave_graphics();
+
+		// 新添加资源是互动教室 => 需要监视并输出，开启本地监视...
+		// 轨道1 => 输出给直播使用，始终屏蔽互动教室的声音...
+		// 轨道2 => 输出给录像使用，当互动教室处于焦点状态时录制声音...
+		obs_source_set_monitoring_type(source, OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT);
+		blog(LOG_INFO, "User changed audio monitoring for source '%s' to: %s", obs_source_get_name(source), "monitor and output");
+
+		success = true;
+	}
+	obs_source_release(source);
+	return success;
+}
+
 void OBSBasicSourceSelect::doSaveScreenPath(obs_data_t * settings)
 {
 	char path[512] = { 0 };
@@ -263,7 +292,7 @@ void OBSBasicSourceSelect::on_buttonBox_accepted()
 	bool visible = ui->sourceVisible->isChecked();
 
 	// 当前新添加的资源是否是 => rtp_source => 互动教室...
-	bool bIsNewRtpSource = ((astrcmpi(id, App()->InteractRtpSource()) == 0) ? true : false);
+	bool bIsNewRtpSource = ((astrcmpi(id, App()->InteractSmartSource()) == 0) ? true : false);
 
 	// 当前新添加的资源是否是 学生屏幕分享...
 	bool bIsNewScreenSource = ((astrcmpi(id, "slideshow") == 0) && m_bIsScreen);
