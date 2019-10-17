@@ -67,5 +67,9 @@
     <file>images/student/maxed.png</file>
     <file>images/student/maxing.png</file>
     <file>images/student/close.png</file>
+    <file>images/student/camera.png</file>
+    <file>images/student/update.png</file>
+    <file>images/student/about.png</file>
+    <file>images/student/system.png</file>
   </qresource>
 </RCC>

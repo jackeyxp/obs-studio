@@ -1,0 +1,79 @@
+
+*{font-family:Microsoft YaHei;}
+
+/*关闭按钮*/
+QPushButton#btnClose {
+  border-image:url(:/student/images/student/close.png) 0 40 0 0;
+}
+QPushButton#btnClose:hover {
+  border-image:url(:/student/images/student/close.png) 0 20 0 20;
+}
+QPushButton#btnClose:pressed {
+  border-image:url(:/student/images/student/close.png) 0 0 0 40;
+}
+
+/*最大化按钮*/
+QPushButton#btnMax {
+  border-image:url(:/student/images/student/maxing.png) 0 40 0 0;
+}
+QPushButton#btnMax:hover {
+  border-image:url(:/student/images/student/maxing.png) 0 20 0 20;
+}
+QPushButton#btnMax:pressed {
+  border-image:url(:/student/images/student/maxing.png) 0 0 0 40;
+}
+
+/*最小化按钮*/
+QPushButton#btnMin {
+  border-image:url(:/student/images/student/mined.png) 0 40 0 0;
+}
+QPushButton#btnMin:hover {
+  border-image:url(:/student/images/student/mined.png) 0 20 0 20;
+}
+QPushButton#btnMin:pressed {
+  border-image:url(:/student/images/student/mined.png) 0 0 0 40;
+}
+
+/*摄像头按钮*/
+QPushButton#btnCamera {
+  border-image:url(:/student/images/student/camera.png) 0 60 0 0;
+}
+QPushButton#btnCamera:hover {
+  border-image:url(:/student/images/student/camera.png) 0 30 0 30;
+}
+QPushButton#btnCamera:pressed {
+  border-image:url(:/student/images/student/camera.png) 0 0 0 60;
+}
+
+/*更新按钮*/
+QPushButton#btnUpdate {
+  border-image:url(:/student/images/student/update.png) 0 60 0 0;
+}
+QPushButton#btnUpdate:hover {
+  border-image:url(:/student/images/student/update.png) 0 30 0 30;
+}
+QPushButton#btnUpdate:pressed {
+  border-image:url(:/student/images/student/update.png) 0 0 0 60;
+}
+
+/*关于按钮*/
+QPushButton#btnAbout {
+  border-image:url(:/student/images/student/about.png) 0 60 0 0;
+}
+QPushButton#btnAbout:hover {
+  border-image:url(:/student/images/student/about.png) 0 30 0 30;
+}
+QPushButton#btnAbout:pressed {
+  border-image:url(:/student/images/student/about.png) 0 0 0 60;
+}
+
+/*系统设置按钮*/
+QPushButton#btnSystem {
+  border-image:url(:/student/images/student/system.png) 0 60 0 0;
+}
+QPushButton#btnSystem:hover {
+  border-image:url(:/student/images/student/system.png) 0 30 0 30;
+}
+QPushButton#btnSystem:pressed {
+  border-image:url(:/student/images/student/system.png) 0 0 0 60;
+}
