@@ -25,6 +25,7 @@
     <file>images/btn_next.png</file>
     <file>images/btn_foot.png</file>
     <file>images/btn_mic.png</file>
+    <file>images/avatar.png</file>
     <file>../HaoYi.ico</file>
   </qresource>
   <qresource prefix="/settings">
@@ -59,5 +60,12 @@
     <file>images/mini/loading.gif</file>
     <file>images/mini/scan.png</file>
     <file>images/mini/arrow.png</file>
+  </qresource>
+  <qresource prefix="/student">
+    <file>css/Student.css</file>
+    <file>images/student/mined.png</file>
+    <file>images/student/maxed.png</file>
+    <file>images/student/maxing.png</file>
+    <file>images/student/close.png</file>
   </qresource>
 </RCC>
