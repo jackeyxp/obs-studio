@@ -26,6 +26,7 @@
     <file>images/btn_foot.png</file>
     <file>images/btn_mic.png</file>
     <file>images/avatar.png</file>
+    <file>images/clock.png</file>
     <file>../HaoYi.ico</file>
   </qresource>
   <qresource prefix="/settings">
