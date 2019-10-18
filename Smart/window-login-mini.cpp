@@ -197,13 +197,8 @@ void CLoginMini::initWindow()
 
 void CLoginMini::doUpdateTitle()
 {
-	QString strTitle, strName;
-	switch (App()->GetClientType()) {
-	case kClientStudent: strName = QStringLiteral("学生端"); break;
-	case kClientTeacher: strName = QStringLiteral("讲师端"); break;
-	}
 	// 重新组合标题栏名称，更新到界面当中...
-	strTitle = QString("%1 - %2").arg(QTStr("MINI.Window.Title")).arg(strName);
+	QString strTitle = QString("%1 - %2").arg(QTStr("MINI.Window.Title")).arg(App()->GetClientTypeName());
 	ui->titleName->setText(strTitle);
 	// 如果是外部参数模式，需要修改标题栏名称...
 	//ui->titleName->setText(QTStr("MINI.Window.Normal"));
@@ -497,6 +492,7 @@ void CLoginMini::onProcMiniUserInfo(QNetworkReply *reply)
 		}
 		// 保存流量记录到全局变量当中...
 		App()->SetDBFlowID(nDBFlowID);
+		App()->SetJsonUser(value["user"]);
 	} while (false);
 	// 发生错误，关闭动画，显示图标|信息，文字左对齐...
 	if (bIsError) {
