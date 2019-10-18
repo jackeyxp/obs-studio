@@ -218,6 +218,9 @@
     <ClCompile Include="getopt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="window-student.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="obs-app.hpp">
@@ -364,6 +367,9 @@
     <QtMoc Include="fastdfs\FastSession.h">
       <Filter>FastDFS Files</Filter>
     </QtMoc>
+    <QtMoc Include="window-student.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="forms\OBSBasicSettings.ui">
@@ -397,6 +403,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="forms\LoginMini.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="forms\StudentWindow.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

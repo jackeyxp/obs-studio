@@ -24,6 +24,7 @@
 #include "qt-wrappers.hpp"
 #include "obs-app.hpp"
 #include "FastSession.h"
+#include "window-student.h"
 #include "window-login-mini.h"
 #include "window-basic-main.hpp"
 #include "window-basic-settings.hpp"
@@ -1410,9 +1411,7 @@ void OBSApp::AppInit()
 
 const char *OBSApp::GetRenderModule() const
 {
-	const char *renderer =
-		config_get_string(globalConfig, "Video", "Renderer");
-
+	const char *renderer = config_get_string(globalConfig, "Video", "Renderer");
 	return (astrcmpi(renderer, "Direct3D 11") == 0) ? DL_D3D11 : DL_OPENGL;
 }
 
@@ -1494,7 +1493,13 @@ bool OBSApp::OBSInit()
 
 	setQuitOnLastWindowClosed(false);
 
-	mainWindow = new OBSBasic();
+	// 根据终端类型创建不同窗口对象...
+	switch(m_nClientType)
+	{
+	case kClientTeacher: mainWindow = new OBSBasic(); break;
+	case kClientStudent: mainWindow = new CStudentWindow(); break;
+	default:             mainWindow = new CStudentWindow(); break;
+	}
 
 	mainWindow->setAttribute(Qt::WA_DeleteOnClose, true);
 	connect(mainWindow, SIGNAL(destroyed()), this, SLOT(quit()));
@@ -1589,6 +1594,7 @@ void OBSApp::doCheckFDFS()
 // 自动检测并创建RemoteSession...
 void OBSApp::doCheckRemote()
 {
+	return;
 	// 如果主窗口还没有加载完毕，不能创建远程对象，因为无法读取资源配置...
 	OBSBasic * lpBasicWnd = qobject_cast<OBSBasic*>(mainWindow);
 	if (!lpBasicWnd->IsLoaded())
@@ -1739,6 +1745,17 @@ const char *OBSApp::GetCurrentLog() const
 const char *OBSApp::GetLastCrashLog() const
 {
 	return lastCrashLogFile.c_str();
+}
+
+QString OBSApp::GetClientTypeName()
+{
+	QString strName;
+	switch (this->GetClientType()) {
+	case kClientStudent: strName = QTStr("Main.Student.Name"); break;
+	case kClientTeacher: strName = QTStr("Main.Teacher.Name"); break;
+	default:             strName = QTStr("Main.Unknown.Name"); break;
+	}
+	return strName;
 }
 
 bool OBSApp::TranslateString(const char *lookupVal, const char **out) const
@@ -1909,8 +1926,7 @@ string GenerateTimeDateFilename(const char *extension, bool noSpace)
 	return string(file);
 }
 
-string GenerateSpecifiedFilename(const char *extension, bool noSpace,
-	const char *format)
+string GenerateSpecifiedFilename(const char *extension, bool noSpace, const char *format)
 {
 	OBSBasic *main = reinterpret_cast<OBSBasic *>(App()->GetMainWindow());
 	bool autoRemux = config_get_bool(main->Config(), "Video", "AutoRemux");
@@ -1918,8 +1934,7 @@ string GenerateSpecifiedFilename(const char *extension, bool noSpace,
 	if ((strcmp(extension, "mp4") == 0) && autoRemux)
 		extension = "mkv";
 
-	BPtr<char> filename =
-		os_generate_formatted_filename(extension, !noSpace, format);
+	BPtr<char> filename = os_generate_formatted_filename(extension, !noSpace, format);
 
 	remuxFilename = string(filename);
 	remuxAfterRecord = autoRemux;
@@ -2556,14 +2571,6 @@ static void upgrade_settings(void)
 		ent = os_readdir(dir);
 	}
 	os_closedir(dir);
-}
-
-void ctrlc_handler(int s)
-{
-	UNUSED_PARAMETER(s);
-
-	OBSBasic *main = reinterpret_cast<OBSBasic *>(App()->GetMainWindow());
-	main->close();
 }
 
 int main(int argc, char *argv[])

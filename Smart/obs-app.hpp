@@ -82,7 +82,6 @@ private:
 	int                            m_nDBFlowID = 0;                 // 从服务器获取到的流量统计数据库编号...
 	int                            m_nDBUserID = 0;                 // 已登录用户的数据库编号...
 	int                            m_nDBSmartID = 0;                // 本机在网站端数据库中的编号...
-	std::string                    m_strUserName;                   // 已登录用户的用户名称...
 	std::string                    m_strRoomID;                     // 登录的房间号...
 	std::string                    m_strMacAddr;                    // 本机MAC地址...
 	std::string                    m_strIPAddr;                     // 本机IP地址...
@@ -94,6 +93,7 @@ private:
 	bool                           m_bIsMiniMode = true;            // 是否是小程序模式 => 挂载到阿里云服务器...
 	uint64_t                       m_nUpFlowByte = 0;               // 终端上行流量...
 	uint64_t                       m_nDownFlowByte = 0;             // 终端下行流量...
+	Json::Value                    m_JsonUser;                      // 用户信息列表...
 	std::string                    locale;
 	std::string                    theme;
 	ConfigFile                     globalConfig;
@@ -137,8 +137,8 @@ public:
 	string & GetLocalIPAddr() { return m_strIPAddr; }
 	string & GetLocalMacAddr() { return m_strMacAddr; }
 	string & GetRoomIDStr() { return m_strRoomID; }
-	string & GetUserNameStr() { return m_strUserName; }
 	CLIENT_TYPE GetClientType() { return m_nClientType; }
+	QString  GetClientTypeName();
 
 	string & GetWebCenterAddr() { return m_strWebCenterAddr; }
 
@@ -152,6 +152,11 @@ public:
 	string & GetUdpAddr() { return m_strUdpAddr; }
 	int		 GetUdpPort() { return m_nUdpPort; }
 	int      GetDBFlowTeacherID() { return m_nDBFlowTeacherID; }
+
+	string   GetUserRealPhone() { return OBSApp::getJsonString(m_JsonUser["real_phone"]); }
+	string   GetUserRealName() { return OBSApp::getJsonString(m_JsonUser["real_name"]); }
+	string   GetUserNickName() { return OBSApp::getJsonString(m_JsonUser["wx_nickname"]); }
+	string   GetUserHeadUrl() { return OBSApp::getJsonString(m_JsonUser["wx_headurl"]); }
 
 	void     doAddDownFlowByte(int nDownSize) { m_nDownFlowByte += nDownSize; }
 	void     doAddUpFlowByte(int nUpSize) { m_nUpFlowByte += nUpSize; }
@@ -168,6 +173,7 @@ public:
 	void     SetTcpCenterPort(int nPort) { m_nCenterTcpPort = nPort; }
 	void     SetClientType(CLIENT_TYPE inType) { m_nClientType = inType; }
 	void     SetDBSmartID(int nDBSmartID) { m_nDBSmartID = nDBSmartID; }
+	void     SetJsonUser(Json::Value & inUser) { m_JsonUser = inUser; }
 public:
 	OBSApp(int &argc, char **argv, profiler_name_store_t *store);
 	~OBSApp();

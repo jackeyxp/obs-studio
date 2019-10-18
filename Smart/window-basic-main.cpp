@@ -113,7 +113,7 @@ template<typename T> static void SetOBSRef(QListWidgetItem *item, T &&val)
 		      QVariant::fromValue(val));
 }
 
-static void AddExtraModulePaths()
+/*static void AddExtraModulePaths()
 {
 	char base_module_dir[512];
 #if defined(_WIN32) || defined(__APPLE__)
@@ -144,7 +144,7 @@ static void AddExtraModulePaths()
 	obs_add_module_path((path + "/bin/32bit").c_str(),
 			    (path + "/data").c_str());
 #endif
-}
+}*/
 
 extern obs_frontend_callbacks *InitializeAPIInterface(OBSBasic *main);
 
@@ -190,7 +190,8 @@ extern void RegisterMixerAuth();
 extern void RegisterRestreamAuth();
 
 OBSBasic::OBSBasic(QWidget *parent)
-	: OBSMainWindow(parent), ui(new Ui::OBSBasic)
+	: OBSMainWindow(parent),
+	ui(new Ui::OBSBasic)
 {
 	setAttribute(Qt::WA_NativeWindow);
 
@@ -1717,7 +1718,8 @@ void OBSBasic::OBSInit()
 	InitOBSCallbacks();
 	InitHotkeys();
 
-	AddExtraModulePaths();
+	//AddExtraModulePaths();
+
 	blog(LOG_INFO, "---------------------------------");
 	obs_load_all_modules();
 	blog(LOG_INFO, "---------------------------------");
@@ -7398,11 +7400,13 @@ void OBSBasic::UpdateTitleBar()
 	name << " - " << Str("TitleBar.Scenes") << ": " << sceneCollection;
 	
 	//setWindowTitle(QT_UTF8(name.str().c_str()));
+	// 将原来标题栏到打印日志文件...
+	blog(LOG_INFO, name.str().c_str());
 
 	// 对窗口标题进行修改 => 使用字典模式...
-	//string & strRoomID = App()->GetRoomIDStr();
-	//QString strTitle = QString("%1%2").arg(QTStr("Main.Window.TitleContent")).arg(QString::fromUtf8(strRoomID.c_str()));
-	QString strTitle = QTStr("Main.Window.TitleContent");
+	QString strTitle = QTStr("Main.Window.TitleContent")
+		.arg(App()->GetClientTypeName())
+		.arg(App()->GetRoomIDStr().c_str());
 	this->setWindowTitle(strTitle);
 }
 
