@@ -891,6 +891,15 @@ void obs_set_room_id(int nRoomID)
 	if (obs) { obs->room_id = nRoomID; }
 }
 
+void obs_add_ignore_module(const char * module_name)
+{
+	// 注意：这里分配了模块名称空间 => obs_shutdown 释放
+	if (obs && module_name != NULL) {
+		char * lpValue = bstrdup(module_name);
+		da_push_back(obs->ignore_modules, &lpValue);
+	}
+}
+
 /* Separate from actual context initialization
  * since this can be set before startup and persist
  * after shutdown. */
@@ -1008,8 +1017,13 @@ void obs_shutdown(void)
 		cmdline_args.argv = NULL;
 	}
 
-	if (!obs)
-		return;
+	if (!obs) return;
+
+	// 释放自定义的忽略模块的数组内容...
+	for (size_t k = 0; k < obs->ignore_modules.num; k++) {
+		bfree(obs->ignore_modules.array[k]);
+	}
+	da_free(obs->ignore_modules);
 
 #define FREE_REGISTERED_TYPES(structure, list)                         \
 	do {                                                           \

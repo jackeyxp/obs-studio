@@ -364,6 +364,16 @@ static void process_found_module(struct obs_module_path *omp, const char *path,
 
 	parsed_data_dir = make_data_directory(name.array, omp->data);
 
+	// 在模块忽略数组当中查找当前模块是否是要忽略的...
+	for (size_t k = 0; k < obs->ignore_modules.num; k++) {
+		const char * lpCurName = obs->ignore_modules.array[k];
+		if (astrcmpi(lpCurName, file) == 0) {
+			blog(LOG_INFO, "Ignored module: %s", file);
+			bin_found = false;
+			break;
+		}
+	}
+
 	if (parsed_data_dir && bin_found) {
 		info.bin_path = parsed_bin_path.array;
 		info.data_path = parsed_data_dir;

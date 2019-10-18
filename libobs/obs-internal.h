@@ -409,6 +409,7 @@ struct obs_core {
 	DARRAY(struct obs_service_info) service_types;
 	DARRAY(struct obs_modal_ui) modal_ui_callbacks;
 	DARRAY(struct obs_modeless_ui) modeless_ui_callbacks;
+	DARRAY(char *) ignore_modules;
 
 	signal_handler_t *signals;
 	proc_handler_t *procs;

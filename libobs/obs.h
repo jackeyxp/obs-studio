@@ -307,6 +307,7 @@ EXPORT bool obs_startup(const char *locale, const char *module_config_path,
 
 EXPORT int  obs_get_room_id();
 EXPORT void obs_set_room_id(int nRoomID);
+EXPORT void obs_add_ignore_module(const char * module_name);
 
 /** Releases all data associated with OBS and terminates the OBS context */
 EXPORT void obs_shutdown(void);
