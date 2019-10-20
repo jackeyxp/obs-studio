@@ -1596,8 +1596,7 @@ void OBSApp::doCheckRemote()
 {
 	return;
 	// 如果主窗口还没有加载完毕，不能创建远程对象，因为无法读取资源配置...
-	OBSBasic * lpBasicWnd = qobject_cast<OBSBasic*>(mainWindow);
-	if (!lpBasicWnd->IsLoaded())
+	if (!mainWindow->IsLoaded())
 		return;
 	// 如果远程会话已经存在，并且已经连接，直接返回...
 	if (m_RemoteSession != NULL && !m_RemoteSession->IsCanReBuild())
@@ -1614,7 +1613,8 @@ void OBSApp::doCheckRemote()
 	m_RemoteSession = new CRemoteSession();
 	m_RemoteSession->InitSession(m_strRemoteAddr.c_str(), m_nRemotePort);
 	// 关联UDP连接被服务器删除时的事件通知信号槽、获取在线通道列表的信号槽、开启或删除rtp资源的信号槽...
-	this->connect(m_RemoteSession, SIGNAL(doTriggerLiveOnLine(int, bool)), lpBasicWnd, SLOT(onTriggerLiveOnLine(int, bool)));
+	//OBSBasic * lpBasicWnd = qobject_cast<OBSBasic*>(mainWindow);
+	//this->connect(m_RemoteSession, SIGNAL(doTriggerLiveOnLine(int, bool)), lpBasicWnd, SLOT(onTriggerLiveOnLine(int, bool)));
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerUdpLogout(int, int, int)), lpBasicWnd, SLOT(onTriggerUdpLogout(int, int, int)));
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerCameraList(Json::Value&)), lpBasicWnd, SLOT(onTriggerCameraList(Json::Value&)));
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerCameraLiveStop(int)), lpBasicWnd, SLOT(onTriggerCameraLiveStop(int)));

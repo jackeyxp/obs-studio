@@ -4,6 +4,7 @@
 #include "window-student.h"
 #include "window-basic-settings.hpp"
 
+#include "display-helpers.hpp"
 #include <util/profiler.hpp>
 #include "qt-wrappers.hpp"
 
@@ -12,6 +13,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QScreen>
+#include <QTimer>
 
 #ifdef _WIN32
 #include "win-update/win-update.hpp"
@@ -131,7 +133,395 @@ void CStudentWindow::OBSInit()
 	blog(LOG_INFO, "---------------------------------");
 	obs_post_load_modules();
 
+	InitBasicConfigDefaults2();
+	CheckForSimpleModeX264Fallback();
+
+	blog(LOG_INFO, STARTUP_SEPARATOR);
+
+	//ResetOutputs();
+	//InitPrimitives();
+	
+	// 注意：为了解决Load加载慢的问题，进行了2次异步操作...
+	// 注意：实际Load执行代码位置 => DeferredLoad...
+
+#ifdef _WIN32
+	uint32_t winVer = GetWindowsVersion();
+	if (winVer > 0 && winVer < 0x602) {
+		bool disableAero = config_get_bool(basicConfig, "Video", "DisableAero");
+		SetAeroEnabled(!disableAero);
+	}
+#endif
+
+	// 可以进行保存配置了...
+	disableSaving--;
+	
+	// 显示窗口...
 	this->show();
+
+	// 强制禁用一些用不到的数据源，避免干扰，混乱...
+	obs_enable_source_type("game_capture", false);
+	obs_enable_source_type("wasapi_output_capture", false);
+
+	// 保存配置路径以便后续使用...
+	m_strSavePath = QT_UTF8(savePath);
+	// 为了避免阻塞主界面的显示，进行两次异步加载Load()配置...
+	QTimer::singleShot(20, this, SLOT(OnFinishedLoad()));
+}
+
+// 异步时钟调用加载完毕事件通知...
+void CStudentWindow::OnFinishedLoad()
+{
+	QMetaObject::invokeMethod(this, "DeferredLoad",
+		Qt::QueuedConnection,
+		Q_ARG(QString, m_strSavePath),
+		Q_ARG(int, 1));
+}
+
+// 第二次异步信号槽调用实际的 Load() 接口...
+void CStudentWindow::DeferredLoad(const QString &file, int requeueCount)
+{
+	ProfileScope("CStudentWindow::DeferredLoad");
+
+	if (--requeueCount > 0) {
+		QMetaObject::invokeMethod(this, "DeferredLoad",
+			Qt::QueuedConnection,
+			Q_ARG(QString, file),
+			Q_ARG(int, requeueCount));
+		return;
+	}
+	// 加载系统各种配置参数...
+	this->Load(QT_TO_UTF8(file));
+	// 注意：这里必须在 Load() 之后调用，否则无法执行 CreateDefaultScene()...
+	// 注意：RefreshSceneCollections() 放在 DeferredLoad() 里面的 Load() 之后执行...
+	//this->RefreshSceneCollections();
+	// 设置已加载完毕的标志...
+	m_bIsLoaded = true;
+	// 立即启动远程连接...
+	//App()->doCheckRemote();
+}
+
+void CStudentWindow::Load(const char *file)
+{
+	ProfileScope("CStudentWindow::Load");
+
+	disableSaving++;
+
+	obs_data_t *data = obs_data_create_from_json_file_safe(file, "bak");
+	if (!data) {
+		disableSaving--;
+		blog(LOG_INFO, "No scene file found, creating default scene");
+		this->CreateDefaultScene(true);
+		//SaveProject();
+		return;
+	}
+}
+
+void CStudentWindow::CreateDefaultScene(bool firstStart)
+{
+	disableSaving++;
+
+	this->ClearSceneData();
+
+	if (firstStart) {
+		this->CreateFirstRunSources();
+	}
+	// 创建场景对象，并将这个主场景对象挂载到频道0上面...
+	m_obsScene = obs_scene_create(Str("Basic.Scene"));
+	/* set the scene as the primary draw source and go */
+	obs_set_output_source(0, obs_scene_get_source(m_obsScene));
+
+	// 创建默认的本地摄像头对象...
+	const char * lpDShowID = App()->DShowInputSource();
+	const char * lpDShowName = obs_source_get_display_name(lpDShowID);
+	obs_source_t * lpDShowSource = obs_source_create(lpDShowID, lpDShowName, NULL, nullptr);
+
+	obs_enter_graphics();
+	vec2 vPos = { 200.0f, 200.0f };
+	m_dshowSceneItem = obs_scene_add(m_obsScene, lpDShowSource);
+	obs_sceneitem_set_visible(m_dshowSceneItem, true);
+	obs_sceneitem_set_pos(m_dshowSceneItem, &vPos);
+	obs_leave_graphics();
+
+	// 对本地摄像头数据源进行常规配置...
+	obs_properties_t * props = obs_source_properties(lpDShowSource);
+	obs_property_t * property = obs_properties_get(props, "video_device_id");
+	obs_property_type prop_type = obs_property_get_type(property);
+	obs_combo_type comb_type = obs_property_list_type(property);
+	obs_combo_format comb_format = obs_property_list_format(property);
+	size_t comb_count = obs_property_list_item_count(property);
+	const char * item_name = obs_property_list_item_name(property, 0);
+	const char * item_data = obs_property_list_item_string(property, 0);
+
+	// 设置并更新配置 => 注意释放引用计数器...
+	OBSData settings = obs_source_get_settings(lpDShowSource);
+	obs_data_set_string(settings, "video_device_id", item_data);
+	obs_source_update(lpDShowSource, settings);
+	obs_data_release(settings);
+	
+	// 数据源属性对象也要进行释放操作...
+	obs_properties_destroy(props);
+
+	// 创建摄像头预览窗口，关联预览函数接口...
+	m_viewCamera = new OBSQTDisplay(this);
+
+	// 关联数据源的预览窗口相关配置...
+	enum obs_source_type type = obs_source_get_type(lpDShowSource);
+	uint32_t caps = obs_source_get_output_flags(lpDShowSource);
+	bool drawable_type = type == OBS_SOURCE_TYPE_INPUT || type == OBS_SOURCE_TYPE_SCENE;
+	bool drawable_preview = (caps & OBS_SOURCE_VIDEO) != 0;
+
+	auto addDShowDrawCallback = [this](OBSQTDisplay *window) {
+		obs_display_add_draw_callback(window->GetDisplay(),
+			CStudentWindow::doDrawDShowPreview, this);
+	};
+	if (drawable_preview && drawable_type) {
+		m_viewCamera->show();
+		// 注意：这里进行了背景修改，避免造成背景颜色混乱的问题...
+		m_viewCamera->SetDisplayBackgroundColor(QColor(40, 42, 49));
+		connect(m_viewCamera, &OBSQTDisplay::DisplayCreated, addDShowDrawCallback);
+	}
+
+	disableSaving--;
+}
+
+void CStudentWindow::doDrawDShowPreview(void *data, uint32_t cx, uint32_t cy)
+{
+	CStudentWindow * window = static_cast<CStudentWindow *>(data);
+	obs_source_t * lpDShowSource = obs_sceneitem_get_source(window->m_dshowSceneItem);
+	
+	if (lpDShowSource == NULL)
+		return;
+
+	uint32_t sourceCX = max(obs_source_get_width(lpDShowSource), 1u);
+	uint32_t sourceCY = max(obs_source_get_height(lpDShowSource), 1u);
+
+	int x, y;
+	int newCX, newCY;
+	float scale;
+
+	GetScaleAndCenterPos(sourceCX, sourceCY, cx, cy, x, y, scale);
+
+	newCX = int(scale * float(sourceCX));
+	newCY = int(scale * float(sourceCY));
+
+	gs_viewport_push();
+	gs_projection_push();
+	gs_ortho(0.0f, float(sourceCX), 0.0f, float(sourceCY), -100.0f, 100.0f);
+	gs_set_viewport(x, y, newCX, newCY);
+
+	obs_source_video_render(lpDShowSource);
+
+	gs_projection_pop();
+	gs_viewport_pop();
+}
+
+static inline bool HasAudioDevices(const char *source_id)
+{
+	const char *output_id = source_id;
+	obs_properties_t *props = obs_get_source_properties(output_id);
+	size_t count = 0;
+
+	if (!props) return false;
+
+	obs_property_t *devices = obs_properties_get(props, "device_id");
+	if (devices) {
+		count = obs_property_list_item_count(devices);
+	}
+	obs_properties_destroy(props);
+
+	return count != 0;
+}
+
+void CStudentWindow::ResetAudioDevice(const char *sourceId, const char *deviceId,
+                                      const char *deviceDesc, int channel)
+{
+	bool disable = deviceId && strcmp(deviceId, "disabled") == 0;
+	obs_source_t * source;
+	obs_data_t * settings;
+
+	source = obs_get_output_source(channel);
+	if (source) {
+		if (disable) {
+			obs_set_output_source(channel, nullptr);
+		} else {
+			settings = obs_source_get_settings(source);
+			const char *oldId = obs_data_get_string(settings, "device_id");
+			if (strcmp(oldId, deviceId) != 0) {
+				obs_data_set_string(settings, "device_id", deviceId);
+				obs_source_update(source, settings);
+			}
+			obs_data_release(settings);
+		}
+		obs_source_release(source);
+	} else if (!disable) {
+		settings = obs_data_create();
+		obs_data_set_string(settings, "device_id", deviceId);
+		source = obs_source_create(sourceId, deviceDesc, settings, nullptr);
+		obs_data_release(settings);
+
+		obs_set_output_source(channel, source);
+		obs_source_release(source);
+		// 如果是音频输入设备，自动加入噪音抑制过滤器|自动屏蔽第三轨道混音...
+		if (strcmp(sourceId, App()->InputAudioSource()) == 0) {
+			//OBSBasicSourceSelect::AddFilterToSourceByID(source, App()->GetNSFilter());
+			// 思路错误 => 轨道3(索引编号是2)专门用来本地统一播放使用的混音通道...
+			//uint32_t new_mixers = obs_source_get_audio_mixers(source) & (~(1 << 2));
+			//obs_source_set_audio_mixers(source, new_mixers);
+		}
+		// 如果是音频输出设备，自动设置为静音状态，避免发生多次叠加啸叫...
+		if (strcmp(sourceId, App()->OutputAudioSource()) == 0) {
+			obs_source_set_muted(source, true);
+		}
+	}
+}
+
+void CStudentWindow::CreateFirstRunSources()
+{
+	bool hasDesktopAudio = HasAudioDevices(App()->OutputAudioSource());
+	bool hasInputAudio = HasAudioDevices(App()->InputAudioSource());
+	// 直接屏蔽电脑输出声音，彻底避免互动时的声音啸叫...
+	//if (hasDesktopAudio) {
+	//	ResetAudioDevice(App()->OutputAudioSource(), "default", Str("Basic.DesktopDevice1"), 1);
+	//}
+	if (hasInputAudio) {
+		ResetAudioDevice(App()->InputAudioSource(), "default", Str("Basic.AuxDevice1"), 3);
+	}
+}
+
+void CStudentWindow::ClearSceneData()
+{
+	disableSaving++;
+
+	if (!m_viewCamera.isNull()) {
+		obs_display_remove_draw_callback(m_viewCamera->GetDisplay(), CStudentWindow::doDrawDShowPreview, this);
+		delete m_viewCamera; m_viewCamera = nullptr;
+	}
+
+	obs_set_output_source(0, nullptr);
+	obs_set_output_source(1, nullptr);
+	obs_set_output_source(2, nullptr);
+	obs_set_output_source(3, nullptr);
+	obs_set_output_source(4, nullptr);
+	obs_set_output_source(5, nullptr);
+
+	auto cb = [](void *unused, obs_source_t *source) {
+		obs_source_remove(source);
+		UNUSED_PARAMETER(unused);
+		return true;
+	};
+
+	// remove 只是设置标志，并没有删除...
+	obs_enum_sources(cb, nullptr);
+	
+	// 注意：wasapi_input_source是在频道3上，上面obs_set_output_source会自动删除...
+
+	// 频道0 => 先释放所有主动创建的数据源对象...
+	if (m_dshowSceneItem != nullptr) {
+		obs_source_release(obs_sceneitem_get_source(m_dshowSceneItem));
+		obs_sceneitem_remove(m_dshowSceneItem);
+		m_dshowSceneItem = nullptr;
+	}
+	if (m_teacherSceneItem != nullptr) {
+		obs_source_release(obs_sceneitem_get_source(m_teacherSceneItem));
+		obs_sceneitem_remove(m_teacherSceneItem);
+		m_teacherSceneItem = nullptr;
+	}
+	// 频道0 => 再释放场景数据源对象...
+	if (m_obsScene != nullptr) {
+		obs_scene_release(m_obsScene);
+		m_obsScene = nullptr;
+	}
+
+	disableSaving--;
+
+	blog(LOG_INFO, "All scene data cleared");
+	blog(LOG_INFO, "------------------------------------------------");
+}
+
+void CStudentWindow::closeEvent(QCloseEvent *event)
+{
+	/*if (outputHandler && outputHandler->Active()) {
+		SetShowing(true);
+		QMessageBox::StandardButton button = OBSMessageBox::question(
+			this, QTStr("ConfirmExit.Title"),
+			QTStr("ConfirmExit.Text"));
+
+		if (button == QMessageBox::No) {
+			event->ignore();
+			return;
+		}
+	}*/
+
+	QWidget::closeEvent(event);
+	if (!event->isAccepted())
+		return;
+
+	blog(LOG_INFO, SHUTDOWN_SEPARATOR);
+
+	disableSaving++;
+
+	/* Clear all scene data (dialogs, widgets, widget sub-items, scenes,
+	* sources, etc) so that all references are released before shutdown */
+	this->ClearSceneData();
+
+	// 调用退出事件通知...
+	App()->doLogoutEvent();
+	// 调用关闭退出接口...
+	App()->quit();
+}
+
+void CStudentWindow::CheckForSimpleModeX264Fallback()
+{
+	const char *curStreamEncoder = config_get_string(basicConfig, "SimpleOutput", "StreamEncoder");
+	const char *curRecEncoder = config_get_string(basicConfig, "SimpleOutput", "RecEncoder");
+	bool qsv_supported = false;
+	bool amd_supported = false;
+	bool nve_supported = false;
+	bool changed = false;
+	size_t idx = 0;
+	const char *id;
+
+	while (obs_enum_encoder_types(idx++, &id)) {
+		if (strcmp(id, "amd_amf_h264") == 0)
+			amd_supported = true;
+		else if (strcmp(id, "obs_qsv11") == 0)
+			qsv_supported = true;
+		else if (strcmp(id, "ffmpeg_nvenc") == 0)
+			nve_supported = true;
+	}
+
+	auto CheckEncoder = [&](const char *&name) {
+		if (strcmp(name, SIMPLE_ENCODER_QSV) == 0) {
+			if (!qsv_supported) {
+				changed = true;
+				name = SIMPLE_ENCODER_X264;
+				return false;
+			}
+		} else if (strcmp(name, SIMPLE_ENCODER_NVENC) == 0) {
+			if (!nve_supported) {
+				changed = true;
+				name = SIMPLE_ENCODER_X264;
+				return false;
+			}
+		} else if (strcmp(name, SIMPLE_ENCODER_AMD) == 0) {
+			if (!amd_supported) {
+				changed = true;
+				name = SIMPLE_ENCODER_X264;
+				return false;
+			}
+		}
+		return true;
+	};
+
+	if (!CheckEncoder(curStreamEncoder)) {
+		config_set_string(basicConfig, "SimpleOutput", "StreamEncoder", curStreamEncoder);
+	}
+	if (!CheckEncoder(curRecEncoder)) {
+		config_set_string(basicConfig, "SimpleOutput", "RecEncoder", curRecEncoder);
+	}
+	if (changed) {
+		config_save_safe(basicConfig, "tmp", nullptr);
+	}
 }
 
 void CStudentWindow::GetFPSCommon(uint32_t &num, uint32_t &den) const
@@ -645,8 +1035,9 @@ void CStudentWindow::initWindow()
 	// WindowMinimizeButtonHint 属性设置在窗口最小化时，点击任务栏窗口可以显示出原窗口;
 	//Qt::WindowFlags flag = this->windowFlags();
 	this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
-	// 设置窗口背景透明 => 设置之后会造成全黑问题 => 顶层窗口需要用背景蒙板，普通窗口没问题...
-	this->setAttribute(Qt::WA_TranslucentBackground);
+	// 注意：这里千万不能设置成透明背景，所有元素都要主动重绘，否则，就会出现镂空问题；
+	// 注意：由于预览窗口是由底层系统重绘，所以，这里必须取消透明背景参数...
+	//this->setAttribute(Qt::WA_TranslucentBackground);
 	// 关闭窗口时释放资源;
 	this->setAttribute(Qt::WA_DeleteOnClose);
 	// 设置窗口图标 => 必须用png图片 => 解决有些机器不认ico，造成左上角图标无法显示...
@@ -685,9 +1076,6 @@ void CStudentWindow::initWindow()
 	m_strUserHeadUrl = QString("%1").arg(App()->GetUserHeadUrl().c_str());
 	// 开启一个定时更新文字时钟 => 每隔1秒更新一次...
 	m_nClassTimer = this->startTimer(1 * 1000);
-	// 修改时钟对象字体和文字颜色...
-	ui->labelClock->setFont(this->font());
-	ui->labelClock->setStyleSheet("color:#FFFFFF;");
 	// 绘制初始的时钟内容...
 	this->doDrawTimeClock();
 	// 发起获取登录用户头像请求...
@@ -730,6 +1118,7 @@ void CStudentWindow::onProcGetUserHead(QNetworkReply *reply)
 	// 从网路数据直接构造用户头像对象...
 	if (!theUserHead.loadFromData(theByteArray))
 		return;
+	blog(LOG_INFO, "== QT WebGetUserHead OK ==");
 	// 更新用户头像对象...
 	m_QPixUserHead.detach();
 	m_QPixUserHead = theUserHead.scaled(50, 50);
@@ -760,8 +1149,9 @@ void CStudentWindow::onButtonMaxClicked()
 			.arg("QPushButton:hover{border-image:url(:/student/images/student/maxing.png) 0 20 0 20;}")
 			.arg("QPushButton:pressed{border-image:url(:/student/images/student/maxing.png) 0 0 0 40;}"));
 		ui->btnMax->setToolTip(QTStr("Student.Tips.Maxing"));
-		this->setGeometry(m_rcSrcGeometry);
+		// 注意：这里必须先还原，再进行坐标更新...
 		this->showNormal();
+		this->setGeometry(m_rcSrcGeometry);
 		return;
 	}
 	// 如果不是最大化 => 最大化显示...
@@ -813,14 +1203,25 @@ void CStudentWindow::doDrawTimeClock()
 	int nMinute = (m_nTimeSecond % 3600) / 60;
 	int nSecond = (m_nTimeSecond % 3600) % 60;
 	QString strTime = (nHours <= 0) ? QString("%1:%2").arg(nMinute, 2, 10, QChar('0')).arg(nSecond, 2, 10, QChar('0')) :
-					  QString("%1:%2:%3").arg(nHours, 2, 10, QChar('0')).arg(nMinute, 2, 10, QChar('0')).arg(nSecond, 2, 10, QChar('0'));
-	ui->labelClock->setText(QTStr("Main.Window.TimeClock").arg(strTime));
+		QString("%1:%2:%3").arg(nHours, 2, 10, QChar('0')).arg(nMinute, 2, 10, QChar('0')).arg(nSecond, 2, 10, QChar('0'));
+	m_strClock = QTStr("Main.Window.TimeClock").arg(strTime);
+	// 计算局部刷新位置的边界位置...
+	QFontMetrics fontMetr(this->font());
+	int nClockPixSize = fontMetr.width(m_strClock);
+	QRect rcTitleRight = ui->hori_title->geometry();
+	// 计算局部更新位置 => 只更新时钟显示区域 => 前后扩充2个像素边界...
+	this->update(QRect(m_nXPosClock - 2, 0, nClockPixSize + 4, rcTitleRight.height()));
 }
 
 void CStudentWindow::doDrawTitle(QPainter & inPainter)
 {
-	// 对窗口标题进行修改 => 使用字典模式...
+	// 先绘制标题栏矩形区域...
 	QRect rcTitleRight = ui->hori_title->geometry();
+	inPainter.fillRect(rcTitleRight, QColor(47, 47, 53));
+	inPainter.setPen(QColor(61, 63, 70));
+	rcTitleRight.adjust(-1, 0, 0, 0);
+	inPainter.drawRect(rcTitleRight);
+	// 对窗口标题进行修改 => 使用字典模式...
 	QString strTitle = QTStr("Main.Window.TitleContent")
 		.arg(App()->GetClientTypeName())
 		.arg(App()->GetRoomIDStr().c_str());
@@ -836,51 +1237,19 @@ void CStudentWindow::doDrawTitle(QPainter & inPainter)
 	nPosX += nTitlePixSize + 10;
 	nPosY = (rcTitleRight.height() - m_QPixClock.height()) / 2;
 	inPainter.drawPixmap(nPosX, nPosY, m_QPixClock);
-	// 重新修改时钟标签对象的坐标位置 => 大小不变...
-	QRect rcSrcClock = ui->labelClock->geometry();
-	nPosX += m_QPixClock.width() + 10;
-	nPosY = (rcTitleRight.height() - rcSrcClock.height()) / 2 + 1;
-	QRect rcDstClock(nPosX, nPosY, rcSrcClock.width(), rcSrcClock.height());
-	ui->labelClock->setGeometry(rcDstClock);
+	// 计算已开课时钟显示位置 => 绘制已生成的时间字符串内容...
+	nPosY = (rcTitleRight.height() - nPixelSize) / 2 + nPixelSize;
+	m_nXPosClock = nPosX + m_QPixClock.width() + 10;
+	inPainter.drawText(m_nXPosClock, nPosY, m_strClock);
 }
 
-void CStudentWindow::paintEvent(QPaintEvent *event)
+void CStudentWindow::doDrawLeftArea(QPainter & inPainter)
 {
-	QPainter painter(this);
-	// 先绘制标题栏矩形区域...
-	QRect rcTitleRight = ui->hori_title->geometry();
-	painter.fillRect(rcTitleRight, QColor(47, 47, 53));
-	painter.setPen(QColor(61, 63, 70));
-	rcTitleRight.adjust(-1, 0, 0, 0);
-	painter.drawRect(rcTitleRight);
-	// 单独绘制标题栏文字信息...
-	this->doDrawTitle(painter);
 	// 再绘制左侧工具条矩形区域...
 	QRect rcToolLeft = ui->vert_tool->geometry();
-	painter.fillRect(rcToolLeft, QColor(67, 69, 85));
-	// 在计算右侧整个空白区域...
-	QRect rcRightArea = ui->vert_right->geometry();
-	rcRightArea.adjust(0, rcTitleRight.height()+1, 0, 0);
-	// 绘制右侧自身摄像头区域...
-	QRect rcRightSelf = rcRightArea;
-	rcRightSelf.setWidth(rcRightArea.width() / 5);
-	painter.fillRect(rcRightSelf, QColor(40, 42, 49));
-	// 绘制两条不同的分割竖线...
-	painter.setPen(QColor(27, 26, 28));
-	painter.drawLine(rcRightSelf.right() + 1, rcRightSelf.top() + 1, rcRightSelf.right() + 1, rcRightSelf.bottom());
-	painter.setPen(QColor(63, 64, 70));
-	painter.drawLine(rcRightSelf.right() + 2, rcRightSelf.top() + 1, rcRightSelf.right() + 2, rcRightSelf.bottom());
-	// 绘制右侧老师画面区域...
-	QRect rcTeacher = rcRightArea;
-	rcTeacher.setLeft(rcRightSelf.right() + 3);
-	painter.fillRect(rcTeacher, QColor(46, 48, 55));
-
-	// 最后绘制整个右侧区域的边框位置...
-	painter.setPen(QColor(27, 26, 28));
-	painter.drawRect(rcRightArea);
-
+	inPainter.fillRect(rcToolLeft, QColor(67, 69, 85));
 	// 绘制用户的昵称 => 需要计算是否显示省略号...
-	painter.setPen(QColor(235, 235, 235));
+	inPainter.setPen(QColor(235, 235, 235));
 	int nHeadSize = m_QPixUserHead.width();
 	int nPosY = 30 + nHeadSize + 10;
 	QFontMetrics fontMetr(this->font());
@@ -888,30 +1257,86 @@ void CStudentWindow::paintEvent(QPaintEvent *event)
 	int nFontSize = fontMetr.width(m_strUserNickName);
 	int nPosX = (rcToolLeft.width() - nNameSize) / 2;
 	if (nFontSize > nNameSize) {
-		QTextOption txtOption(Qt::AlignLeft|Qt::AlignTop);
+		QTextOption txtOption(Qt::AlignLeft | Qt::AlignTop);
 		txtOption.setWrapMode(QTextOption::WrapAnywhere);
 		QRect txtRect(nPosX, nPosY, nNameSize, (fontMetr.height() + 2) * 4);
-		painter.drawText(txtRect, m_strUserNickName, txtOption);
+		inPainter.drawText(txtRect, m_strUserNickName, txtOption);
 		//m_strUserNickName = fontMetr.elidedText(m_strUserNickName, Qt::ElideRight, nNameSize);
 		//nNameSize = fontMetr.width(m_strUserNickName);
 	} else {
 		// 注意：单行文字还要增加Y轴高度 => 从下往上...
 		nPosY += QFontInfo(this->font()).pixelSize();
 		nPosX = (rcToolLeft.width() - nFontSize) / 2;
-		painter.drawText(nPosX, nPosY, m_strUserNickName);
+		inPainter.drawText(nPosX, nPosY, m_strUserNickName);
 	}
 
 	// 抗锯齿 + 平滑边缘处理
-	painter.setRenderHints(QPainter::Antialiasing, true);
-	painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
+	inPainter.setRenderHints(QPainter::Antialiasing, true);
+	inPainter.setRenderHints(QPainter::SmoothPixmapTransform, true);
 
 	// 需要计算显示位置 = > 设置裁剪圆形区域...
 	QPainterPath pathCircle;
 	nPosX = (rcToolLeft.width() - nHeadSize) / 2;
 	pathCircle.addEllipse(nPosX, 30, nHeadSize, nHeadSize);
-	painter.setClipPath(pathCircle);
+	inPainter.setClipPath(pathCircle);
 	// 绘制用户的头像 => 固定位置，自动裁剪...
-	painter.drawPixmap(nPosX, 30, m_QPixUserHead);
+	inPainter.drawPixmap(nPosX, 30, m_QPixUserHead);
+}
+
+void CStudentWindow::doDrawRightArea(QPainter & inPainter)
+{
+	// 在计算右侧整个空白区域...
+	QRect rcTitleRight = ui->hori_title->geometry();
+	QRect rcRightArea = ui->vert_right->geometry();
+	rcRightArea.adjust(0, rcTitleRight.height()+1, 0, 0);
+	// 绘制右侧自身摄像头区域...
+	QRect rcRightSelf = rcRightArea;
+	rcRightSelf.setWidth(rcRightArea.width() / 5);
+	inPainter.fillRect(rcRightSelf, QColor(40, 42, 49));
+	// 绘制两条不同的分割竖线...
+	inPainter.setPen(QColor(27, 26, 28));
+	inPainter.drawLine(rcRightSelf.right() + 1, rcRightSelf.top() + 1, rcRightSelf.right() + 1, rcRightSelf.bottom());
+	inPainter.setPen(QColor(63, 64, 70));
+	inPainter.drawLine(rcRightSelf.right() + 2, rcRightSelf.top() + 1, rcRightSelf.right() + 2, rcRightSelf.bottom());
+	// 预先计算原始数据源的长宽比例 => 默认4：3的比列...
+	float radioScale = 3.0 / 4.0;
+	obs_source_t * lpDShowSource = obs_sceneitem_get_source(m_dshowSceneItem);
+	if (lpDShowSource != NULL) {
+		uint32_t sourceCX = max(obs_source_get_width(lpDShowSource), 1u);
+		uint32_t sourceCY = max(obs_source_get_height(lpDShowSource), 1u);
+		radioScale = (sourceCY * 1.0f) / (sourceCX * 1.0f);
+	}
+	//blog(LOG_INFO, "== doDrawRightArea scale: %.2f ==", radioScale);
+	// 计算本地摄像头预览窗口的显示位置...
+	QRect rcViewCamera;
+	rcViewCamera.setLeft(rcRightSelf.left() + 1);
+	rcViewCamera.setWidth(rcRightSelf.width() - 1);
+	rcViewCamera.setTop(rcRightSelf.top() + (rcRightSelf.height() - rcViewCamera.width()) / 2);
+	rcViewCamera.setHeight(rcViewCamera.width() * radioScale);
+	// 如果预览窗口有效，并且计算的新位置与当前获取的坐标位置不一致...
+	if (!m_viewCamera.isNull() && rcViewCamera != m_viewCamera->geometry()) {
+		m_viewCamera->setGeometry(rcViewCamera);
+	}
+	// 绘制右侧老师画面区域...
+	QRect rcTeacher = rcRightArea;
+	rcTeacher.setLeft(rcRightSelf.right() + 3);
+	inPainter.fillRect(rcTeacher, QColor(46, 48, 55));
+	// 最后绘制整个右侧区域的边框位置...
+	inPainter.setPen(QColor(27, 26, 28));
+	inPainter.drawRect(rcRightArea);
+}
+
+void CStudentWindow::paintEvent(QPaintEvent *event)
+{
+	QPainter painter(this);
+
+	// 单独绘制标题栏文字信息...
+	this->doDrawTitle(painter);
+	// 必须先绘制右侧预览窗口信息...
+	this->doDrawRightArea(painter);
+	// 然后再绘制左侧工具栏信息...
+	this->doDrawLeftArea(painter);
+
 	QWidget::paintEvent(event);
 }
 

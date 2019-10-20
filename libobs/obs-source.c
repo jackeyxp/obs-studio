@@ -359,8 +359,7 @@ static obs_source_t *obs_source_create_internal(const char *id,
 	if (info->create && !source->context.data)
 		blog(LOG_ERROR, "Failed to create source '%s'!", name);
 
-	blog(LOG_DEBUG, "%ssource '%s' (%s) created", private ? "private " : "",
-	     name, id);
+	blog(LOG_INFO, "%ssource '%s' (%s) created", private ? "private " : "", name, id);
 
 	source->flags = source->default_flags;
 	source->enabled = true;

@@ -85,8 +85,7 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 	view->setMinimumHeight(150);
 
 	preview->setMinimumSize(20, 150);
-	preview->setSizePolicy(
-		QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+	preview->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
 
 	// Create a QSplitter to keep a unified workflow here.
 	windowSplitter = new QSplitter(Qt::Orientation::Vertical, this);
@@ -139,14 +138,11 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 
 	if (drawable_preview && drawable_type) {
 		preview->show();
-		connect(preview.data(), &OBSQTDisplay::DisplayCreated,
-			addDrawCallback);
+		connect(preview.data(), &OBSQTDisplay::DisplayCreated, addDrawCallback);
 
 	} else if (type == OBS_SOURCE_TYPE_TRANSITION) {
-		sourceA =
-			obs_source_create_private("scene", "sourceA", nullptr);
-		sourceB =
-			obs_source_create_private("scene", "sourceB", nullptr);
+		sourceA = obs_source_create_private("scene", "sourceA", nullptr);
+		sourceB = obs_source_create_private("scene", "sourceB", nullptr);
 
 		obs_source_release(sourceA);
 		obs_source_release(sourceB);
@@ -165,8 +161,7 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 
 		obs_data_t *settings = obs_source_get_settings(source);
 
-		sourceClone = obs_source_create_private(
-			obs_source_get_id(source), "clone", settings);
+		sourceClone = obs_source_create_private(obs_source_get_id(source), "clone", settings);
 		obs_source_release(sourceClone);
 
 		obs_source_inc_active(sourceClone);
@@ -190,8 +185,7 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 		connect(view, &OBSPropertiesView::Changed, updateCallback);
 
 		preview->show();
-		connect(preview.data(), &OBSQTDisplay::DisplayCreated,
-			addTransitionDrawCallback);
+		connect(preview.data(), &OBSQTDisplay::DisplayCreated, addTransitionDrawCallback);
 
 	} else {
 		preview->hide();

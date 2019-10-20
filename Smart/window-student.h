@@ -3,13 +3,16 @@
 
 #include <util/util.hpp>
 
+#include "qt-display.hpp"
 #include "window-main.hpp"
 #include "ui_StudentWindow.h"
 
+#include <obs.hpp>
 #include <string>
 #include <memory>
 
 #include <QNetworkAccessManager>
+#include <QPointer>
 
 using namespace std;
 
@@ -17,23 +20,33 @@ class CStudentWindow : public OBSMainWindow
 {
     Q_OBJECT
 private:
-	ConfigFile               basicConfig;
-	bool                     m_bIsLoaded = false;
-	QPoint	                 m_startMovePos;
-	bool	                 m_isPressed = false;
-	int                      m_nClassTimer = -1;
-	int                      m_nTimeSecond = 0;
-	QPixmap                  m_QPixClock;
-	QPixmap                  m_QPixUserHead;
-	QString                  m_strUserHeadUrl;
-	QString                  m_strUserNickName;
-	QRect                    m_rcSrcGeometry;
-	QNetworkAccessManager    m_objNetManager;	// QT 网络管理对象...
+	long disableSaving = 1;
+	ConfigFile basicConfig;
+	QString m_strSavePath;
+	bool m_bIsSlientClose = false;
+	bool m_bIsLoaded = false;
+	QPoint m_startMovePos;
+	bool m_isPressed = false;
+	int m_nClassTimer = -1;
+	int m_nTimeSecond = 0;
+	int m_nXPosClock = 0;
+	QString m_strClock;
+	QPixmap m_QPixClock;
+	QPixmap m_QPixUserHead;
+	QString m_strUserHeadUrl;
+	QString m_strUserNickName;
+	QRect m_rcSrcGeometry;
+	obs_scene_t  * m_obsScene = nullptr;             // 唯一主场景...
+	obs_sceneitem_t * m_dshowSceneItem = nullptr;    // 本地摄像头...
+	obs_sceneitem_t * m_teacherSceneItem = nullptr;  // 远程老师端...
+	QNetworkAccessManager  m_objNetManager;	         // QT 网络管理对象...
+	QPointer<OBSQTDisplay> m_viewCamera = nullptr;   // 预览本地摄像头...
 private:
 	enum {
 		kWebGetUserHead   = 0,
 	} m_eNetState;
 private slots:
+	void OnFinishedLoad();
 	void onButtonMinClicked();
 	void onButtonMaxClicked();
 	void onButtonCloseClicked();
@@ -42,6 +55,9 @@ private slots:
 	void onButtonCameraClicked();
 	void onButtonSystemClicked();
 	void onReplyFinished(QNetworkReply *reply);
+	void DeferredLoad(const QString &file, int requeueCount);
+private:
+	static void doDrawDShowPreview(void *data, uint32_t cx, uint32_t cy);
 private:
 	int  doD3DSetup();
 	int  ResetVideo();
@@ -54,11 +70,20 @@ private:
 	void GetFPSFraction(uint32_t &num, uint32_t &den) const;
 	void GetFPSNanoseconds(uint32_t &num, uint32_t &den) const;
 	void GetConfigFPS(uint32_t &num, uint32_t &den) const;
+	void CheckForSimpleModeX264Fallback();
+
+	void ClearSceneData();
+	void Load(const char *file);
+	void CreateFirstRunSources();
+	void CreateDefaultScene(bool firstStart);
+	void ResetAudioDevice(const char *sourceId, const char *deviceId, const char *deviceDesc, int channel);
 
 	void initWindow();
 	void doWebGetUserHead();
 	void doDrawTimeClock();
 	void doDrawTitle(QPainter & inPainter);
+	void doDrawLeftArea(QPainter & inPainter);
+	void doDrawRightArea(QPainter & inPainter);
 	void loadStyleSheet(const QString &sheetName);
 	void onProcGetUserHead(QNetworkReply *reply);
 private:
@@ -67,13 +92,15 @@ private:
 	virtual void mousePressEvent(QMouseEvent *event);
 	virtual void mouseMoveEvent(QMouseEvent *event);
 	virtual void mouseReleaseEvent(QMouseEvent *event);
+	virtual void closeEvent(QCloseEvent *event) override;
 public:
-	inline bool IsLoaded() { return m_bIsLoaded; }
+	inline void SetSlientClose(bool bIsSlient) { m_bIsSlientClose = bIsSlient; }
 public:
 	explicit CStudentWindow(QWidget *parent = NULL);
 	virtual ~CStudentWindow();
 	virtual void OBSInit() override;
 	virtual config_t *Config() const override;
+	virtual bool IsLoaded() { return m_bIsLoaded; }
 	virtual int GetProfilePath(char *path, size_t size, const char *file) const override;
 private:
 	std::unique_ptr<Ui::StudentWindow> ui;

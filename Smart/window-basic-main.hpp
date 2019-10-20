@@ -569,7 +569,6 @@ private:
 public:
 	inline obs_sceneitem_t * GetZeroSceneItem() { return m_lpZeroSceneItem; }
 	inline void SetSlientClose(bool bIsSlient) { m_bIsSlientClose = bIsSlient; }
-	inline bool IsLoaded() { return m_bIsLoaded; }
 	
 	void RemoveSceneItem(OBSSceneItem item);
 
@@ -853,6 +852,7 @@ public:
 	virtual void OBSInit() override;
 
 	virtual config_t *Config() const override;
+	virtual bool IsLoaded() { return m_bIsLoaded; }
 
 	virtual int GetProfilePath(char *path, size_t size,
 				   const char *file) const override;
