@@ -313,7 +313,7 @@ void CStudentWindow::Load(const char *file)
 
 	// 查看指定的场景配置文件是否有效 => 无效，加载默认的场景并进行存盘...
 	obs_data_t *data = obs_data_create_from_json_file_safe(file, "bak");
-	if (!data) {
+	if (data == nullptr) {
 		disableSaving--;
 		blog(LOG_INFO, "No scene file found, creating default scene");
 		this->CreateDefaultScene(true);
