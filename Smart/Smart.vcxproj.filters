@@ -221,6 +221,9 @@
     <ClCompile Include="window-student.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="window-view-camera.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="obs-app.hpp">
@@ -368,6 +371,9 @@
       <Filter>FastDFS Files</Filter>
     </QtMoc>
     <QtMoc Include="window-student.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="window-view-camera.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

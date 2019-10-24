@@ -80,6 +80,7 @@
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">input</DynamicSource>
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
     </ClCompile>
+    <ClCompile Include="window-view-camera.cpp" />
     <ClCompile Include="window-wait-ppt.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -233,6 +234,10 @@
     <ClInclude Include="..\vsbuild\config\obsconfig.h" />
     <ClInclude Include="audio-encoders.hpp" />
     <ClInclude Include="fastdfs\fastdfs.h" />
+    <QtMoc Include="window-view-camera.hpp">
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\json -I.\fastdfs -I.\win-update -I.\obs-frontend-api -I.\..\Server\common -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\deps\w32-pthreads -IF:\obs-studio\deps\jansson\src -IF:\obs-studio\vsbuild\deps\jansson\include -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>
+    </QtMoc>
     <QtMoc Include="window-student.h">
       <Define Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\json -I.\fastdfs -I.\win-update -I.\obs-frontend-api -I.\..\Server\common -I.\GeneratedFiles -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\deps\w32-pthreads -IF:\obs-studio\deps\jansson\src -IF:\obs-studio\vsbuild\deps\jansson\include -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtSvg -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore</IncludePath>

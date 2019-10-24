@@ -16,6 +16,7 @@
 
 using namespace std;
 
+class CViewCamera;
 class CStudentWindow : public OBSMainWindow
 {
     Q_OBJECT
@@ -39,8 +40,9 @@ private:
 	obs_scene_t  * m_obsScene = nullptr;             // 唯一主场景...
 	obs_sceneitem_t * m_dshowSceneItem = nullptr;    // 本地摄像头...
 	obs_sceneitem_t * m_teacherSceneItem = nullptr;  // 远程老师端...
+	QPointer<CViewCamera> m_viewCamera = nullptr;    // 预览本地摄像头...
 	QNetworkAccessManager  m_objNetManager;	         // QT 网络管理对象...
-	QPointer<OBSQTDisplay> m_viewCamera = nullptr;   // 预览本地摄像头...
+	std::vector<OBSSignal> signalHandlers;
 private:
 	enum {
 		kWebGetUserHead   = 0,
@@ -56,8 +58,13 @@ private slots:
 	void onButtonSystemClicked();
 	void onReplyFinished(QNetworkReply *reply);
 	void DeferredLoad(const QString &file, int requeueCount);
+private slots:
+	void AddSceneItem(OBSSceneItem item);
+	void AddScene(OBSSource source);
 private:
-	static void doDrawDShowPreview(void *data, uint32_t cx, uint32_t cy);
+	static void SourceCreated(void *data, calldata_t *params);
+	static void SourceRemoved(void *data, calldata_t *params);
+	static void SceneItemAdded(void *data, calldata_t *params);
 private:
 	int  doD3DSetup();
 	int  ResetVideo();
@@ -72,9 +79,12 @@ private:
 	void GetConfigFPS(uint32_t &num, uint32_t &den) const;
 	void CheckForSimpleModeX264Fallback();
 
+	void LogScenes();
+	void SaveProject();
 	void ClearSceneData();
+	void InitOBSCallbacks();
 	void Load(const char *file);
-	void CreateFirstRunSources();
+	void RefreshSceneCollections();
 	void CreateDefaultScene(bool firstStart);
 	void ResetAudioDevice(const char *sourceId, const char *deviceId, const char *deviceDesc, int channel);
 
@@ -94,6 +104,8 @@ private:
 	virtual void mouseReleaseEvent(QMouseEvent *event);
 	virtual void closeEvent(QCloseEvent *event) override;
 public:
+	inline obs_scene_t * GetObsScene() { return m_obsScene; }
+	inline obs_sceneitem_t * GetDShowSceneItem() { return m_dshowSceneItem; }
 	inline void SetSlientClose(bool bIsSlient) { m_bIsSlientClose = bIsSlient; }
 public:
 	explicit CStudentWindow(QWidget *parent = NULL);
