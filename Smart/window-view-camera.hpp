@@ -13,7 +13,6 @@ public:
 public:
 	bool  doInitCamera();
 	void  doRemoveDrawCallback();
-	float doGetSourceRatioScale();
 private:
 	void  initWindow();
 	bool  doLoadNoCameraSource();

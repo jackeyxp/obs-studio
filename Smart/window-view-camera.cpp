@@ -48,18 +48,6 @@ void CViewCamera::doRemoveDrawCallback()
 	obs_display_remove_draw_callback(this->GetDisplay(), CViewCamera::doDrawDShowPreview, this);
 }
 
-float CViewCamera::doGetSourceRatioScale()
-{
-	float ratioScale = 3.0 / 4.0;
-	obs_source_t * lpDShowSource = obs_sceneitem_get_source(m_dshowSceneItem);
-	if (lpDShowSource != NULL) {
-		uint32_t sourceCX = max(obs_source_get_width(lpDShowSource), 1u);
-		uint32_t sourceCY = max(obs_source_get_height(lpDShowSource), 1u);
-		ratioScale = (sourceCY * 1.0f) / (sourceCX * 1.0f);
-	}
-	return ratioScale;
-}
-
 // 加载默认的摄像头图片数据源对象...
 bool CViewCamera::doLoadNoCameraSource()
 {

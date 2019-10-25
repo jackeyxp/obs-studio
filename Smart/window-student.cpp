@@ -172,12 +172,11 @@ void CStudentWindow::OBSInit()
 	if (!this->ResetAudio()) {
 		throw "Failed to initialize audio";
 	}
+	// 后续还要调用这个接口...
 	ret = this->ResetVideo();
-
 	// 针对D3D做特殊拦截操作...
 	if (ret == OBS_D3D_INSTALL)
 		return;
-
 	switch (ret) {
 	case OBS_VIDEO_MODULE_NOT_FOUND:
 		throw "Failed to initialize video:  Graphics module not found";
@@ -898,10 +897,11 @@ int CStudentWindow::ResetVideo()
 	const char *colorRange = config_get_string(basicConfig, "Video", "ColorRange");
 
 	ovi.graphics_module = App()->GetRenderModule();
-	ovi.base_width = (uint32_t)config_get_uint(basicConfig, "Video", "BaseCX");
-	ovi.base_height = (uint32_t)config_get_uint(basicConfig, "Video", "BaseCY");
-	ovi.output_width = (uint32_t)config_get_uint(basicConfig, "Video", "OutputCX");
-	ovi.output_height = (uint32_t)config_get_uint(basicConfig, "Video", "OutputCY");
+	// 注意：这里将Video分组换成了Student分组，为了与讲师模式进行区分...
+	ovi.base_width = (uint32_t)config_get_uint(basicConfig, "Student", "BaseCX");
+	ovi.base_height = (uint32_t)config_get_uint(basicConfig, "Student", "BaseCY");
+	ovi.output_width = (uint32_t)config_get_uint(basicConfig, "Student", "OutputCX");
+	ovi.output_height = (uint32_t)config_get_uint(basicConfig, "Student", "OutputCY");
 	ovi.output_format = GetVideoFormatFromName(colorFormat);
 	ovi.colorspace = astrcmpi(colorSpace, "601") == 0 ? VIDEO_CS_601 : VIDEO_CS_709;
 	ovi.range = astrcmpi(colorRange, "Full") == 0 ? VIDEO_RANGE_FULL : VIDEO_RANGE_PARTIAL;
@@ -913,15 +913,15 @@ int CStudentWindow::ResetVideo()
 	if (ovi.base_width == 0 || ovi.base_height == 0) {
 		ovi.base_width = 1920;
 		ovi.base_height = 1080;
-		config_set_uint(basicConfig, "Video", "BaseCX", 1920);
-		config_set_uint(basicConfig, "Video", "BaseCY", 1080);
+		config_set_uint(basicConfig, "Student", "BaseCX", 1920);
+		config_set_uint(basicConfig, "Student", "BaseCY", 1080);
 	}
 
 	if (ovi.output_width == 0 || ovi.output_height == 0) {
 		ovi.output_width = ovi.base_width;
 		ovi.output_height = ovi.base_height;
-		config_set_uint(basicConfig, "Video", "OutputCX", ovi.base_width);
-		config_set_uint(basicConfig, "Video", "OutputCY", ovi.base_height);
+		config_set_uint(basicConfig, "Student", "OutputCX", ovi.base_width);
+		config_set_uint(basicConfig, "Student", "OutputCY", ovi.base_height);
 	}
 
 	ret = AttemptToResetVideo(&ovi);
@@ -1119,14 +1119,14 @@ bool CStudentWindow::InitBasicConfigDefaults()
 	config_set_default_uint(basicConfig, "AdvOut", "RecRBTime", 20);
 	config_set_default_int(basicConfig, "AdvOut", "RecRBSize", 512);
 
-	config_set_default_uint(basicConfig, "Video", "BaseCX", cx);
-	config_set_default_uint(basicConfig, "Video", "BaseCY", cy);
-
+	// 为了与讲师模式区分，专门将Video修改成了Student，特殊处理...
+	config_set_default_uint(basicConfig, "Student", "BaseCX", cx);
+	config_set_default_uint(basicConfig, "Student", "BaseCY", cy);
 	/* don't allow BaseCX/BaseCY to be susceptible to defaults changing */
-	if (!config_has_user_value(basicConfig, "Video", "BaseCX") ||
-		!config_has_user_value(basicConfig, "Video", "BaseCY")) {
-		config_set_uint(basicConfig, "Video", "BaseCX", cx);
-		config_set_uint(basicConfig, "Video", "BaseCY", cy);
+	if (!config_has_user_value(basicConfig, "Student", "BaseCX") ||
+		!config_has_user_value(basicConfig, "Student", "BaseCY")) {
+		config_set_uint(basicConfig, "Student", "BaseCX", cx);
+		config_set_uint(basicConfig, "Student", "BaseCY", cy);
 		config_save_safe(basicConfig, "tmp", nullptr);
 	}
 
@@ -1156,15 +1156,14 @@ bool CStudentWindow::InitBasicConfigDefaults()
 		scale_cy = uint32_t(double(cy) / scale);
 	}
 
-	config_set_default_uint(basicConfig, "Video", "OutputCX", scale_cx);
-	config_set_default_uint(basicConfig, "Video", "OutputCY", scale_cy);
-
-	/* don't allow OutputCX/OutputCY to be susceptible to defaults
-	* changing */
-	if (!config_has_user_value(basicConfig, "Video", "OutputCX") ||
-		!config_has_user_value(basicConfig, "Video", "OutputCY")) {
-		config_set_uint(basicConfig, "Video", "OutputCX", scale_cx);
-		config_set_uint(basicConfig, "Video", "OutputCY", scale_cy);
+	// 注意：这里将Video分组换成了Student分组，为了与讲师模式进行区分...
+	config_set_default_uint(basicConfig, "Student", "OutputCX", scale_cx);
+	config_set_default_uint(basicConfig, "Student", "OutputCY", scale_cy);
+	/* don't allow OutputCX/OutputCY to be susceptible to defaults changing */
+	if (!config_has_user_value(basicConfig, "Student", "OutputCX") ||
+		!config_has_user_value(basicConfig, "Student", "OutputCY")) {
+		config_set_uint(basicConfig, "Student", "OutputCX", scale_cx);
+		config_set_uint(basicConfig, "Student", "OutputCY", scale_cy);
 		config_save_safe(basicConfig, "tmp", nullptr);
 	}
 
@@ -1526,6 +1525,41 @@ void CStudentWindow::doDrawLeftArea(QPainter & inPainter)
 	inPainter.drawPixmap(nPosX, 30, m_QPixUserHead);
 }
 
+void CStudentWindow::doDShowResetVideo(int sourceCX, int sourceCY)
+{
+	int nResult = this->ResetVideo();
+	blog(LOG_INFO, "== doDShowResetVideo result: %d ==", nResult);
+}
+
+float CStudentWindow::doDShowCheckRatio()
+{
+	float ratioScale = 3.0 / 4.0;
+	obs_source_t * lpDShowSource = obs_sceneitem_get_source(m_dshowSceneItem);
+	uint32_t baseCX = (uint32_t)config_get_uint(basicConfig, "Student", "BaseCX");
+	uint32_t baseCY = (uint32_t)config_get_uint(basicConfig, "Student", "BaseCY");
+	uint32_t sourceCX = ((lpDShowSource != NULL) ? obs_source_get_width(lpDShowSource) : 0);
+	uint32_t sourceCY = ((lpDShowSource != NULL) ? obs_source_get_height(lpDShowSource) : 0);
+	// 摄像头的分辨率有效，需要进行相关的实际操作...
+	if (sourceCX > 0 && sourceCY > 0) {
+		// 计算当前摄像头有效的高宽比例...
+		ratioScale = (sourceCY * 1.0f) / (sourceCX * 1.0f);
+		// 如果分辨率与基础画布的分辨率不一致，需要重置...
+		if (baseCX != sourceCX || baseCY != sourceCY) {
+			// 直接将摄像头分辨率修改为输出分辨率，并保存到配置文件当中...
+			config_set_uint(basicConfig, "Student", "BaseCX", sourceCX);
+			config_set_uint(basicConfig, "Student", "BaseCY", sourceCY);
+			config_set_uint(basicConfig, "Student", "OutputCX", sourceCX);
+			config_set_uint(basicConfig, "Student", "OutputCY", sourceCY);
+			config_save_safe(basicConfig, "tmp", nullptr);
+			// 先存盘之后，再进行异步的信号消息通知，最大降低对主界面的影响...
+			QMetaObject::invokeMethod(this, "doDShowResetVideo", Qt::QueuedConnection,
+									  Q_ARG(int, sourceCX), Q_ARG(int, sourceCY));
+		}
+	}
+	// 返回摄像头高宽比例...
+	return ratioScale;
+}
+
 void CStudentWindow::doDrawRightArea(QPainter & inPainter)
 {
 	// 在计算右侧整个空白区域...
@@ -1541,11 +1575,9 @@ void CStudentWindow::doDrawRightArea(QPainter & inPainter)
 	inPainter.drawLine(rcRightSelf.right() + 1, rcRightSelf.top() + 1, rcRightSelf.right() + 1, rcRightSelf.bottom());
 	inPainter.setPen(QColor(63, 64, 70));
 	inPainter.drawLine(rcRightSelf.right() + 2, rcRightSelf.top() + 1, rcRightSelf.right() + 2, rcRightSelf.bottom());
+	// 注意：当发现分辨率与系统设定的分辨率不一致时，需要重置ResetVideo()...
 	// 预先计算原始数据源的长宽比例 => 默认4：3的比列...
-	float ratioScale = 3.0 / 4.0;
-	if (!m_viewCamera.isNull()) {
-		ratioScale = m_viewCamera->doGetSourceRatioScale();
-	}
+	float ratioScale = this->doDShowCheckRatio();
 	//blog(LOG_INFO, "== doDrawRightArea scale: %.2f ==", ratioScale);
 	// 计算本地摄像头预览窗口的显示位置...
 	QRect rcViewCamera;
