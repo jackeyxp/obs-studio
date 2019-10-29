@@ -29,6 +29,11 @@ static void smart_output_update(void *data, obs_data_t *settings)
 	lpRtpStream->udp_port = (int)obs_data_get_int(settings, "udp_port");
 	lpRtpStream->tcp_socket = (int)obs_data_get_int(settings, "tcp_socket");
 	lpRtpStream->client_type = (CLIENT_TYPE)obs_data_get_int(settings, "client_type");
+	// 保存数据源终端的内部名称...
+	switch (lpRtpStream->client_type) {
+	case kClientStudent: lpRtpStream->inner_name = ST_SEND_NAME; break;
+	case kClientTeacher: lpRtpStream->inner_name = TH_SEND_NAME; break;
+	}
 	// 如果推流线程已经创建，直接删除...
 	if (lpRtpStream->sendThread != NULL) {
 		delete lpRtpStream->sendThread;
@@ -41,11 +46,6 @@ static void smart_output_update(void *data, obs_data_t *settings)
 			lpRtpStream->client_type, lpRtpStream->room_id, lpRtpStream->tcp_socket,
 			lpRtpStream->udp_addr, lpRtpStream->udp_port);
 		return;
-	}
-	// 保存数据源终端的内部名称...
-	switch (lpRtpStream->client_type) {
-	case kClientStudent: lpRtpStream->inner_name = ST_SEND_NAME; break;
-	case kClientTeacher: lpRtpStream->inner_name = TH_SEND_NAME; break;
 	}
 	// 创建新的推流线程对象，延时初始化，将推流线程对象保存到输出管理器当中...
 	lpRtpStream->sendThread = new CSmartSendThread(lpRtpStream->client_type, lpRtpStream->tcp_socket, lpRtpStream->room_id);

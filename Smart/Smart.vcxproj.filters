@@ -224,6 +224,9 @@
     <ClCompile Include="window-view-camera.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="window-student-output.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="obs-app.hpp">
@@ -576,6 +579,9 @@
       <Filter>Json Files</Filter>
     </ClInclude>
     <ClInclude Include="getopt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="window-student-output.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

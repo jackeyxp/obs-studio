@@ -867,6 +867,7 @@ void SimpleOutput::UpdateRecording()
 
 bool SimpleOutput::ConfigureRecording(bool updateReplayBuffer)
 {
+	bool autoRemux = config_get_bool(main->Config(), "Video", "AutoRemux");
 	const char *path = config_get_string(main->Config(), "SimpleOutput", "FilePath");
 	const char *format = config_get_string(main->Config(), "SimpleOutput", "RecFormat");
 	const char *mux = config_get_string(main->Config(), "SimpleOutput", "MuxerCustom");
@@ -900,8 +901,9 @@ bool SimpleOutput::ConfigureRecording(bool updateReplayBuffer)
 	if (lastChar != '/' && lastChar != '\\')
 		strPath += "/";
 
-	strPath += GenerateSpecifiedFilename(ffmpegOutput ? "avi" : format,
-					     noSpace, filenameFormat);
+	strPath += GenerateSpecifiedFilename(autoRemux, 
+		ffmpegOutput ? "avi" : format,
+		noSpace, filenameFormat);
 	ensure_directory_exists(strPath);
 	if (!overwriteIfExists)
 		FindBestFilename(strPath, noSpace);
@@ -1693,8 +1695,8 @@ bool AdvancedOutput::StartRecording()
 		if (lastChar != '/' && lastChar != '\\')
 			strPath += "/";
 
-		strPath += GenerateSpecifiedFilename(recFormat, noSpace,
-						     filenameFormat);
+		bool autoRemux = config_get_bool(main->Config(), "Video", "AutoRemux");
+		strPath += GenerateSpecifiedFilename(autoRemux, recFormat, noSpace, filenameFormat);
 		ensure_directory_exists(strPath);
 		if (!overwriteIfExists)
 			FindBestFilename(strPath, noSpace);
@@ -1793,8 +1795,8 @@ bool AdvancedOutput::StartReplayBuffer()
 		if (lastChar != '/' && lastChar != '\\')
 			strPath += "/";
 
-		strPath += GenerateSpecifiedFilename(recFormat, noSpace,
-						     filenameFormat);
+		bool autoRemux = config_get_bool(main->Config(), "Video", "AutoRemux");
+		strPath += GenerateSpecifiedFilename(autoRemux, recFormat, noSpace, filenameFormat);
 		ensure_directory_exists(strPath);
 		if (!overwriteIfExists)
 			FindBestFilename(strPath, noSpace);

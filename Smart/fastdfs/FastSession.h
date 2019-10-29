@@ -100,6 +100,7 @@ public:
 	CRemoteSession();
 	virtual ~CRemoteSession();
 signals:
+	void doTriggerSmartLogin();
 	void doTriggerLiveOnLine(int nLiveID, bool bIsLiveOnLine);
 	void doTriggerCameraLiveStop(int nDBCameraID);
 	void doTriggerCameraList(Json::Value & value);

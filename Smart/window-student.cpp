@@ -4,6 +4,7 @@
 #include "window-student.h"
 #include "window-view-camera.hpp"
 #include "window-basic-settings.hpp"
+#include "window-student-output.hpp"
 
 #include "display-helpers.hpp"
 #include <util/profiler.hpp>
@@ -55,6 +56,15 @@ CStudentWindow::~CStudentWindow()
 	if (m_nClassTimer > 0) {
 		this->killTimer(m_nClassTimer);
 		m_nClassTimer = -1;
+	}
+	if (m_nOutputTimer > 0) {
+		this->killTimer(m_nOutputTimer);
+		m_nOutputTimer = -1;
+	}
+	// 释放学生端输出对象集合体...
+	if (m_lpStudentOutput != nullptr) {
+		delete m_lpStudentOutput;
+		m_lpStudentOutput = nullptr;
 	}
 }
 
@@ -144,6 +154,19 @@ void CStudentWindow::SourceRemoved(void *data, calldata_t *params)
 	obs_source_t *source = (obs_source_t *)calldata_ptr(params, "source");
 }
 
+void CStudentWindow::ResetOutputs()
+{
+	ProfileScope("CStudentWindow::ResetOutputs");
+	const char *mode = config_get_string(basicConfig, "Output", "Mode");
+	bool advOut = astrcmpi(mode, "Advanced") == 0;
+	if (m_lpStudentOutput != nullptr) {
+		delete m_lpStudentOutput;
+		m_lpStudentOutput = nullptr;
+	}
+	// 创建新的学生端输出对象集合体 => 录像|推流...
+	m_lpStudentOutput = new CStudentOutput(this);
+}
+
 void CStudentWindow::OBSInit()
 {
 	ProfileScope("CStudentWindow::OBSInit");
@@ -217,7 +240,8 @@ void CStudentWindow::OBSInit()
 
 	blog(LOG_INFO, STARTUP_SEPARATOR);
 
-	//ResetOutputs();
+	this->ResetOutputs();
+
 	//InitPrimitives();
 	
 	// 注意：为了解决Load加载慢的问题，进行了2次异步操作...
@@ -276,7 +300,7 @@ void CStudentWindow::DeferredLoad(const QString &file, int requeueCount)
 	// 设置已加载完毕的标志...
 	m_bIsLoaded = true;
 	// 立即启动远程连接...
-	//App()->doCheckRemote();
+	App()->doCheckRemote();
 }
 
 void CStudentWindow::RefreshSceneCollections()
@@ -1436,6 +1460,8 @@ void CStudentWindow::timerEvent(QTimerEvent *inEvent)
 	if (nTimerID == m_nClassTimer) {
 		++m_nTimeSecond;
 		this->doDrawTimeClock();
+	} else if (nTimerID == m_nOutputTimer) {
+		this->doCheckOutput();
 	}
 }
 
@@ -1525,10 +1551,96 @@ void CStudentWindow::doDrawLeftArea(QPainter & inPainter)
 	inPainter.drawPixmap(nPosX, 30, m_QPixUserHead);
 }
 
-void CStudentWindow::doDShowResetVideo(int sourceCX, int sourceCY)
+/*void CStudentWindow::doDShowResetVideo(int sourceCX, int sourceCY)
 {
 	int nResult = this->ResetVideo();
 	blog(LOG_INFO, "== doDShowResetVideo result: %d ==", nResult);
+	// 如果重置视频不成功，直接返回...
+	if (nResult != OBS_VIDEO_SUCCESS)
+		return;
+	this->ResetOutputs();
+	// 一旦重置视频成功，立即开启压缩输出功能...
+	this->doStartStreaming();
+}*/
+
+/*if (!m_bIsStartOutput) {
+	 // 通过异步信号消息通知，进行对外输出事件的操作...
+	 QMetaObject::invokeMethod(this, "doStartOutput", Qt::QueuedConnection);
+}
+void CStudentWindow::doStartOutput()
+{
+	// 直接进行开始录像的启动测试操作...
+	//this->doStartRecording();
+	// 直接进行开始推流的启动测试操作...
+	this->doStartStreaming();
+	// 输出成功之后，一定要设定输出标志...
+	m_bIsStartOutput = true;
+}*/
+
+// 登录远程数据服务器成功之后的信号通知 => doTriggerSmartLogin()...
+void CStudentWindow::onRemoteSmartLogin()
+{
+	// 如果时钟有效，需要先删除之...
+	if (m_nOutputTimer > 0) {
+		this->killTimer(m_nOutputTimer);
+		m_nOutputTimer = -1;
+	}
+	// 开启一个推流上传时钟 => 每隔5秒检查一次...
+	m_nOutputTimer = this->startTimer(5 * 1000);
+	// 立即启动推流状态检测...
+	this->doCheckOutput();
+}
+
+void CStudentWindow::doCheckOutput()
+{
+	// 如果发生格式变化...
+	if (m_bIsResetVideo) {
+		// 复原标志，重置视频...
+		m_bIsResetVideo = false;
+		// 必须先重置输出对象...
+		this->ResetOutputs();
+		// 再重置视频配置操作...
+		int nResult = this->ResetVideo();
+		blog(LOG_INFO, "== ResetVideo: %d ==", nResult);
+	}
+	// 如果不能对外输出，直接返回...
+	if (!m_bIsStartOutput)
+		return;
+	ASSERT(m_bIsStartOutput);
+	// 调用推流接口函数...
+	this->doStartStreaming();
+	// 调用录像接口函数...
+	//this->doStartRecording();
+}
+
+void CStudentWindow::doStartStreaming()
+{
+	// 输出时钟无效，直接返回...
+	if (m_nOutputTimer <= 0)
+		return;
+	// 学生输出对象无效，直接返回...
+	if (m_lpStudentOutput == nullptr)
+		return;
+	// 如果正在推流，直接返回...
+	if (m_lpStudentOutput->StreamingActive())
+		return;
+	// 开启学生推流操作...
+	m_lpStudentOutput->StartStreaming();
+}
+
+void CStudentWindow::doStartRecording()
+{
+	// 输出时钟无效，直接返回...
+	if (m_nOutputTimer <= 0)
+		return;
+	// 学生输出对象无效，直接返回...
+	if (m_lpStudentOutput == nullptr)
+		return;
+	// 如果正在录像，直接返回...
+	if (m_lpStudentOutput->RecordingActive())
+		return;
+	// 开启学生录像操作...
+	m_lpStudentOutput->StartRecording();
 }
 
 float CStudentWindow::doDShowCheckRatio()
@@ -1551,10 +1663,12 @@ float CStudentWindow::doDShowCheckRatio()
 			config_set_uint(basicConfig, "Student", "OutputCX", sourceCX);
 			config_set_uint(basicConfig, "Student", "OutputCY", sourceCY);
 			config_save_safe(basicConfig, "tmp", nullptr);
-			// 先存盘之后，再进行异步的信号消息通知，最大降低对主界面的影响...
-			QMetaObject::invokeMethod(this, "doDShowResetVideo", Qt::QueuedConnection,
-									  Q_ARG(int, sourceCX), Q_ARG(int, sourceCY));
+			// 先存盘之后，再重置标志，最大降低对主界面的影响...
+			// 注意：都放到doCheckOutput()处理，可以不用互斥...
+			m_bIsResetVideo = true;
 		}
+		// 拿到有效摄像头数据，才能进行输出...
+		m_bIsStartOutput = true;
 	}
 	// 返回摄像头高宽比例...
 	return ratioScale;

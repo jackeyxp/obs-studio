@@ -17,6 +17,7 @@
 using namespace std;
 
 class CViewCamera;
+class CStudentOutput;
 class CStudentWindow : public OBSMainWindow
 {
     Q_OBJECT
@@ -24,10 +25,13 @@ private:
 	long disableSaving = 1;
 	ConfigFile basicConfig;
 	QString m_strSavePath;
+	bool m_bIsResetVideo = false;
+	bool m_bIsStartOutput = false;
 	bool m_bIsSlientClose = false;
 	bool m_bIsLoaded = false;
 	QPoint m_startMovePos;
 	bool m_isPressed = false;
+	int m_nOutputTimer = -1;
 	int m_nClassTimer = -1;
 	int m_nTimeSecond = 0;
 	int m_nXPosClock = 0;
@@ -42,7 +46,8 @@ private:
 	obs_sceneitem_t * m_teacherSceneItem = nullptr;  // 远程老师端...
 	QPointer<CViewCamera> m_viewCamera = nullptr;    // 预览本地摄像头...
 	QNetworkAccessManager  m_objNetManager;	         // QT 网络管理对象...
-	std::vector<OBSSignal> signalHandlers;
+	std::vector<OBSSignal> signalHandlers;           // 系统信号量集合...
+	CStudentOutput * m_lpStudentOutput = nullptr;    // 学生端输出对象...
 private:
 	enum {
 		kWebGetUserHead   = 0,
@@ -58,8 +63,8 @@ private slots:
 	void onButtonSystemClicked();
 	void onReplyFinished(QNetworkReply *reply);
 	void DeferredLoad(const QString &file, int requeueCount);
+	void onRemoteSmartLogin();
 private slots:
-    void doDShowResetVideo(int sourceCX, int sourceCY);
 	void AddSceneItem(OBSSceneItem item);
 	void AddScene(OBSSource source);
 private:
@@ -70,6 +75,7 @@ private:
 	int   doD3DSetup();
 	int   ResetVideo();
 	bool  ResetAudio();
+	void  ResetOutputs();
 	bool  InitBasicConfig();
 	bool  InitBasicConfigDefaults();
 	void  InitBasicConfigDefaults2();
@@ -98,6 +104,9 @@ private:
 	void  loadStyleSheet(const QString &sheetName);
 	void  onProcGetUserHead(QNetworkReply *reply);
 	float doDShowCheckRatio();
+	void  doStartStreaming();
+	void  doStartRecording();
+	void  doCheckOutput();
 private:
 	void timerEvent(QTimerEvent * inEvent);
 	virtual void paintEvent(QPaintEvent *event);

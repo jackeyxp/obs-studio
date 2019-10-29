@@ -1549,7 +1549,8 @@ void OBSApp::onTriggerMiniSuccess()
 	m_strRoomID = QString("%1").arg(nDBRoomID).toStdString();
 	// 当前信号槽就是LoginMini发起的，最好不要在这里删除它自己...
 	// 关闭登录窗口，自己会删除 => WA_DeleteOnClose...
-	m_LoginMini->close();
+	// 注意：为了保持中心连接在线状态，不要删除...
+	m_LoginMini->hide();
 	// 创建主窗口 => 失败返回...
 	if (!this->OBSInit()) return;
 	// 将房间号保存到obs核心对象...
@@ -1594,7 +1595,6 @@ void OBSApp::doCheckFDFS()
 // 自动检测并创建RemoteSession...
 void OBSApp::doCheckRemote()
 {
-	return;
 	// 如果主窗口还没有加载完毕，不能创建远程对象，因为无法读取资源配置...
 	if (!mainWindow->IsLoaded())
 		return;
@@ -1612,7 +1612,11 @@ void OBSApp::doCheckRemote()
 	// 初始化远程中转会话对象...
 	m_RemoteSession = new CRemoteSession();
 	m_RemoteSession->InitSession(m_strRemoteAddr.c_str(), m_nRemotePort);
+
+	// 注意：学生端 => CStudentWindow | 老师端 => OBSBasic，都使用同样的基类 => OBSMainWindow
 	// 关联UDP连接被服务器删除时的事件通知信号槽、获取在线通道列表的信号槽、开启或删除rtp资源的信号槽...
+	this->connect(m_RemoteSession, SIGNAL(doTriggerSmartLogin()), mainWindow, SLOT(onRemoteSmartLogin()));
+
 	//OBSBasic * lpBasicWnd = qobject_cast<OBSBasic*>(mainWindow);
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerLiveOnLine(int, bool)), lpBasicWnd, SLOT(onTriggerLiveOnLine(int, bool)));
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerUdpLogout(int, int, int)), lpBasicWnd, SLOT(onTriggerUdpLogout(int, int, int)));
@@ -1926,11 +1930,8 @@ string GenerateTimeDateFilename(const char *extension, bool noSpace)
 	return string(file);
 }
 
-string GenerateSpecifiedFilename(const char *extension, bool noSpace, const char *format)
+string GenerateSpecifiedFilename(bool autoRemux, const char *extension, bool noSpace, const char *format)
 {
-	OBSBasic *main = reinterpret_cast<OBSBasic *>(App()->GetMainWindow());
-	bool autoRemux = config_get_bool(main->Config(), "Video", "AutoRemux");
-
 	if ((strcmp(extension, "mp4") == 0) && autoRemux)
 		extension = "mkv";
 
