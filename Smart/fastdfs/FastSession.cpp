@@ -534,11 +534,12 @@ bool CRemoteSession::doCmdSmartLogin(const char * lpData, int nSize)
 	}
 	// 打印获取到的远程tcp套接字的编号...
 	blog(LOG_INFO, "[RemoteSession] doCmdSmartLogin => tcp_socket: %d", nTCPSocketFD);
-	// 针对学生端，需要获取更多的信息 => TCP讲师端和UDP讲师端是否在线...
+	// 针对学生端，需要获取更多的信息 => 讲师端正在推流编号和数据库编号...
 	if (App()->GetClientType() == kClientStudent) {
-		bool bIsTCPTeacherOnLine = atoi(OBSApp::getJsonString(value["tcp_teacher"]).c_str());
-		bool bIsUDPTeacherOnLine = atoi(OBSApp::getJsonString(value["udp_teacher"]).c_str());
-		int  nDBFlowTeacherID = atoi(OBSApp::getJsonString(value["flow_teacher"]).c_str());
+		int nLiveTeacherID = atoi(OBSApp::getJsonString(value["live_teacher"]).c_str());
+		int nDBFlowTeacherID = atoi(OBSApp::getJsonString(value["flow_teacher"]).c_str());
+		// 保存学生端正在拉取的讲师端推流直播编号...
+		App()->SetLiveTeacherID(nLiveTeacherID);
 		// 保存关联的讲师流量记录编号 => 不一致，并且有效时才更新...
 		if (nDBFlowTeacherID > 0 && App()->GetDBFlowTeacherID() != nDBFlowTeacherID) {
 			App()->SetDBFlowTeacherID(nDBFlowTeacherID);

@@ -3,6 +3,7 @@
 #include "platform.hpp"
 #include "window-student.h"
 #include "window-view-camera.hpp"
+#include "window-view-teacher.hpp"
 #include "window-basic-settings.hpp"
 #include "window-student-output.hpp"
 
@@ -142,10 +143,16 @@ void CStudentWindow::AddSceneItem(OBSSceneItem item)
 		obs_source_get_id(itemSource),
 		obs_source_get_name(sceneSource));
 	// 根据数据源id判断并保存摄像头数据源 => 保存场景条目，计数器在数据源上...
-	bool bIsDShowInput = ((stricmp(obs_source_get_id(itemSource), App()->DShowInputSource()) == 0) ? true : false);
+	bool bIsDShowInput = ((astrcmpi(obs_source_get_id(itemSource), App()->DShowInputSource()) == 0) ? true : false);
 	if (itemSource != nullptr && bIsDShowInput && m_dshowSceneItem == nullptr) {
 		obs_source_addref(itemSource);
 		m_dshowSceneItem = item;
+	}
+	// 如果是smart_source数据源 => 老师端数据源，保存并增加引用计数器...
+	bool bIsTeacherSource = ((astrcmpi(obs_source_get_id(itemSource), App()->InteractSmartSource()) == 0) ? true : false);
+	if (itemSource != nullptr && bIsTeacherSource && m_teacherSceneItem == nullptr) {
+		obs_source_addref(itemSource);
+		m_teacherSceneItem = item;
 	}
 }
 
@@ -311,6 +318,12 @@ void CStudentWindow::RefreshSceneCollections()
 	// 这里的操作为了避免发生闪烁...
 	m_viewCamera->resize(0, 0);
 	m_viewCamera->show();
+	// 创建右侧教师预览窗口，关联预览函数接口...
+	m_viewTeacher = new CViewTeacher(this);
+	m_viewTeacher->doInitTeacher();
+	// 这里的操作为了避免发生闪烁...
+	m_viewTeacher->resize(0, 0);
+	m_viewTeacher->show();
 }
 
 static void LoadAudioDevice(const char *name, int channel, obs_data_t *parent)
@@ -340,7 +353,7 @@ void CStudentWindow::Load(const char *file)
 		disableSaving--;
 		blog(LOG_INFO, "No scene file found, creating default scene");
 		this->CreateDefaultScene(true);
-		this->SaveProject();
+		//this->SaveProject();
 		return;
 	}
 
@@ -588,9 +601,9 @@ void CStudentWindow::CreateDefaultScene(bool firstStart)
 	//	ResetAudioDevice(App()->OutputAudioSource(), "default", Str("Basic.DesktopDevice1"), 1);
 	//}
 	// 有音频输入设备，直接使用默认的音频输入设备 => 放在频道3上面...
-	if (hasInputAudio) {
+	/*if (hasInputAudio) {
 		ResetAudioDevice(App()->InputAudioSource(), "default", Str("Basic.AuxDevice1"), 3);
-	}
+	}*/
 
 	// 创建场景对象，并将这个主场景对象挂载到频道0上面...
 	obs_scene_t * lpObsScene = obs_scene_create(Str("Basic.Scene"));
@@ -600,14 +613,47 @@ void CStudentWindow::CreateDefaultScene(bool firstStart)
 	obs_scene_release(lpObsScene);
 
 	// 创建默认的本地摄像头对象...
+	//this->doCreateDShowSource(lpObsScene);
+	// 创建默认的老师端数据源对象...
+	this->doCreateTeacherSource(lpObsScene);
+
+	disableSaving--;
+}
+
+void CStudentWindow::doCreateTeacherSource(obs_scene_t * lpObsScene)
+{
+	const char * lpSmartID = App()->InteractSmartSource();
+	const char * lpSmartName = obs_source_get_display_name(lpSmartID);
+	obs_source_t * lpTeacherSource = obs_source_create(lpSmartID, lpSmartName, NULL, nullptr);
+	// 如果没有获取到了默认的Smart数据源 => 直接返回 => 注意处理存盘标志...
+	if (lpObsScene == nullptr || lpSmartID == nullptr && lpTeacherSource == nullptr)
+		return;
+	// 初始化默认数据源...
+	obs_enter_graphics();
+	vec2 vPos = { 120.0f, 120.0f };
+	// 这里的位置是相对整个MainTexure的位置 => 不能设定为0点位置...
+	obs_sceneitem_t * lpTeacherItem = obs_scene_add(lpObsScene, lpTeacherSource);
+	// 注意：这里会激发信号事件AddSceneItem => 需要减少引用计数器...
+	obs_source_release(lpTeacherSource);
+	// 设置摄像头可见，以及设定初始位置...
+	// 注意：0点位置的数据源是需要对外输出的数据源...
+	obs_sceneitem_set_visible(lpTeacherItem, true);
+	obs_sceneitem_set_pos(lpTeacherItem, &vPos);
+	obs_leave_graphics();
+	// 这里需要设置老师端数据源的音频为只播放不输出状态，默认是NONE，既不输出也不本地播放...
+	obs_source_set_monitoring_type(lpTeacherSource, OBS_MONITORING_TYPE_MONITOR_ONLY);
+	blog(LOG_INFO, "User changed audio monitoring for source '%s' to: %s", obs_source_get_name(lpTeacherSource), "monitor and output");
+}
+
+void CStudentWindow::doCreateDShowSource(obs_scene_t * lpObsScene)
+{
+	// 创建默认的本地摄像头对象...
 	const char * lpDShowID = App()->DShowInputSource();
 	const char * lpDShowName = obs_source_get_display_name(lpDShowID);
 	obs_source_t * lpDShowSource = obs_source_create(lpDShowID, lpDShowName, NULL, nullptr);
 	// 如果没有获取到了默认的DShow数据源 => 直接返回 => 注意处理存盘标志...
-	if (lpObsScene == nullptr || lpDShowName == nullptr && lpDShowSource == nullptr) {
-		disableSaving--;
+	if (lpObsScene == nullptr || lpDShowName == nullptr && lpDShowSource == nullptr)
 		return;
-	}
 	// 初始化默认数据源...
 	obs_enter_graphics();
 	vec2 vPos = { 0.0f, 0.0f };
@@ -616,6 +662,7 @@ void CStudentWindow::CreateDefaultScene(bool firstStart)
 	// 注意：这里会激发信号事件AddSceneItem => 需要减少引用计数器...
 	obs_source_release(lpDShowSource);
 	// 设置摄像头可见，以及设定初始位置...
+	// 注意：0点位置的数据源是需要对外输出的数据源...
 	obs_sceneitem_set_visible(lpDShowItem, true);
 	obs_sceneitem_set_pos(lpDShowItem, &vPos);
 	obs_leave_graphics();
@@ -644,8 +691,6 @@ void CStudentWindow::CreateDefaultScene(bool firstStart)
 	//uint32_t caps = obs_source_get_output_flags(lpDShowSource);
 	//bool drawable_type = type == OBS_SOURCE_TYPE_INPUT || type == OBS_SOURCE_TYPE_SCENE;
 	//bool drawable_preview = (caps & OBS_SOURCE_VIDEO) != 0;
-
-	disableSaving--;
 }
 
 void CStudentWindow::ClearSceneData()
@@ -655,6 +700,10 @@ void CStudentWindow::ClearSceneData()
 	// 主动移除绑定上去回调接口...
 	if (!m_viewCamera.isNull()) {
 		m_viewCamera->doRemoveDrawCallback();
+	}
+	// 主动移除绑定上去回调接口...
+	if (!m_viewTeacher.isNull()) {
+		m_viewTeacher->doRemoveDrawCallback();
 	}
 
 	obs_set_output_source(0, nullptr);
@@ -679,6 +728,10 @@ void CStudentWindow::ClearSceneData()
 	if (!m_viewCamera.isNull()) {
 		delete m_viewCamera;
 		m_viewCamera = nullptr;
+	}
+	if (!m_viewTeacher.isNull()) {
+		delete m_viewTeacher;
+		m_viewTeacher = nullptr;
 	}
 	// 频道0 => 先释放所有主动创建的数据源对象...
 	if (m_dshowSceneItem != nullptr) {
@@ -1577,9 +1630,35 @@ void CStudentWindow::doStartOutput()
 	m_bIsStartOutput = true;
 }*/
 
+// 老师端发出的直播推流的信号通知 => 直播编号和在线状态...
+void CStudentWindow::onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine)
+{
+	// 如果右侧讲师端数据源无效，直接返回...
+	obs_source_t * lpTeacherSource = obs_sceneitem_get_source(m_teacherSceneItem);
+	if (lpTeacherSource == nullptr || m_teacherSceneItem == nullptr)
+		return;
+	// 尝试创建右侧老师端播放画面对象...
+	obs_data_t * lpSettings = obs_source_get_settings(lpTeacherSource);
+	int nRoomID = atoi(App()->GetRoomIDStr().c_str());
+	obs_data_set_int(lpSettings, "room_id", nRoomID);
+	obs_data_set_int(lpSettings, "live_id", nLiveID);
+	obs_data_set_bool(lpSettings, "live_on", bIsLiveOnLine);
+	obs_data_set_int(lpSettings, "udp_port", App()->GetUdpPort());
+	obs_data_set_string(lpSettings, "udp_addr", App()->GetUdpAddr().c_str());
+	obs_data_set_int(lpSettings, "tcp_socket", App()->GetRemoteTcpSockFD());
+	obs_data_set_int(lpSettings, "client_type", App()->GetClientType());
+	// 将新的资源配置应用到当前smart_source资源对象当中...
+	obs_source_update(lpTeacherSource, lpSettings);
+	// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏...
+	obs_data_release(lpSettings);
+}
+
 // 登录远程数据服务器成功之后的信号通知 => doTriggerSmartLogin()...
 void CStudentWindow::onRemoteSmartLogin()
 {
+	// 直接尝试拉取老师端正在推流直播...
+	int nLiveTeacherID = App()->GetLiveTeacherID();
+	this->onRemoteLiveOnLine(nLiveTeacherID, (nLiveTeacherID > 0) ? true : false);
 	// 如果时钟有效，需要先删除之...
 	if (m_nOutputTimer > 0) {
 		this->killTimer(m_nOutputTimer);
@@ -1680,7 +1759,7 @@ void CStudentWindow::doDrawRightArea(QPainter & inPainter)
 	QRect rcTitleRight = ui->hori_title->geometry();
 	QRect rcRightArea = ui->vert_right->geometry();
 	rcRightArea.adjust(0, rcTitleRight.height()+1, 0, 0);
-	// 绘制右侧自身摄像头区域...
+	// 绘制左侧自身摄像头区域...
 	QRect rcRightSelf = rcRightArea;
 	rcRightSelf.setWidth(rcRightArea.width() / 5);
 	inPainter.fillRect(rcRightSelf, QColor(40, 42, 49));
@@ -1704,9 +1783,14 @@ void CStudentWindow::doDrawRightArea(QPainter & inPainter)
 		m_viewCamera->setGeometry(rcViewCamera);
 	}
 	// 绘制右侧老师画面区域...
-	QRect rcTeacher = rcRightArea;
-	rcTeacher.setLeft(rcRightSelf.right() + 3);
-	inPainter.fillRect(rcTeacher, QColor(46, 48, 55));
+	QRect rcViewTeacher = rcRightArea;
+	rcViewTeacher.setLeft(rcRightSelf.right() + 3);
+	inPainter.fillRect(rcViewTeacher, QColor(46, 48, 55));
+	// 进行右侧窗口的预览窗口位置调整...
+	rcViewTeacher.setTop(rcRightArea.top() + 1);
+	if (!m_viewTeacher.isNull() && rcViewTeacher != m_viewTeacher->geometry()) {
+		m_viewTeacher->setGeometry(rcViewTeacher);
+	}
 	// 最后绘制整个右侧区域的边框位置...
 	inPainter.setPen(QColor(27, 26, 28));
 	inPainter.drawRect(rcRightArea);

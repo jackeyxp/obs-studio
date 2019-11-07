@@ -240,10 +240,9 @@ bool AddNew(QWidget *parent, const char *id, const char *name,
 	return success;
 }
 
-bool OBSBasicSourceSelect::AddNewSmartSource(const char *name)
+obs_source_t * OBSBasicSourceSelect::AddNewSmartSource(const char *name)
 {
-	bool success = false;
-	const char *id = "smart_source";
+	const char *id = App()->InteractSmartSource();
 	obs_source_t *source = obs_source_create(id, name, NULL, nullptr);
 	OBSBasic *main = reinterpret_cast<OBSBasic *>(App()->GetMainWindow());
 	OBSScene scene = main->GetCurrentScene();
@@ -262,11 +261,9 @@ bool OBSBasicSourceSelect::AddNewSmartSource(const char *name)
 		// 轨道2 => 输出给录像使用，当互动教室处于焦点状态时录制声音...
 		obs_source_set_monitoring_type(source, OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT);
 		blog(LOG_INFO, "User changed audio monitoring for source '%s' to: %s", obs_source_get_name(source), "monitor and output");
-
-		success = true;
 	}
 	obs_source_release(source);
-	return success;
+	return source;
 }
 
 void OBSBasicSourceSelect::doSaveScreenPath(obs_data_t * settings)

@@ -227,6 +227,9 @@
     <ClCompile Include="window-student-output.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="window-view-teacher.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="obs-app.hpp">
@@ -377,6 +380,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="window-view-camera.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="window-view-teacher.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

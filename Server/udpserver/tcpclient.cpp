@@ -326,24 +326,22 @@ int CTCPClient::doCmdSmartLogin()
     // json对象引用计数减少...
     json_object_put(new_obj);
   } else if (m_nClientType == kClientStudent) {
-    // 学生端 => 当前房间里的TCP讲师端是否在线 和 UDP讲师端是否在线...
-    bool bIsTCPTeacherOnLine = m_lpRoom->IsTcpTeacherClientOnLine();
-    bool bIsUDPTeacherOnLine = m_lpRoom->IsUdpTeacherPusherOnLine();
+    // 学生端 => 当前房间里的TCP讲师端的正在推流的直播编号...
     int  nTeacherFlowID = m_lpRoom->GetTcpTeacherDBFlowID();
-    // 发送反馈命令信息给学生端长链接对象...
-    nResult = this->doSendCmdLoginForStudent(bIsTCPTeacherOnLine, bIsUDPTeacherOnLine, nTeacherFlowID);
+    int  nTeacherLiveID = m_lpRoom->GetUdpTeacherLiveID();
+    // 发送反馈命令信息给学生端长链接对象 => 讲师端数据库编号和推流编号...
+    nResult = this->doSendCmdLoginForStudent(nTeacherFlowID, nTeacherLiveID);
   }
   // 返回执行结果...
   return nResult;
 }
 
-int CTCPClient::doSendCmdLoginForStudent(bool bIsTCPOnLine, bool bIsUDPOnLine, int nTeacherFlowID)
+int CTCPClient::doSendCmdLoginForStudent(int nTeacherFlowID, int nTeacherLiveID)
 {
   // 构造转发JSON数据块 => 返回套接字|TCP讲师|UDP讲师|流量编号...
   json_object * new_obj = json_object_new_object();
   json_object_object_add(new_obj, "tcp_socket", json_object_new_int(m_nConnFD));
-  json_object_object_add(new_obj, "tcp_teacher", json_object_new_int(bIsTCPOnLine));
-  json_object_object_add(new_obj, "udp_teacher", json_object_new_int(bIsUDPOnLine));
+  json_object_object_add(new_obj, "live_teacher", json_object_new_int(nTeacherLiveID));
   json_object_object_add(new_obj, "flow_teacher", json_object_new_int(nTeacherFlowID));
   // 转换成json字符串，获取字符串长度...
   char * lpNewJson = (char*)json_object_to_json_string(new_obj);

@@ -56,5 +56,5 @@ public:
 	static void SourcePaste(const char *name, bool visible, bool duplicate);
 	static void AddFilterToSourceByID(obs_source_t *source, const char * lpFilterID);
 
-	static bool AddNewSmartSource(const char *name);
+	static obs_source_t * AddNewSmartSource(const char *name);
 };

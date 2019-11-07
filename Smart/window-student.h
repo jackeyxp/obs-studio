@@ -17,6 +17,7 @@
 using namespace std;
 
 class CViewCamera;
+class CViewTeacher;
 class CStudentOutput;
 class CStudentWindow : public OBSMainWindow
 {
@@ -45,6 +46,7 @@ private:
 	obs_sceneitem_t * m_dshowSceneItem = nullptr;    // 本地摄像头...
 	obs_sceneitem_t * m_teacherSceneItem = nullptr;  // 远程老师端...
 	QPointer<CViewCamera> m_viewCamera = nullptr;    // 预览本地摄像头...
+	QPointer<CViewTeacher> m_viewTeacher = nullptr;  // 预览老师端画面...
 	QNetworkAccessManager  m_objNetManager;	         // QT 网络管理对象...
 	std::vector<OBSSignal> signalHandlers;           // 系统信号量集合...
 	CStudentOutput * m_lpStudentOutput = nullptr;    // 学生端输出对象...
@@ -63,6 +65,7 @@ private slots:
 	void onButtonSystemClicked();
 	void onReplyFinished(QNetworkReply *reply);
 	void DeferredLoad(const QString &file, int requeueCount);
+	void onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine);
 	void onRemoteSmartLogin();
 private slots:
 	void AddSceneItem(OBSSceneItem item);
@@ -93,6 +96,8 @@ private:
 	void  Load(const char *file);
 	void  RefreshSceneCollections();
 	void  CreateDefaultScene(bool firstStart);
+	void  doCreateDShowSource(obs_scene_t * lpObsScene);
+	void  doCreateTeacherSource(obs_scene_t * lpObsScene);
 	void  ResetAudioDevice(const char *sourceId, const char *deviceId, const char *deviceDesc, int channel);
 
 	void  initWindow();
@@ -117,6 +122,7 @@ private:
 public:
 	inline obs_scene_t * GetObsScene() { return m_obsScene; }
 	inline obs_sceneitem_t * GetDShowSceneItem() { return m_dshowSceneItem; }
+	inline obs_sceneitem_t * GetTeacherSceneItem() { return m_teacherSceneItem; }
 	inline void SetSlientClose(bool bIsSlient) { m_bIsSlientClose = bIsSlient; }
 public:
 	explicit CStudentWindow(QWidget *parent = NULL);

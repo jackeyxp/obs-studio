@@ -1043,7 +1043,7 @@ retryScene:
 	copyString = nullptr;
 	copyFiltersString = nullptr;
 
-	LogScenes();
+	this->LogScenes();
 
 	disableSaving--;
 
@@ -1054,6 +1054,10 @@ retryScene:
 		api->on_event(OBS_FRONTEND_EVENT_SCENE_CHANGED);
 		api->on_event(OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED);
 	}
+
+	// 注意：必须在加载完毕之后再删除...
+	// 新增删除交互学生数据源操作...
+	this->doRemoveSmartSource();
 }
 
 #define SERVICE_PATH "service.json"
@@ -4026,6 +4030,10 @@ void OBSBasic::closeEvent(QCloseEvent *event)
 	QWidget::closeEvent(event);
 	if (!event->isAccepted())
 		return;
+	
+	//注意：这里不能完全删除smart_source，还有OBSRef存在，是需要异步删除的...
+	//注意：退出时，只能删除smart_source_item，还会将source信息存盘，等待启动时再删除之...
+	this->doRemoveSmartSource();
 
 	blog(LOG_INFO, SHUTDOWN_SEPARATOR);
 
@@ -4944,6 +4952,9 @@ QMenu *OBSBasic::BuildAddSourcePopupMenu()
 		// 去掉 图片幻灯片 的菜单添加入口...
 		//if (astrcmpi(type, "slideshow") == 0)
 		//	continue;
+		// 去掉 smart_source 的菜单添加入口...
+		if (astrcmpi(type, App()->InteractSmartSource()) == 0)
+			continue;
 		// 去掉 色源 的菜单添加入口...
 		if (astrcmpi(type, "color_source") == 0)
 			continue;
@@ -8341,47 +8352,73 @@ void OBSBasic::CheckDiskSpaceRemaining()
 	}
 }
 
+// 响应服务器发送的登录事件通知...
+void OBSBasic::onRemoteSmartLogin()
+{
+}
+
 // 响应服务器发送的smart_source重建事件通知...
-void OBSBasic::onTriggerLiveOnLine(int nLiveID, bool bIsLiveOnLine)
+void OBSBasic::onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine)
 {
 	// 在线状态 => 直接新建数据源...
 	// 离线状态 => 直接删除数据源...
 	// 启动或退出时，全部删除已经加载的互动数据源...
 
-	/*// 通过推流编号查找场景对应的数据源...
 	for (int i = 0; i < ui->sources->count(); i++) {
 		obs_sceneitem_t * lpSceneitem = ui->sources->Get(i);
 		obs_source_t * lpFindSource = obs_sceneitem_get_source(lpSceneitem);
 		obs_data_t * lpSettings = obs_source_get_settings(lpFindSource);
+		const char * lpID = obs_source_get_id(lpFindSource);
 		// 场景配置无效，继续寻找...
 		if (lpSettings == NULL)
 			continue;
-		// 推流编号和场景配置不一致，需要释放引用计数器，继续寻找...
-		if (nLiveID != obs_data_get_int(lpSettings, "live_id")) {
-			obs_data_release(lpSettings);
-			continue;
-		}
-		// 如果云台窗口有效，需要更新...
-		//this->doUpdatePTZ(nDBCameraID);
-		// 将smart_source需要的参数写入配置结构当中...
-		int nRoomID = atoi(App()->GetRoomIDStr().c_str());
-		obs_data_set_int(lpSettings, "room_id", nRoomID);
-		obs_data_set_int(lpSettings, "live_id", nLiveID);
-		obs_data_set_bool(lpSettings, "live_on", bIsLiveOnLine);
-		obs_data_set_int(lpSettings, "udp_port", App()->GetUdpPort());
-		obs_data_set_string(lpSettings, "udp_addr", App()->GetUdpAddr().c_str());
-		obs_data_set_int(lpSettings, "tcp_socket", App()->GetRemoteTcpSockFD());
-		// 将新的资源配置应用到当前smart_source资源对象当中...
-		obs_source_update(lpFindSource, lpSettings);
-		// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏...
+		// 注意需要释放引用计数器...
 		obs_data_release(lpSettings);
-		// 跳出查找循环...
-		return;
+		// 如果不是互动学生端数据源，继续寻找...
+		if (astrcmpi(lpID, App()->InteractSmartSource()) != 0)
+			continue;
+		// 推流编号和场景配置不一致，继续寻找...
+		if (nLiveID != obs_data_get_int(lpSettings, "live_id"))
+			continue;
+		// 如果是离线状态，直接删除已经找到的数据源对象...
+		if (!bIsLiveOnLine) {
+			obs_sceneitem_remove(lpSceneitem);
+			return;
+		}
 	}
 	// 如果没有找到对应的数据源，并且是离线通知，直接返回...
 	if (!bIsLiveOnLine)
 		return;
 	ASSERT(bIsLiveOnLine && nLiveID);
 	// 如果没有找到对应的数据源，需要自动新建一个...
-	OBSBasicSourceSelect::AddNewSmartSource();*/
+	const char * lpSmartName = obs_source_get_display_name(App()->InteractSmartSource());
+	obs_source_t * lpNewSource = OBSBasicSourceSelect::AddNewSmartSource(lpSmartName);
+	// 如果创建失败，直接返回...
+	if (lpNewSource == nullptr)
+		return;
+	// 创建成功，更新配置到新的数据源当中...
+	obs_data_t * lpNewSettings = obs_source_get_settings(lpNewSource);
+	int nNewRoomID = atoi(App()->GetRoomIDStr().c_str());
+	obs_data_set_int(lpNewSettings, "room_id", nNewRoomID);
+	obs_data_set_int(lpNewSettings, "live_id", nLiveID);
+	obs_data_set_bool(lpNewSettings, "live_on", bIsLiveOnLine);
+	obs_data_set_int(lpNewSettings, "udp_port", App()->GetUdpPort());
+	obs_data_set_string(lpNewSettings, "udp_addr", App()->GetUdpAddr().c_str());
+	obs_data_set_int(lpNewSettings, "tcp_socket", App()->GetRemoteTcpSockFD());
+	obs_data_set_int(lpNewSettings, "client_type", App()->GetClientType());
+	// 将新的资源配置应用到当前smart_source资源对象当中...
+	obs_source_update(lpNewSource, lpNewSettings);
+	// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏...
+	obs_data_release(lpNewSettings);
+}
+
+void OBSBasic::doRemoveSmartSource()
+{
+	for (int i = 0; i < ui->sources->count(); i++) {
+		obs_sceneitem_t * lpSceneitem = ui->sources->Get(i);
+		obs_source_t * lpFindSource = obs_sceneitem_get_source(lpSceneitem);
+		if (astrcmpi(obs_source_get_id(lpFindSource), App()->InteractSmartSource()) == 0) {
+			obs_sceneitem_remove(lpSceneitem);
+		}
+	}
 }

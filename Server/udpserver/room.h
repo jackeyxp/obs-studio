@@ -12,9 +12,8 @@ public:
 public:
   int          GetTcpTeacherCount();
   int          GetTcpStudentCount();
+  int          GetUdpTeacherLiveID();
   int          GetTcpTeacherDBFlowID();
-  bool         IsTcpTeacherClientOnLine();
-  bool         IsUdpTeacherPusherOnLine();
 public:
   void         doDumpRoomInfo();
   CUDPClient * doFindUdpPusher(int inLiveID);
@@ -22,12 +21,15 @@ public:
   void         doTcpDeleteSmart(CTCPClient * lpTcpSmart);
   void         doUdpCreateSmart(CUDPClient * lpUdpSmart);
   void         doUdpDeleteSmart(CUDPClient * lpUdpSmart);
+  void         doUdpHeaderSmart(CUDPClient * lpUdpSmart);
 private:
   void         doTcpCreateTeacher(CTCPClient * lpTeacher);
   void         doTcpCreateStudent(CTCPClient * lpStudent);
   void         doTcpDeleteTeacher(CTCPClient * lpTeacher);
   void         doTcpDeleteStudent(CTCPClient * lpStudent);
 
+  void         doUdpHeaderTeacherPusher(CUDPClient * lpTeacher);
+  void         doUdpHeaderStudentPusher(CUDPClient * lpStudent);
   void         doUdpCreateTeacherPusher(CUDPClient * lpTeacher);
   void         doUdpCreateTeacherLooker(CUDPClient * lpTeacher);
   void         doUdpCreateStudentPusher(CUDPClient * lpStudent);

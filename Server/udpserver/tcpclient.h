@@ -34,7 +34,7 @@ private:
 private:
   int       doCmdSmartLogin();
   int       doCmdSmartOnLine();
-  int       doSendCmdLoginForStudent(bool bIsTCPOnLine, bool bIsUDPOnLine, int nTeacherFlowID);
+  int       doSendCmdLoginForStudent(int nTeacherFlowID, int nTeacherLiveID);
   int       doSendCommonCmd(int nCmdID, const char * lpJsonPtr = NULL, int nJsonSize = 0, int nSockID = 0);
   int       doSendPHPResponse(const char * lpJsonPtr, int nJsonSize);
 private:

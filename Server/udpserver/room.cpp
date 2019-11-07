@@ -70,7 +70,15 @@ int CRoom::GetTcpTeacherDBFlowID()
   return ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetDBFlowID() : 0);
 }
 
-bool CRoom::IsTcpTeacherClientOnLine()
+int CRoom::GetUdpTeacherLiveID()
+{
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
+  CUDPClient * lpUdpPusher = ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetUdpPusher() : NULL);
+  return ((lpUdpPusher != NULL) ? lpUdpPusher->GetLiveID() : 0);
+}
+
+/*bool CRoom::IsTcpTeacherClientOnLine()
 {
   // 利用构造函数|析构函数进行互斥保护...
   OSMutexLocker theLocker(&m_tcp_mutex);
@@ -83,7 +91,7 @@ bool CRoom::IsUdpTeacherPusherOnLine()
   OSMutexLocker theLocker(&m_tcp_mutex);
   CUDPClient * lpUdpPusher = ((m_lpTCPTeacher != NULL) ? m_lpTCPTeacher->GetUdpPusher() : NULL);
   return ((lpUdpPusher != NULL) ? true : false);
-}
+}*/
 
 void CRoom::doTcpCreateSmart(CTCPClient * lpTcpSmart)
 {
@@ -191,6 +199,50 @@ CUDPClient * CRoom::doFindUdpPusher(int inLiveID)
   return NULL;
 }
 
+void CRoom::doUdpHeaderSmart(CUDPClient * lpUdpSmart)
+{
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
+  // 只有推流者才会处理序列头命令...
+  if (lpUdpSmart->GetIdTag() != ID_TAG_PUSHER)
+    return;
+  // 根据不同终端进行不同处理...
+  switch(lpUdpSmart->GetTmTag()) {
+    case TM_TAG_TEACHER: this->doUdpHeaderTeacherPusher(lpUdpSmart); break;
+    case TM_TAG_STUDENT: this->doUdpHeaderStudentPusher(lpUdpSmart); break;
+  }
+}
+
+void CRoom::doUdpHeaderTeacherPusher(CUDPClient * lpTeacher)
+{
+  // 如果房间里的讲师长链接无效...
+  if (m_lpTCPTeacher == NULL || lpTeacher == NULL)
+    return;
+  // 如果新的讲师推流对象与原有对象不相同(可能多次发命令) => 告诉房间里所有TCP在线学生端，可以创建拉流线程了...
+  if( m_lpTCPTeacher->GetUdpPusher() != lpTeacher ) {
+    this->doUdpLiveOnLine(m_lpTCPTeacher, lpTeacher->GetLiveID(), true);
+  }
+  // 将UDP推流终端保存到对应的TCP终端里面...
+  m_lpTCPTeacher->doUdpCreatePusher(lpTeacher);
+}
+
+void CRoom::doUdpHeaderStudentPusher(CUDPClient * lpStudent)
+{
+  // 查找UDP学生端对象对应的TCP学生端对象...
+  int nTcpSockFD = lpStudent->GetTCPSockID();
+  GM_MapTCPConn::iterator itorItem = m_MapTCPStudent.find(nTcpSockFD);
+  if (itorItem == m_MapTCPStudent.end())
+    return;
+  // 获取UDP学生端相关的变量内容...
+  CTCPClient * lpTcpStudent = itorItem->second;
+  // 如果新的学生推流对象与原有对象不相同(可能多次发命令) => 告诉房间里所有TCP终端，可以创建拉流线程了...
+  if (lpTcpStudent->GetUdpPusher() != lpStudent) {
+    this->doUdpLiveOnLine(lpTcpStudent, lpStudent->GetLiveID(), true);
+  }
+  // 将UDP推流终端保存到对应的TCP终端里面...
+  lpTcpStudent->doUdpCreatePusher(lpStudent);
+}
+
 void CRoom::doUdpCreateSmart(CUDPClient * lpUdpSmart)
 {
   // 利用构造函数|析构函数进行互斥保护...
@@ -224,12 +276,13 @@ void CRoom::doUdpCreateTeacherPusher(CUDPClient * lpTeacher)
   if (lpTeacher->m_rtp_create.liveID <= 0) {
     lpTeacher->m_rtp_create.liveID = ++m_nMaxLiveID;
   }
+  // 注意：不能在这里发送拉流通知，因为回复给推流端的tagCreate命令可能丢失，造成LiveID重复创建...
   // 如果新的讲师推流对象与原有对象不相同(可能多次发命令) => 告诉房间里所有TCP在线学生端，可以创建拉流线程了...
-  if( m_lpTCPTeacher->GetUdpPusher() != lpTeacher ) {
+  /*if( m_lpTCPTeacher->GetUdpPusher() != lpTeacher ) {
     this->doUdpLiveOnLine(m_lpTCPTeacher, lpTeacher->GetLiveID(), true);
   }
   // 将UDP推流终端保存到对应的TCP终端里面...
-  m_lpTCPTeacher->doUdpCreatePusher(lpTeacher);
+  m_lpTCPTeacher->doUdpCreatePusher(lpTeacher);*/
 }
 
 void CRoom::doUdpCreateTeacherLooker(CUDPClient * lpTeacher)
@@ -265,14 +318,14 @@ void CRoom::doUdpCreateStudentPusher(CUDPClient * lpStudent)
   if (lpStudent->m_rtp_create.liveID <= 0) {
     lpStudent->m_rtp_create.liveID = ++m_nMaxLiveID;
   }
-  // 获取UDP学生端相关的变量内容...
-  CTCPClient * lpTcpStudent = itorItem->second;
+  // 注意：不能在这里发送拉流通知，因为回复给推流端的tagCreate命令可能丢失，造成LiveID重复创建...
   // 如果新的学生推流对象与原有对象不相同(可能多次发命令) => 告诉房间里所有TCP终端，可以创建拉流线程了...
+  /*CTCPClient * lpTcpStudent = itorItem->second;
   if (lpTcpStudent->GetUdpPusher() != lpStudent) {
     this->doUdpLiveOnLine(lpTcpStudent, lpStudent->GetLiveID(), true);
   }
   // 将UDP推流终端保存到对应的TCP终端里面...
-  lpTcpStudent->doUdpCreatePusher(lpStudent);
+  lpTcpStudent->doUdpCreatePusher(lpStudent);*/
 }
 
 void CRoom::doUdpCreateStudentLooker(CUDPClient * lpStudent)
@@ -391,6 +444,9 @@ void CRoom::doUdpLiveOnLine(CTCPClient * lpTcpExclude, int inLiveID, bool bIsOnL
   if( m_lpTCPTeacher != NULL && lpTcpExclude != m_lpTCPTeacher ) {
     m_lpTCPTeacher->doUdpLiveOnLine(inLiveID, bIsOnLineFlag);
   }
+  // 如果是学生端推流，只通知老师端，不要通知房间里的其它学生端...
+  if( lpTcpExclude->GetClientType() == kClientStudent)
+    return;
   // 遍历房间里所有的学生端对象...
   GM_MapTCPConn::iterator itorItem;
   for(itorItem = m_MapTCPStudent.begin(); itorItem != m_MapTCPStudent.end(); ++itorItem) {

@@ -289,12 +289,14 @@ bool CUDPClient::doTagCreate(char * lpBuffer, int inBufSize)
 bool CUDPClient::doCreateForPusher(char * lpBuffer, int inBufSize)
 {
   // 打印推流对象创建信息 => 可能会打印多次信息 => 专门打印推流直播编号...
-  log_trace("[%s-%s] LiveID: %d", get_tm_tag(m_tmTag), get_id_tag(m_idTag), this->GetLiveID());
+  log_trace("[UDP-%s-%s-Create] LiveID: %d", get_tm_tag(m_tmTag), get_id_tag(m_idTag), this->GetLiveID());
   // 构造反馈的数据包...
   rtp_hdr_t rtpHdr = {0};
   rtpHdr.tm = TM_TAG_SERVER;
   rtpHdr.id = ID_TAG_SERVER;
   rtpHdr.pt = PT_TAG_CREATE;
+  // 新增反馈直播编号 => 服务器生成...
+  rtpHdr.noset = this->GetLiveID();
   // 回复推流端 => 房间已经创建成功，不要再发创建命令了...
   return this->doTransferToFrom((char*)&rtpHdr, sizeof(rtpHdr));
 }
@@ -305,6 +307,8 @@ bool CUDPClient::doCreateForLooker(char * lpBuffer, int inBufSize)
   // 如果没有房间，直接返回...
   if( m_lpRoom == NULL )
     return false;
+  // 打印观看对象创建信息 => 可能会打印多次信息 => 专门打印观看直播编号...
+  log_trace("[UDP-%s-%s-Create] LiveID: %d", get_tm_tag(m_tmTag), get_id_tag(m_idTag), this->GetLiveID());
   // 获取房间里指定编号的推流者对象 => 无推流者，直接返回...
   int nLiveID = this->GetLiveID();
   CUDPClient * lpUdpPusher = m_lpRoom->doFindUdpPusher(nLiveID);
@@ -316,6 +320,25 @@ bool CUDPClient::doCreateForLooker(char * lpBuffer, int inBufSize)
     return false;
   // 回复观看端 => 将推流端的序列头转发给观看端...
   return this->doTransferToFrom((char*)strSeqHeader.c_str(), strSeqHeader.size());
+}
+
+bool CUDPClient::doTagHeader(char * lpBuffer, int inBufSize)
+{
+  // 只有推流者才会处理序列头命令...
+  if( this->GetIdTag() != ID_TAG_PUSHER )
+    return false;
+  // 将序列头保存起来，等待观看端接入时，转发给观看端...
+  m_strSeqHeader.assign(lpBuffer, inBufSize);
+  // 注意：之前放在tagCreate当中，当丢包时会造成问题...
+  // 通知房间里关联的终端可以进行拉流操作了...
+  m_lpRoom->doUdpHeaderSmart(this);
+  // 构造反馈的数据包...
+  rtp_hdr_t rtpHdr = {0};
+  rtpHdr.tm = TM_TAG_SERVER;
+  rtpHdr.id = ID_TAG_SERVER;
+  rtpHdr.pt = PT_TAG_HEADER;
+  // 回复推流端 => 序列头已经收到，不要再发序列头命令了...
+  return this->doTransferToFrom((char*)&rtpHdr, sizeof(rtpHdr));
 }
 
 bool CUDPClient::doTagDelete(char * lpBuffer, int inBufSize)
@@ -358,10 +381,10 @@ bool CUDPClient::doTagSupply(char * lpBuffer, int inBufSize)
     uint32_t   nLoseSeq = 0;
     rtp_lose_t rtpLose = {0};
     // 获取补包序列号...
-    memcpy(&nLoseSeq, lpDataPtr, sizeof(int));
+    memcpy(&nLoseSeq, lpDataPtr, sizeof(uint32_t));
     // 移动数据区指针位置...
-    lpDataPtr += sizeof(int);
-    nDataSize -= sizeof(int);
+    lpDataPtr += sizeof(uint32_t);
+    nDataSize -= sizeof(uint32_t);
     // 查看这个丢包号是否是服务器端也要补的包...
     // 服务器收到补包后会自动转发，这里就不用补了...
     if( this->doIsPusherLose(rtpSupply.suType, nLoseSeq) )
@@ -411,22 +434,6 @@ bool CUDPClient::doIsLosePacket(bool bIsAudio, uint32_t inLoseSeq)
 {
   GM_MapLose & theMapLose = bIsAudio ? m_AudioMapLose : m_VideoMapLose;
   return ((theMapLose.find(inLoseSeq) != theMapLose.end()) ? true : false);
-}
-
-bool CUDPClient::doTagHeader(char * lpBuffer, int inBufSize)
-{
-  // 只有推流者才会处理序列头命令...
-  if( this->GetIdTag() != ID_TAG_PUSHER )
-    return false;
-  // 将序列头保存起来，等待观看端接入时，转发给观看端...
-  m_strSeqHeader.assign(lpBuffer, inBufSize);
-  // 构造反馈的数据包...
-  rtp_hdr_t rtpHdr = {0};
-  rtpHdr.tm = TM_TAG_SERVER;
-  rtpHdr.id = ID_TAG_SERVER;
-  rtpHdr.pt = PT_TAG_HEADER;
-  // 回复推流端 => 序列头已经收到，不要再发序列头命令了...
-  return this->doTransferToFrom((char*)&rtpHdr, sizeof(rtpHdr));
 }
 
 bool CUDPClient::doTagReady(char * lpBuffer, int inBufSize)
@@ -813,9 +820,9 @@ void CUDPClient::doSendLosePacket(bool bIsAudio)
   // 获取有效的数据区长度 => 包头 + 数据...
   nSendSize = sizeof(rtp_hdr_t) + lpSendHeader->psize;
   // 打印已经发送补包信息...
-  log_trace("[%s-%s] Lose Send => Seq: %u, TS: %u, Slice: %d, Type: %d",
-            lpTMTag, lpIDTag, lpSendHeader->seq, lpSendHeader->ts,
-            lpSendHeader->psize, lpSendHeader->pt);
+  //log_trace("[%s-%s] Lose Send => Seq: %u, TS: %u, Slice: %d, Type: %d",
+  //          lpTMTag, lpIDTag, lpSendHeader->seq, lpSendHeader->ts,
+  //          lpSendHeader->psize, lpSendHeader->pt);
   // 回复老师观看端 => 发送补包命令数据内容...
   this->doTransferToFrom((char*)lpSendHeader, nSendSize);
 }
