@@ -1,5 +1,7 @@
 
 =========================================================================
+注意 => github => 多台机器联合调试时，需要及时同步，否则无法提交，需要用下面的方法处理；
+注意 => github => git pull origin master --allow-unrelated-histories
 注意 => github => https://www.cnblogs.com/zhaoqingqing/p/5151192.html
 注意 => github => 直接通过 同步菜单，就能提取服务器上的最新版本，并更新覆盖到本地版本；
 注意 => github => 通常都在master分支上进行操作 => 本地master => 远端master
