@@ -31,7 +31,7 @@ CTCPClient::CTCPClient(CTCPThread * lpTCPThread, int connfd, int nHostPort, stri
 CTCPClient::~CTCPClient()
 {
   // 打印终端退出信息...
-  log_trace("TCPClient Delete: %s, From: %s:%d, Socket: %d", get_client_type(m_nClientType), 
+  log_trace("[TCP-%s-Delete] => From: %s:%d, Socket: %d", get_client_type(m_nClientType), 
             this->m_strSinAddr.c_str(), this->m_nHostPort, this->m_nConnFD);
   /*// 如果是屏幕端，从房间当中删除之...
   if( m_lpRoom != NULL && m_nClientType == kClientScreen ) {
@@ -49,6 +49,10 @@ CTCPClient::~CTCPClient()
   // 使用统一的接口进行房间内的终端删除操作...
   if ( m_lpRoom != NULL ) {
     m_lpRoom->doTcpDeleteSmart(this);
+  }
+  // 打印自己所在的房间信息...
+  if( m_lpRoom != NULL ) {
+    m_lpRoom->doDumpRoomInfo();
   }
   // 打印终端退出后剩余的链接数量...
   m_lpTCPThread->doDecreaseClient(this->m_nHostPort, this->m_strSinAddr);

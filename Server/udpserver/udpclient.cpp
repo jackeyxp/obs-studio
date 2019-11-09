@@ -409,9 +409,9 @@ bool CUDPClient::doTagSupply(char * lpBuffer, int inBufSize)
   // 把自己加入到丢包对象列表当中...
   GetApp()->doAddLoseForLooker(this);
   // 打印已收到补包命令...
-  log_trace("[%s-%s] Supply Recv => Count: %d, Type: %d",
+  log_trace("[%s-%s] Supply Recv => Count: %d, Type: %d, Lose: %d",
             get_tm_tag(this->GetTmTag()), get_id_tag(this->GetIdTag()),
-            rtpSupply.suSize / sizeof(int), rtpSupply.suType);
+            rtpSupply.suSize / sizeof(int), rtpSupply.suType, theMapLose.size());
   return true;
 }
 

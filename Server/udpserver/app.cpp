@@ -440,6 +440,7 @@ void CApp::doSendSupplyCmd()
 
 void CApp::doAddSupplyForPusher(CUDPClient * lpPusher)
 {
+  // 注意：这里不必调用os_sem_post()，因为doRecvPacket()已经调用了...
   // 注意：是从doProcSocket()过来的，无需互斥处理...
   GM_ListPusher::iterator itorItem;
   itorItem = std::find(m_ListPusher.begin(), m_ListPusher.end(), lpPusher);
@@ -477,6 +478,7 @@ void CApp::doSendLoseCmd()
 
 void CApp::doAddLoseForLooker(CUDPClient * lpLooker)
 {
+  // 注意：这里不必调用os_sem_post()，因为doRecvPacket()已经调用了...
   // 注意：是从doProcSocket()过来的，无需互斥处理...
   GM_ListLooker::iterator itorItem;
   itorItem = std::find(m_ListLooker.begin(), m_ListLooker.end(), lpLooker);
