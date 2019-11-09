@@ -1,5 +1,6 @@
 
 =========================================================================
+注意 => github => https://www.cnblogs.com/murenziwei/p/9621599.html => 针对用户混乱时的处理；
 注意 => github => 多台机器联合调试时，需要及时同步，否则无法提交，需要用下面的方法处理；
 注意 => github => https://blog.csdn.net/techfield/article/details/72786751
 注意 => github => git pull --rebase origin master
