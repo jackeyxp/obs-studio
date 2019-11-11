@@ -1852,3 +1852,4 @@ void CStudentWindow::mouseReleaseEvent(QMouseEvent *event)
 		this->setGeometry(rcRect);
 	}
 }
+// ฒโสิธüะย...

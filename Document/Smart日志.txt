@@ -1,9 +1,6 @@
 
 =========================================================================
-注意 => github => https://www.cnblogs.com/murenziwei/p/9621599.html => 针对用户混乱时的处理；
 注意 => github => 多台机器联合调试时，需要及时同步，否则无法提交，需要用下面的方法处理；
-注意 => github => https://blog.csdn.net/techfield/article/details/72786751
-注意 => github => git pull --rebase origin master
 注意 => github => git pull origin master --allow-unrelated-histories
 注意 => github => https://www.cnblogs.com/zhaoqingqing/p/5151192.html
 注意 => github => 直接通过 同步菜单，就能提取服务器上的最新版本，并更新覆盖到本地版本；
@@ -16,6 +13,8 @@
 注意 => Smart服务器端 => /weike/server
 注意 => Smart网站位置 => /weike/smart
 =========================================================================
+注意 => Smart的代码修改放在PC端，MacBook用来测试；
+注意 => 小程序，两台机器都可以进行调试；
 
 未来版本需要完成的功能列表：
 =========================================================================
