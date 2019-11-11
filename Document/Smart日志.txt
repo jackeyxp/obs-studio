@@ -1,9 +1,6 @@
 
 =========================================================================
-注意 => github => https://www.cnblogs.com/murenziwei/p/9621599.html => 针对用户混乱时的处理；
 注意 => github => 多台机器联合调试时，需要及时同步，否则无法提交，需要用下面的方法处理；
-注意 => github => https://blog.csdn.net/techfield/article/details/72786751
-注意 => github => git pull --rebase origin master
 注意 => github => git pull origin master --allow-unrelated-histories
 注意 => github => https://www.cnblogs.com/zhaoqingqing/p/5151192.html
 注意 => github => 直接通过 同步菜单，就能提取服务器上的最新版本，并更新覆盖到本地版本；
@@ -36,6 +33,8 @@
 
 2019.10.15 - 2019.10.31 - 重装上阵：
 ===============================================================================================
+0.（已完成）https://blog.csdn.net/gengxt2003/article/details/79070741 => obs在2015下的编译参考文档；
+  （已完成）当前使用的是23.2.2版本，cmake-gui当中新增QTDIR|DepsPath|RELEASE_CANDIDATE(23.2.2-rc1)，否则Configure无法通过；
 1.（已完成）搁置了一个月，开始重新整理回顾当前改造的代码位置，重新走到改造的正轨上面来；
 2.（已完成）基础改造完毕之后，新功能参考视频 => F:\电影\阔地教育案例集.mp4
 3.（已完成）Smart的基础改造，以讲师端|学生端合并功能为主，不考虑第三方加载情况；
