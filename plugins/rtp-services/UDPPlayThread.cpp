@@ -770,10 +770,14 @@ void CPlaySDL::PushPacket(int zero_delay_ms, string & inData, int inTypeTag, boo
 		m_bFindFirstVKey = true;
 		blog(LOG_INFO, "%s Find First Video KeyFrame OK => PTS: %lu, Type: %d, Size: %d", m_strInnerName.c_str(), inSendTime, inTypeTag, inData.size());
 	}
-	// 判断处理帧的对象是否存在，不存在，直接丢弃...
-	if( inTypeTag == FLV_TAG_TYPE_AUDIO && m_lpAudioThread == NULL )
+	// 如果是音频，并且还没有找到视频关键帧，直接丢弃...
+	// 目的是为了避免关键帧来的慢，造成音视频落差太大引起的不同步...
+	if (inTypeTag == PT_TAG_AUDIO && !m_bFindFirstVKey)
 		return;
-	if( inTypeTag == FLV_TAG_TYPE_VIDEO && m_lpVideoThread == NULL )
+	// 判断处理帧的对象是否存在，不存在，直接丢弃...
+	if( inTypeTag == PT_TAG_AUDIO && m_lpAudioThread == NULL )
+		return;
+	if( inTypeTag == PT_TAG_VIDEO && m_lpVideoThread == NULL )
 		return;
 	// 如果当前帧的时间戳比第一帧的时间戳还要小，不要扔掉，设置成启动时间戳就可以了...
 	if( inSendTime < (uint32_t)m_start_pts_ms ) {
@@ -804,17 +808,17 @@ void CPlaySDL::PushPacket(int zero_delay_ms, string & inData, int inTypeTag, boo
 	// 随机丢掉数据帧 => 每隔10秒，丢1秒的音视频数据帧...
 	///////////////////////////////////////////////////////////////////////////
 	//if( (inFrame.dwSendTime/1000>0) && ((inFrame.dwSendTime/1000)%5==0) ) {
-	//	blog("%s [%s] Discard Packet, PTS: %d", m_strInnerName.c_str(), inFrame.typeFlvTag == FLV_TAG_TYPE_AUDIO ? "Audio" : "Video", nCalcPTS);
+	//	blog("%s [%s] Discard Packet, PTS: %d", m_strInnerName.c_str(), inFrame.typeFlvTag == PT_TAG_AUDIO ? "Audio" : "Video", nCalcPTS);
 	//	return;
 	//}
 
 	// 根据音视频类型进行相关操作...
-	if( inTypeTag == FLV_TAG_TYPE_AUDIO ) {
+	if( inTypeTag == PT_TAG_AUDIO ) {
 		m_lpAudioThread->doFillPacket(inData, nCalcPTS, bIsKeyFrame, 0);
-	} else if( inTypeTag == FLV_TAG_TYPE_VIDEO ) {
+	} else if( inTypeTag == PT_TAG_VIDEO ) {
 		m_lpVideoThread->doFillPacket(inData, nCalcPTS, bIsKeyFrame, 0);
 	}
-	//blog("%s [%s] RenderOffset: %lu", m_strInnerName.c_str(), inFrame.typeFlvTag == FLV_TAG_TYPE_AUDIO ? "Audio" : "Video", inFrame.dwRenderOffset);
+	//blog("%s [%s] RenderOffset: %lu", m_strInnerName.c_str(), inFrame.typeFlvTag == PT_TAG_AUDIO ? "Audio" : "Video", inFrame.dwRenderOffset);
 }
 
 /*static bool DoProcSaveJpeg(AVFrame * pSrcFrame, AVPixelFormat inSrcFormat, int64_t inPTS, LPCTSTR lpPath)

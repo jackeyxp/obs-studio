@@ -127,9 +127,9 @@ void CUDPClient::doCalcAVJamStatus(bool bIsAudio)
     // 计算环形队列当中总的缓存时间...
     uint32_t cur_buf_ms = max_ts - lpCurHeader->ts;
     // 如果总缓存时间不超过n秒，中断操作...
-    if (cur_buf_ms < 5000)
+    if (cur_buf_ms < 6000)
       break;
-    assert(cur_buf_ms >= 5000);
+    assert(cur_buf_ms >= 6000);
     // 保存删除的时间点，供音频参考...
     min_ts = lpCurHeader->ts;
     min_seq = lpCurHeader->seq;
@@ -482,6 +482,11 @@ void CUDPClient::doTagAVPackProcess(char * lpBuffer, int inBufSize)
   uint32_t new_id = lpNewHeader->seq;
   uint32_t max_id = new_id;
   uint32_t min_id = new_id;
+  // 更新序列头里面的最新视频关键帧序号 => 视频帧标志+关键帧+帧开始...
+  /*if((lpNewHeader->pt == PT_TAG_VIDEO) && (lpNewHeader->pk > 0) && (lpNewHeader->pst > 0)) {
+    rtp_header_t * lpSeqHeader = (rtp_header_t*)m_strSeqHeader.c_str();
+    lpSeqHeader->vk_seq = lpNewHeader->seq;
+  }*/
   // 打印推流端发送数据的调试信息...
   //log_debug("[%s-%s] Size: %d, Type: %d, Seq: %u, TS: %u, pst: %d, ped: %d, Slice: %d, Zero: %d", lpTMTag, lpIDTag, inBufSize,
   //          lpNewHeader->pt, lpNewHeader->seq, lpNewHeader->ts, lpNewHeader->pst,
