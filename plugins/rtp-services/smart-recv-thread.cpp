@@ -480,7 +480,12 @@ void CSmartRecvThread::doTagHeaderProcess(char * lpBuffer, int inRecvLen)
 		int nPicWidth = m_rtp_header.picWidth;
 		int nPicHeight = m_rtp_header.picHeight;
 		m_lpPlaySDL->InitVideo(m_strSPS, m_strPPS, nPicWidth, nPicHeight, nPicFPS);
-	} 
+		/*// 打印这个服务器端传递过来的视频关键帧序列号 => 这个序号还没有获取到...
+		blog(LOG_INFO, "%s First Packet => Video KeyFrame Seq: %lu", m_strInnerName.c_str(), m_rtp_header.vk_seq);
+		// 最大播放包的序号是已删除序号，因此，需要向前减1，这样会自动进入补包状态，只要来的序号比最大播放序号大，就会形成补包...
+		m_nVideoMaxPlaySeq = m_rtp_header.vk_seq - 1;
+		m_bFirstVideoSeq = true;*/
+	}
 	// 如果有音频，初始化音频线程...
 	if( m_rtp_header.hasAudio ) {
 		int nRateIndex = m_rtp_header.rateIndex;
