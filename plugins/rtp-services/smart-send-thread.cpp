@@ -115,7 +115,7 @@ BOOL CSmartSendThread::InitVideo(string & inSPS, string & inPPS, int nWidth, int
 	// 设置视频标志...
 	m_rtp_header.hasVideo = true;
 	// 保存传递过来的参数信息...
-	//m_rtp_header.vk_seq = 1;
+	m_rtp_header.vk_seq = 1;
 	m_rtp_header.fpsNum = nFPS;
 	m_rtp_header.picWidth = nWidth;
 	m_rtp_header.picHeight = nHeight;

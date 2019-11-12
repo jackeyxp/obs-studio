@@ -9,6 +9,7 @@ CUDPClient::CUDPClient(int inUdpListenFD, uint8_t tmTag, uint8_t idTag, uint32_t
   , m_nHostPort(inHostPort)
   , m_server_rtt_var_ms(-1)
   , m_server_rtt_ms(-1)
+  , m_nCurVPushSeq(0)
   , m_lpRoom(NULL)
   , m_tmTag(tmTag)
   , m_idTag(idTag)
@@ -314,10 +315,15 @@ bool CUDPClient::doCreateForLooker(char * lpBuffer, int inBufSize)
   CUDPClient * lpUdpPusher = m_lpRoom->doFindUdpPusher(nLiveID);
   if( lpUdpPusher == NULL )
     return false;
+  // 注意：这里要用拷贝模式，因为可能要破坏序列头结构...
   // 获取推流者的序列头信息 => 序列头为空，直接返回...
-  string & strSeqHeader = lpUdpPusher->GetSeqHeader();
+  string strSeqHeader = lpUdpPusher->GetSeqHeader();
   if( strSeqHeader.size() <= 0 )
     return false;
+  // 如果当前推流帧编号与最近关键帧编号落差超过50个包，使用传统模式...
+  rtp_header_t * lpSeqHeader = (rtp_header_t*)strSeqHeader.c_str();
+  int nDeltaSeq = lpUdpPusher->GetCurVPushSeq() - lpSeqHeader->vk_seq;
+  lpSeqHeader->vk_seq = ((nDeltaSeq >= 50) ? 0 : lpSeqHeader->vk_seq);
   // 回复观看端 => 将推流端的序列头转发给观看端...
   return this->doTransferToFrom((char*)strSeqHeader.c_str(), strSeqHeader.size());
 }
@@ -483,10 +489,14 @@ void CUDPClient::doTagAVPackProcess(char * lpBuffer, int inBufSize)
   uint32_t max_id = new_id;
   uint32_t min_id = new_id;
   // 更新序列头里面的最新视频关键帧序号 => 视频帧标志+关键帧+帧开始...
-  /*if((lpNewHeader->pt == PT_TAG_VIDEO) && (lpNewHeader->pk > 0) && (lpNewHeader->pst > 0)) {
+  if((lpNewHeader->pt == PT_TAG_VIDEO) && (lpNewHeader->pk > 0) && (lpNewHeader->pst > 0)) {
     rtp_header_t * lpSeqHeader = (rtp_header_t*)m_strSeqHeader.c_str();
     lpSeqHeader->vk_seq = lpNewHeader->seq;
-  }*/
+  }
+  // 记录推流者最近发送的视频序号...
+  if( lpNewHeader->pt == PT_TAG_VIDEO ) {
+    m_nCurVPushSeq = lpNewHeader->seq;
+  }
   // 打印推流端发送数据的调试信息...
   //log_debug("[%s-%s] Size: %d, Type: %d, Seq: %u, TS: %u, pst: %d, ped: %d, Slice: %d, Zero: %d", lpTMTag, lpIDTag, inBufSize,
   //          lpNewHeader->pt, lpNewHeader->seq, lpNewHeader->ts, lpNewHeader->pst,

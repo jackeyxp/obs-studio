@@ -162,6 +162,7 @@ typedef struct {
   unsigned char   rateIndex:5;  // 音频采样率索引编号
   unsigned char   channelNum:3; // 音频通道数量
   unsigned char   fpsNum;       // 视频fps大小
+  unsigned int    vk_seq;       // 视频关键帧序号 => 观看端
   unsigned short  picWidth;     // 视频宽度
   unsigned short  picHeight;    // 视频高度
   unsigned short  spsSize;      // sps长度

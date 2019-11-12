@@ -17,6 +17,7 @@ public:
   uint32_t      GetHostAddr() { return m_nHostAddr; }
   uint16_t      GetHostPort() { return m_nHostPort; }
   string    &   GetSeqHeader() { return m_strSeqHeader; }
+  uint32_t      GetCurVPushSeq() { return m_nCurVPushSeq; }
   uint32_t      GetLiveID() { return m_rtp_create.liveID; }
   int           GetTCPSockID() { return m_rtp_create.tcpSock; }
   int           GetLookerCount() { return m_MapUdpLooker.size(); }
@@ -60,6 +61,7 @@ protected:
   CRoom    *    m_lpRoom;             // 房间对象
   int           m_nRoomID;            // 房间编号
   int           m_nUdpListenFD;       // UDP监听套接字
+  uint32_t      m_nCurVPushSeq;       // 推流者最新推送视频帧序号...
   uint32_t      m_nHostAddr;          // 映射地址
   uint16_t      m_nHostPort;          // 映射端口
   uint8_t       m_tmTag;              // 终端类型

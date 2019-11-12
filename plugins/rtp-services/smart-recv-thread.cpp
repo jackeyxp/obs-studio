@@ -480,11 +480,14 @@ void CSmartRecvThread::doTagHeaderProcess(char * lpBuffer, int inRecvLen)
 		int nPicWidth = m_rtp_header.picWidth;
 		int nPicHeight = m_rtp_header.picHeight;
 		m_lpPlaySDL->InitVideo(m_strSPS, m_strPPS, nPicWidth, nPicHeight, nPicFPS);
-		/*// 打印这个服务器端传递过来的视频关键帧序列号 => 这个序号还没有获取到...
-		blog(LOG_INFO, "%s First Packet => Video KeyFrame Seq: %lu", m_strInnerName.c_str(), m_rtp_header.vk_seq);
-		// 最大播放包的序号是已删除序号，因此，需要向前减1，这样会自动进入补包状态，只要来的序号比最大播放序号大，就会形成补包...
-		m_nVideoMaxPlaySeq = m_rtp_header.vk_seq - 1;
-		m_bFirstVideoSeq = true;*/
+		// 只处理关键帧序号有效时的情况...
+		if (m_rtp_header.vk_seq > 0) {
+			// 打印这个服务器端传递过来的视频关键帧序列号 => 这个序号还没有获取到...
+			blog(LOG_INFO, "%s First Packet => Video KeyFrame Seq: %lu", m_strInnerName.c_str(), m_rtp_header.vk_seq);
+			// 最大播放包的序号是已删除序号，因此，需要向前减1，这样会自动进入补包状态，只要来的序号比最大播放序号大，就会形成补包...
+			m_nVideoMaxPlaySeq = m_rtp_header.vk_seq - 1;
+			m_bFirstVideoSeq = true;
+		}
 	}
 	// 如果有音频，初始化音频线程...
 	if( m_rtp_header.hasAudio ) {
@@ -982,6 +985,11 @@ void CSmartRecvThread::doTagAVPackProcess(char * lpBuffer, int inRecvLen)
 		blog(LOG_INFO, "%s Error => RecvLen: %d, DataSize: %d, ZeroSize: %d", m_strInnerName.c_str(), inRecvLen, nDataSize, nZeroSize);
 		return;
 	}
+	// 注意：由于新版改进，必须要等待序列头收到之后才能进行正式的数据接收...
+	if (m_nCmdState <= kCmdSendCreate) {
+		blog(LOG_INFO, "%s Discard => No Header, Seq: %lu, Type: %d", m_strInnerName.c_str(), new_id, pt_tag);
+		return;
+	}
 	// 音视频使用不同的打包对象和变量...
 	uint32_t & nMaxPlaySeq = (pt_tag == PT_TAG_AUDIO) ? m_nAudioMaxPlaySeq : m_nVideoMaxPlaySeq;
 	bool   &  bFirstSeqSet = (pt_tag == PT_TAG_AUDIO) ? m_bFirstAudioSeq : m_bFirstVideoSeq;
@@ -1001,9 +1009,9 @@ void CSmartRecvThread::doTagAVPackProcess(char * lpBuffer, int inRecvLen)
 		return;
 	}
 	// 打印收到的音频数据包信息 => 包括缓冲区填充量 => 每个数据包都是统一大小 => rtp_hdr_t + slice + Zero
-	//log_trace("%s Seq: %lu, TS: %lu, Type: %d, pst: %d, ped: %d, Slice: %d, ZeroSize: %d",
-	//          m_strInnerName.c_str(), lpNewHeader->seq, lpNewHeader->ts, lpNewHeader->pt,
-	//          lpNewHeader->pst, lpNewHeader->ped, lpNewHeader->psize, nZeroSize);
+	//blog(LOG_INFO, "%s Seq: %lu, TS: %lu, Type: %d, pst: %d, ped: %d, Slice: %d, ZeroSize: %d",
+	//     m_strInnerName.c_str(), lpNewHeader->seq, lpNewHeader->ts, lpNewHeader->pt,
+	//     lpNewHeader->pst, lpNewHeader->ped, lpNewHeader->psize, nZeroSize);
 	// 首先，将当前包序列号从丢包队列当中删除...
 	this->doEraseLoseSeq(pt_tag, new_id);
 	//////////////////////////////////////////////////////////////////////////////////////////////////
