@@ -394,3 +394,14 @@ void CTCPThread::doHandleTimeout()
     }
   }
 }
+
+void CTCPThread::doUdpLogoutToTcp(int nTCPSockFD, int nLiveID, uint8_t tmTag, uint8_t idTag)
+{
+  CTCPClient * lpTCPClient = NULL;
+  GM_MapTCPConn::iterator itorItem;
+  itorItem = m_MapConnect.find(nTCPSockFD);
+  if( itorItem == m_MapConnect.end() )
+    return;
+  lpTCPClient = itorItem->second;
+  lpTCPClient->doUdpLogoutToTcp(nLiveID, tmTag, idTag);
+}

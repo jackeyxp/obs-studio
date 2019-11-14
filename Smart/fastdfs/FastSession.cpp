@@ -41,6 +41,7 @@ const char * get_command_name(int inCmd)
 	case kCmd_Smart_Login:          return "Smart_Login";
 	case kCmd_Smart_OnLine:         return "Smart_OnLine";
 	case kCmd_Live_OnLine:          return "Live_OnLine";
+	case kCmd_UDP_Logout:           return "UDP_Logout";
 	case kCmd_UdpServer_Login:      return "UdpServer_Login";
 	case kCmd_UdpServer_OnLine:     return "UdpServer_OnLine";
 	case kCmd_UdpServer_AddTeacher: return "UdpServer_AddTeacher";
@@ -506,7 +507,7 @@ void CRemoteSession::onReadyRead()
 		case kCmd_Smart_Login:         bResult = this->doCmdSmartLogin(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		case kCmd_Smart_OnLine:        bResult = this->doCmdSmartOnLine(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		case kCmd_Live_OnLine:         bResult = this->doCmdLiveOnLine(lpDataPtr, lpCmdHeader->m_pkg_len); break;
-		//case kCmd_UDP_Logout:        bResult = this->doCmdUdpLogout(lpDataPtr, lpCmdHeader->m_pkg_len); break;
+		case kCmd_UDP_Logout:          bResult = this->doCmdUdpLogout(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		//case kCmd_Camera_LiveStop:   bResult = this->doCmdTeacherCameraLiveStop(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		//case kCmd_Camera_OnLineList: bResult = this->doCmdTeacherCameraList(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		//case kCmd_Screen_Packet:     bResult = this->doCmdScreenPacket(lpDataPtr, lpCmdHeader); break;
@@ -535,18 +536,17 @@ bool CRemoteSession::doCmdSmartLogin(const char * lpData, int nSize)
 	// 打印获取到的远程tcp套接字的编号...
 	blog(LOG_INFO, "[RemoteSession] doCmdSmartLogin => tcp_socket: %d", nTCPSocketFD);
 	// 针对学生端，需要获取更多的信息 => 讲师端正在推流编号和数据库编号...
+	int nLiveTeacherID = 0, nDBFlowTeacherID = 0;
 	if (App()->GetClientType() == kClientStudent) {
-		int nLiveTeacherID = atoi(OBSApp::getJsonString(value["live_teacher"]).c_str());
-		int nDBFlowTeacherID = atoi(OBSApp::getJsonString(value["flow_teacher"]).c_str());
-		// 保存学生端正在拉取的讲师端推流直播编号...
-		App()->SetLiveTeacherID(nLiveTeacherID);
+		nLiveTeacherID = atoi(OBSApp::getJsonString(value["live_teacher"]).c_str());
+		nDBFlowTeacherID = atoi(OBSApp::getJsonString(value["flow_teacher"]).c_str());
 		// 保存关联的讲师流量记录编号 => 不一致，并且有效时才更新...
 		if (nDBFlowTeacherID > 0 && App()->GetDBFlowTeacherID() != nDBFlowTeacherID) {
 			App()->SetDBFlowTeacherID(nDBFlowTeacherID);
 		}
 	}
 	// 通知上层信号量，可以进行直接的推流操作了...
-	emit this->doTriggerSmartLogin();
+	emit this->doTriggerSmartLogin(nLiveTeacherID);
 	return true;
 
 	/*int nDBCameraID = atoi(OBSApp::getJsonString(value["camera_id"]).c_str());
@@ -603,6 +603,23 @@ bool CRemoteSession::doCmdLiveOnLine(const char * lpData, int nSize)
 	if (nLiveID > 0) {
 		emit this->doTriggerLiveOnLine(nLiveID, bIsLiveOnLine);
 	}
+	return true;
+}
+
+bool CRemoteSession::doCmdUdpLogout(const char * lpData, int nSize)
+{
+	Json::Value value;
+	// 进行Json数据包的内容解析...
+	if (!this->doParseJson(lpData, nSize, value)) {
+		blog(LOG_INFO, "CRemoteSession::doParseJson Error!");
+		return false;
+	}
+	// 获取服务器发送过来的数据信息...
+	int tmTag = atoi(OBSApp::getJsonString(value["tm_tag"]).c_str());
+	int idTag = atoi(OBSApp::getJsonString(value["id_tag"]).c_str());
+	int nLiveID = atoi(OBSApp::getJsonString(value["live_id"]).c_str());
+	// 通知主窗口界面层，UDP终端发生退出事件...
+	emit this->doTriggerUdpLogout(nLiveID, tmTag, idTag);
 	return true;
 }
 
@@ -697,23 +714,6 @@ bool CRemoteSession::doCmdTeacherCameraList(const char * lpData, int nSize)
 	}
 	// 通知主窗口界面，已获取摄像头在线列表成功...
 	emit this->doTriggerCameraList(value["list_data"]);
-	return true;
-}
-
-bool CRemoteSession::doCmdUdpLogout(const char * lpData, int nSize)
-{
-	Json::Value value;
-	// 进行Json数据包的内容解析...
-	if (!this->doParseJson(lpData, nSize, value)) {
-		blog(LOG_INFO, "CRemoteSession::doParseJson Error!");
-		return false;
-	}
-	// 获取服务器发送过来的数据信息...
-	int tmTag = atoi(OBSApp::getJsonString(value["tm_tag"]).c_str());
-	int idTag = atoi(OBSApp::getJsonString(value["id_tag"]).c_str());
-	int nDBCameraID = atoi(OBSApp::getJsonString(value["camera_id"]).c_str());
-	// 通知主窗口界面层，UDP终端发生退出事件...
-	emit this->doTriggerUdpLogout(tmTag, idTag, nDBCameraID);
 	return true;
 }*/
 

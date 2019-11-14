@@ -83,6 +83,7 @@ define('CMD_LINE_START',              __LINE__);
 define('kCmd_Smart_Login',            __LINE__ - CMD_LINE_START);
 define('kCmd_Smart_OnLine',           __LINE__ - CMD_LINE_START);
 define('kCmd_Live_OnLine',            __LINE__ - CMD_LINE_START);
+define('kCmd_UDP_Logout',             __LINE__ - CMD_LINE_START);
 define('kCmd_UdpServer_Login',        __LINE__ - CMD_LINE_START);
 define('kCmd_UdpServer_OnLine',       __LINE__ - CMD_LINE_START);
 define('kCmd_UdpServer_AddTeacher',   __LINE__ - CMD_LINE_START);

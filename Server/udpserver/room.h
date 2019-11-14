@@ -22,6 +22,7 @@ public:
   void         doUdpCreateSmart(CUDPClient * lpUdpSmart);
   void         doUdpDeleteSmart(CUDPClient * lpUdpSmart);
   void         doUdpHeaderSmart(CUDPClient * lpUdpSmart);
+  void         doUdpLogoutToTcp(int nTCPSockFD, int nLiveID, uint8_t tmTag, uint8_t idTag);
 private:
   void         doTcpCreateTeacher(CTCPClient * lpTeacher);
   void         doTcpCreateStudent(CTCPClient * lpStudent);

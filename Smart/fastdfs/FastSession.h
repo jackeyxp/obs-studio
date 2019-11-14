@@ -100,12 +100,12 @@ public:
 	CRemoteSession();
 	virtual ~CRemoteSession();
 signals:
-	void doTriggerSmartLogin();
+	void doTriggerSmartLogin(int nLiveID);
 	void doTriggerLiveOnLine(int nLiveID, bool bIsLiveOnLine);
-	void doTriggerCameraLiveStop(int nDBCameraID);
-	void doTriggerCameraList(Json::Value & value);
-	void doTriggerUdpLogout(int tmTag, int idTag, int nDBCameraID);
-	void doTriggerScreenFinish(int nScreenID, QString strQUser, QString strQFile);
+	void doTriggerUdpLogout(int nLiveID, int tmTag, int idTag);
+	//void doTriggerCameraLiveStop(int nDBCameraID);
+	//void doTriggerCameraList(Json::Value & value);
+	//void doTriggerScreenFinish(int nScreenID, QString strQUser, QString strQFile);
 public:
 	bool IsCanReBuild() { return m_bCanReBuild; }
 	bool doSendOnLineCmd();
@@ -126,7 +126,7 @@ private:
 	bool doCmdSmartLogin(const char * lpData, int nSize);
 	bool doCmdSmartOnLine(const char * lpData, int nSize);
 	bool doCmdLiveOnLine(const char * lpData, int nSize);
-	//bool doCmdUdpLogout(const char * lpData, int nSize);
+	bool doCmdUdpLogout(const char * lpData, int nSize);
 	//bool doCmdTeacherCameraList(const char * lpData, int nSize);
 	//bool doCmdTeacherCameraLiveStop(const char * lpData, int nSize);
 	//bool doCmdScreenPacket(const char * lpData, Cmd_Header * lpCmdHeader);

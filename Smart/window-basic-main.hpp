@@ -463,8 +463,9 @@ public slots:
 	void UnpauseRecording();
 
 private slots:
-	void onRemoteSmartLogin();
+	void onRemoteSmartLogin(int nLiveID);
 	void onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine);
+	void onRemoteUdpLogout(int nLiveID, int tmTag, int idTag);
 private slots:
 	void AddSceneItem(OBSSceneItem item);
 	void AddScene(OBSSource source);

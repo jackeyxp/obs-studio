@@ -397,6 +397,24 @@ int CTCPClient::doUdpLiveOnLine(int inLiveID, bool bIsOnLineFlag)
   return nResult;  
 }
 
+// 将相关联的UDP终端退出的事件转发给TCP终端连接对象...
+int CTCPClient::doUdpLogoutToTcp(int nLiveID, uint8_t tmTag, uint8_t idTag)
+{
+  // 构造转发JSON数据块 => UDP的终端类型和身份类型 => tmTag | idTag...
+  json_object * new_obj = json_object_new_object();
+  json_object_object_add(new_obj, "tm_tag", json_object_new_int(tmTag));
+  json_object_object_add(new_obj, "id_tag", json_object_new_int(idTag));
+  json_object_object_add(new_obj, "live_id", json_object_new_int(nLiveID));
+  // 转换成json字符串，获取字符串长度...
+  char * lpNewJson = (char*)json_object_to_json_string(new_obj);
+  // 使用统一的通用命令发送接口函数...
+  int nResult = this->doSendCommonCmd(kCmd_UDP_Logout, lpNewJson, strlen(lpNewJson));
+  // json对象引用计数减少...
+  json_object_put(new_obj);
+  // 返回执行结果...
+  return nResult;
+}
+
 // 处理Screen事件...
 int CTCPClient::doScreenClient(Cmd_Header * lpHeader, const char * lpJsonPtr)
 {

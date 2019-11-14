@@ -53,6 +53,10 @@ CUDPClient::~CUDPClient()
   if( m_lpRoom != NULL ) {
     m_lpRoom->doDumpRoomInfo();
   }
+  // 通过相互关联的TCP连接通知终端UDP连接退出了...
+  if( m_lpRoom != NULL ) {
+    m_lpRoom->doUdpLogoutToTcp(m_rtp_create.tcpSock, m_rtp_create.liveID, this->GetTmTag(), this->GetIdTag());
+  }
   // 释放推流端音视频环形队列空间...
   circlebuf_free(&m_audio_circle);
   circlebuf_free(&m_video_circle);

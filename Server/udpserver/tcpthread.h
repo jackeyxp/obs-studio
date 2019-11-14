@@ -17,6 +17,7 @@ public:
   int     doRoomCommand(int inRoomID, int inCmdID);
   void    doIncreaseClient(int inSinPort, string & strSinAddr);
   void    doDecreaseClient(int inSinPort, string & strSinAddr);
+  void    doUdpLogoutToTcp(int nTCPSockFD, int nLiveID, uint8_t tmTag, uint8_t idTag);
 private:
   int     doCreateListenSocket(int nHostPort);
   void    doTCPCenterEvent(int nEvent);

@@ -49,6 +49,14 @@ void CRoom::doDumpRoomInfo()
   log_trace("\n======== RoomID: %d ========\n%s", m_nRoomID, strInfo.c_str());
 }
 
+void CRoom::doUdpLogoutToTcp(int nTCPSockFD, int nLiveID, uint8_t tmTag, uint8_t idTag)
+{
+  // 利用构造函数|析构函数进行互斥保护...
+  OSMutexLocker theLocker(&m_tcp_mutex);
+  if (m_lpTCPThread == NULL) return;
+  m_lpTCPThread->doUdpLogoutToTcp(nTCPSockFD, nLiveID, tmTag, idTag);
+}
+
 int CRoom::GetTcpTeacherCount()
 {
   // 利用构造函数|析构函数进行互斥保护...

@@ -25,6 +25,7 @@ public:
   void      doUdpCreatePusher(CUDPClient * lpPusher);
   void      doUdpDeletePusher(CUDPClient * lpPusher);
   int       doUdpLiveOnLine(int inLiveID, bool bIsOnLineFlag);
+  int       doUdpLogoutToTcp(int nLiveID, uint8_t tmTag, uint8_t idTag);
 private:
   int       parseJsonData(const char * lpJsonPtr, int nJsonLength);          // 统一的JSON解析接口...
   int       doPHPClient(Cmd_Header * lpHeader, const char * lpJsonPtr);      // 处理PHP客户端事件...

@@ -1615,11 +1615,11 @@ void OBSApp::doCheckRemote()
 
 	// 注意：学生端 => CStudentWindow | 老师端 => OBSBasic，都使用同样的基类 => OBSMainWindow
 	// 关联UDP连接被服务器删除时的事件通知信号槽、获取在线通道列表的信号槽、开启或删除rtp资源的信号槽...
-	this->connect(m_RemoteSession, SIGNAL(doTriggerSmartLogin()), mainWindow, SLOT(onRemoteSmartLogin()));
+	this->connect(m_RemoteSession, SIGNAL(doTriggerSmartLogin(int)), mainWindow, SLOT(onRemoteSmartLogin(int)));
 	this->connect(m_RemoteSession, SIGNAL(doTriggerLiveOnLine(int, bool)), mainWindow, SLOT(onRemoteLiveOnLine(int, bool)));
+	this->connect(m_RemoteSession, SIGNAL(doTriggerUdpLogout(int, int, int)), mainWindow, SLOT(onRemoteUdpLogout(int, int, int)));
 
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerLiveOnLine(int, bool)), lpBasicWnd, SLOT(onTriggerLiveOnLine(int, bool)));
-	//this->connect(m_RemoteSession, SIGNAL(doTriggerUdpLogout(int, int, int)), lpBasicWnd, SLOT(onTriggerUdpLogout(int, int, int)));
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerCameraList(Json::Value&)), lpBasicWnd, SLOT(onTriggerCameraList(Json::Value&)));
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerCameraLiveStop(int)), lpBasicWnd, SLOT(onTriggerCameraLiveStop(int)));
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerScreenFinish(int, QString, QString)), lpBasicWnd, SLOT(onTriggerScreenFinish(int, QString, QString)), Qt::QueuedConnection);

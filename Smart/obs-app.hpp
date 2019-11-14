@@ -78,7 +78,6 @@ private:
 	int                            m_nRemoteTcpSockFD = 0;          // CRemoteSession在服务器端的套接字号码...
 	std::string                    m_strUdpAddr;                    // 远程UDPServer的UDP地址...
 	int                            m_nUdpPort = 0;                  // 远程UDPServer的UDP端口...
-	int                            m_nLiveTeacherID = 0;            // 学生端正在拉取的老师端推流编号...
 	int                            m_nDBFlowTeacherID = 0;          // 学生端与讲师端关联的流量记录编号...
 	int                            m_nDBFlowID = 0;                 // 从服务器获取到的流量统计数据库编号...
 	int                            m_nDBUserID = 0;                 // 已登录用户的数据库编号...
@@ -153,7 +152,6 @@ public:
 	string & GetUdpAddr() { return m_strUdpAddr; }
 	int		 GetUdpPort() { return m_nUdpPort; }
 	int      GetDBFlowTeacherID() { return m_nDBFlowTeacherID; }
-	int      GetLiveTeacherID() { return m_nLiveTeacherID; }
 
 	string   GetUserRealPhone() { return OBSApp::getJsonString(m_JsonUser["real_phone"]); }
 	string   GetUserRealName() { return OBSApp::getJsonString(m_JsonUser["real_name"]); }
@@ -162,7 +160,6 @@ public:
 
 	void     doAddDownFlowByte(int nDownSize) { m_nDownFlowByte += nDownSize; }
 	void     doAddUpFlowByte(int nUpSize) { m_nUpFlowByte += nUpSize; }
-	void     SetLiveTeacherID(int nLiveTeacherID) { m_nLiveTeacherID = nLiveTeacherID; }
 	void     SetDBFlowTeacherID(int nFlowTeacherID) { m_nDBFlowTeacherID = nFlowTeacherID; }
 	void     SetDBFlowID(int nDBFlowID) { m_nDBFlowID = nDBFlowID; }
 	void	 SetUdpAddr(const string & strAddr) { m_strUdpAddr = strAddr; }

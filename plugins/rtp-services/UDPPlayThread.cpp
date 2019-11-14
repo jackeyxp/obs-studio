@@ -764,10 +764,28 @@ void CPlaySDL::PushPacket(int zero_delay_ms, string & inData, int inTypeTag, boo
 		// 如果当前视频帧，不是关键帧，直接丢弃...
 		if( !bIsKeyFrame ) {
 			//blog(LOG_INFO, "%s Discard for First Video KeyFrame => PTS: %lu, Type: %d, Size: %d", m_strInnerName.c_str(), inSendTime, inTypeTag, inData.size());
+			int nCurCalcPTS = ((inSendTime < (uint32_t)m_start_pts_ms) ? 0 : inSendTime - (uint32_t)m_start_pts_ms);
+			if (m_lpObsSource != nullptr) {
+				obs_data_t * settings = obs_source_get_settings(m_lpObsSource);
+				obs_data_set_string(settings, "notice", "Render.Window.DropVideoFrame");
+				obs_data_set_int(settings, "pts", nCurCalcPTS);
+				obs_data_set_bool(settings, "render", false);
+				obs_data_release(settings);
+				// 通知外层界面进行信息更新...
+				obs_source_updated(m_lpObsSource);
+			}
 			return;
 		}
 		// 设置已经找到第一个视频关键帧标志...
 		m_bFindFirstVKey = true;
+		if (m_lpObsSource != nullptr) {
+			obs_data_t * settings = obs_source_get_settings(m_lpObsSource);
+			obs_data_set_string(settings, "notice", "Render.Window.FindFirstVKey");
+			obs_data_set_bool(settings, "render", true);
+			obs_data_release(settings);
+			// 通知外层界面进行信息更新...
+			obs_source_updated(m_lpObsSource);
+		}
 		blog(LOG_INFO, "%s Find First Video KeyFrame OK => PTS: %lu, Type: %d, Size: %d", m_strInnerName.c_str(), inSendTime, inTypeTag, inData.size());
 	}
 	// 如果是音频，并且还没有找到视频关键帧，直接丢弃...

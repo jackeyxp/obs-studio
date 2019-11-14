@@ -100,16 +100,32 @@ void CStudentWindow::InitOBSCallbacks()
 		CStudentWindow::SourceCreated, this);
 	signalHandlers.emplace_back(obs_get_signal_handler(), "source_remove",
 		CStudentWindow::SourceRemoved, this);
+	signalHandlers.emplace_back(obs_get_signal_handler(), "source_updated",
+		CStudentWindow::SourceUpdated, this);
+}
+
+void CStudentWindow::SourceUpdated(void *data, calldata_t *params)
+{
+	// 注意：这里必须使用WaitConnection()，否则会出现参数错误...
+	obs_source_t *source = (obs_source_t*)calldata_ptr(params, "source");
+	QMetaObject::invokeMethod(static_cast<CStudentWindow*>(data),
+		"UpdatedSmartSource", WaitConnection(),
+		Q_ARG(OBSSource, OBSSource(source)));
+}
+
+void CStudentWindow::UpdatedSmartSource(OBSSource source)
+{
+	if (m_viewTeacher == nullptr) return;
+	m_viewTeacher->doUpdatedSmartSource(source);
 }
 
 void CStudentWindow::SourceCreated(void *data, calldata_t *params)
 {
+	// 注意：这里必须使用WaitConnection()，否则会出现参数错误...
 	obs_source_t *source = (obs_source_t *)calldata_ptr(params, "source");
-
 	if (obs_scene_from_source(source) != NULL) {
 		QMetaObject::invokeMethod(static_cast<CStudentWindow *>(data),
-			"AddScene", WaitConnection(), 
-			Q_ARG(OBSSource, OBSSource(source)));
+			"AddScene", WaitConnection(), Q_ARG(OBSSource, OBSSource(source)));
 	}
 }
 
@@ -148,12 +164,11 @@ void CStudentWindow::AddSceneItem(OBSSceneItem item)
 		obs_source_addref(itemSource);
 		m_dshowSceneItem = item;
 	}
-	// 如果是smart_source数据源 => 老师端数据源，保存并增加引用计数器...
-	bool bIsTeacherSource = ((astrcmpi(obs_source_get_id(itemSource), App()->InteractSmartSource()) == 0) ? true : false);
-	if (itemSource != nullptr && bIsTeacherSource && m_teacherSceneItem == nullptr) {
-		obs_source_addref(itemSource);
-		m_teacherSceneItem = item;
-	}
+	// 如果是smart_source数据源 => 老师端数据源，直接存放到右侧窗口对象当中...
+	/*bool bIsTeacherSource = ((astrcmpi(obs_source_get_id(itemSource), App()->InteractSmartSource()) == 0) ? true : false);
+	if (itemSource != nullptr && bIsTeacherSource && m_viewTeacher != nullptr) {
+		m_viewTeacher->SaveTeacherSceneItem(item);
+	}*/
 }
 
 void CStudentWindow::SourceRemoved(void *data, calldata_t *params)
@@ -299,8 +314,15 @@ void CStudentWindow::DeferredLoad(const QString &file, int requeueCount)
 			Q_ARG(int, requeueCount));
 		return;
 	}
+	// 创建右侧教师预览窗口，关联预览函数接口...
+	m_viewTeacher = new CViewTeacher(this);
+	// 这里的操作为了避免发生闪烁...
+	m_viewTeacher->resize(0, 0);
 	// 加载系统各种配置参数...
 	this->Load(QT_TO_UTF8(file));
+	// 加载场景配置之后再初始化并显示窗口...
+	m_viewTeacher->doInitTeacher();
+	m_viewTeacher->show();
 	// 注意：这里必须在 Load() 之后调用，否则无法执行 CreateDefaultScene()...
 	// 注意：RefreshSceneCollections() 放在 DeferredLoad() 里面的 Load() 之后执行...
 	this->RefreshSceneCollections();
@@ -319,11 +341,11 @@ void CStudentWindow::RefreshSceneCollections()
 	m_viewCamera->resize(0, 0);
 	m_viewCamera->show();
 	// 创建右侧教师预览窗口，关联预览函数接口...
-	m_viewTeacher = new CViewTeacher(this);
-	m_viewTeacher->doInitTeacher();
+	//m_viewTeacher = new CViewTeacher(this);
+	//m_viewTeacher->doInitTeacher();
 	// 这里的操作为了避免发生闪烁...
-	m_viewTeacher->resize(0, 0);
-	m_viewTeacher->show();
+	//m_viewTeacher->resize(0, 0);
+	//m_viewTeacher->show();
 }
 
 static void LoadAudioDevice(const char *name, int channel, obs_data_t *parent)
@@ -591,11 +613,11 @@ void CStudentWindow::CreateDefaultScene(bool firstStart)
 {
 	disableSaving++;
 
-	this->ClearSceneData();
+	//this->ClearSceneData();
 
 	// 查看是否有桌面的输入输出音频设备...
-	bool hasDesktopAudio = HasAudioDevices(App()->OutputAudioSource());
-	bool hasInputAudio = HasAudioDevices(App()->InputAudioSource());
+	//bool hasDesktopAudio = HasAudioDevices(App()->OutputAudioSource());
+	//bool hasInputAudio = HasAudioDevices(App()->InputAudioSource());
 	// 直接屏蔽电脑输出声音，彻底避免互动时的声音啸叫...
 	//if (hasDesktopAudio) {
 	//	ResetAudioDevice(App()->OutputAudioSource(), "default", Str("Basic.DesktopDevice1"), 1);
@@ -615,7 +637,7 @@ void CStudentWindow::CreateDefaultScene(bool firstStart)
 	// 创建默认的本地摄像头对象...
 	//this->doCreateDShowSource(lpObsScene);
 	// 创建默认的老师端数据源对象...
-	this->doCreateTeacherSource(lpObsScene);
+	//this->doCreateTeacherSource(lpObsScene);
 
 	disableSaving--;
 }
@@ -642,7 +664,7 @@ void CStudentWindow::doCreateTeacherSource(obs_scene_t * lpObsScene)
 	obs_leave_graphics();
 	// 这里需要设置老师端数据源的音频为只播放不输出状态，默认是NONE，既不输出也不本地播放...
 	obs_source_set_monitoring_type(lpTeacherSource, OBS_MONITORING_TYPE_MONITOR_ONLY);
-	blog(LOG_INFO, "User changed audio monitoring for source '%s' to: %s", obs_source_get_name(lpTeacherSource), "monitor and output");
+	blog(LOG_INFO, "User changed audio monitoring for source '%s' to: %s", obs_source_get_name(lpTeacherSource), "monitor only");
 }
 
 void CStudentWindow::doCreateDShowSource(obs_scene_t * lpObsScene)
@@ -718,7 +740,6 @@ void CStudentWindow::ClearSceneData()
 		UNUSED_PARAMETER(unused);
 		return true;
 	};
-
 	// remove 只是设置标志，并没有删除...
 	obs_enum_sources(cb, nullptr);
 	
@@ -738,12 +759,6 @@ void CStudentWindow::ClearSceneData()
 		obs_source_release(obs_sceneitem_get_source(m_dshowSceneItem));
 		obs_sceneitem_remove(m_dshowSceneItem);
 		m_dshowSceneItem = nullptr;
-	}
-	// 释放已经创建的老师端数据源对象...
-	if (m_teacherSceneItem != nullptr) {
-		obs_source_release(obs_sceneitem_get_source(m_teacherSceneItem));
-		obs_sceneitem_remove(m_teacherSceneItem);
-		m_teacherSceneItem = nullptr;
 	}
 	// 频道0 => 再释放场景数据源对象...
 	if (m_obsScene != nullptr) {
@@ -1633,32 +1648,15 @@ void CStudentWindow::doStartOutput()
 // 老师端发出的直播推流的信号通知 => 直播编号和在线状态...
 void CStudentWindow::onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine)
 {
-	// 如果右侧讲师端数据源无效，直接返回...
-	obs_source_t * lpTeacherSource = obs_sceneitem_get_source(m_teacherSceneItem);
-	if (lpTeacherSource == nullptr || m_teacherSceneItem == nullptr)
-		return;
-	// 尝试创建右侧老师端播放画面对象...
-	obs_data_t * lpSettings = obs_source_get_settings(lpTeacherSource);
-	int nRoomID = atoi(App()->GetRoomIDStr().c_str());
-	obs_data_set_int(lpSettings, "room_id", nRoomID);
-	obs_data_set_int(lpSettings, "live_id", nLiveID);
-	obs_data_set_bool(lpSettings, "live_on", bIsLiveOnLine);
-	obs_data_set_int(lpSettings, "udp_port", App()->GetUdpPort());
-	obs_data_set_string(lpSettings, "udp_addr", App()->GetUdpAddr().c_str());
-	obs_data_set_int(lpSettings, "tcp_socket", App()->GetRemoteTcpSockFD());
-	obs_data_set_int(lpSettings, "client_type", App()->GetClientType());
-	// 将新的资源配置应用到当前smart_source资源对象当中...
-	obs_source_update(lpTeacherSource, lpSettings);
-	// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏...
-	obs_data_release(lpSettings);
+	if (m_viewTeacher == nullptr) return;
+	m_viewTeacher->onRemoteLiveOnLine(nLiveID, bIsLiveOnLine);
 }
 
 // 登录远程数据服务器成功之后的信号通知 => doTriggerSmartLogin()...
-void CStudentWindow::onRemoteSmartLogin()
+void CStudentWindow::onRemoteSmartLogin(int nLiveID)
 {
 	// 直接尝试拉取老师端正在推流直播...
-	int nLiveTeacherID = App()->GetLiveTeacherID();
-	this->onRemoteLiveOnLine(nLiveTeacherID, (nLiveTeacherID > 0) ? true : false);
+	this->onRemoteLiveOnLine(nLiveID, (nLiveID > 0) ? true : false);
 	// 如果时钟有效，需要先删除之...
 	if (m_nOutputTimer > 0) {
 		this->killTimer(m_nOutputTimer);
@@ -1668,6 +1666,20 @@ void CStudentWindow::onRemoteSmartLogin()
 	m_nOutputTimer = this->startTimer(5 * 1000);
 	// 立即启动推流状态检测...
 	this->doCheckOutput();
+}
+
+void CStudentWindow::onRemoteUdpLogout(int nLiveID, int tmTag, int idTag)
+{
+	// 如果不是学生端对象 => 直接返回...
+	if (tmTag != TM_TAG_STUDENT)
+		return;
+	// 如果是学生观看端的处理过程...
+	if (idTag == ID_TAG_LOOKER) {
+		this->onRemoteLiveOnLine(nLiveID, false);
+	}
+	// 如果是学生推流端的处理过程...
+	if (idTag == ID_TAG_PUSHER) {
+	}
 }
 
 void CStudentWindow::doCheckOutput()

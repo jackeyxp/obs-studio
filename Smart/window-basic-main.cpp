@@ -8352,8 +8352,13 @@ void OBSBasic::CheckDiskSpaceRemaining()
 	}
 }
 
+void OBSBasic::onRemoteUdpLogout(int nLiveID, int tmTag, int idTag)
+{
+
+}
+
 // 响应服务器发送的登录事件通知...
-void OBSBasic::onRemoteSmartLogin()
+void OBSBasic::onRemoteSmartLogin(int nLiveID)
 {
 }
 
