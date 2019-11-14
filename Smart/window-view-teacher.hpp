@@ -17,6 +17,9 @@ public:
 	void  doRemoveDrawCallback();
 	void  doUpdatedSmartSource(OBSSource source);
 	void  onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine);
+	void  onFullScreenAction();
+public:
+	bool  IsDrawImage() { return m_bIsDrawImage; }
 private:
 	void  initWindow();
 	void  doCreateTeacherSource();
@@ -29,7 +32,12 @@ private:
 	void  onUpdateTeacherLabel(const char * lpLabelName);
 private:
 	static void doDrawTeacherPreview(void *data, uint32_t cx, uint32_t cy);
+protected:
+	void  closeEvent(QCloseEvent *event) override;
+	void  keyPressEvent(QKeyEvent *event) override;
+	void  mouseDoubleClickEvent(QMouseEvent *event) override;
 private:
+	QRect               m_rcNoramlRect;                // 窗口的全屏前的矩形区域...
 	string              m_strUTF8TextLabel;            // UTF8文字标签提示信息...
 	bool                m_bIsDrawImage = false;        // 是否正在绘制讲师画面标志...
 	bool                m_bTeacherOnLine = false;      // 右侧老师端数据源是否在线...

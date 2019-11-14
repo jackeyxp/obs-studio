@@ -1535,6 +1535,11 @@ void CStudentWindow::timerEvent(QTimerEvent *inEvent)
 
 void CStudentWindow::doDrawTimeClock()
 {
+	// 如果右侧窗口无效，或者，右侧窗口没有绘制播放，需要重置计数器...
+	if (m_viewTeacher.isNull() || !m_viewTeacher->IsDrawImage()) {
+		m_nTimeSecond = 0;
+	}
+	// 计算小时|分|秒...
 	int nHours = m_nTimeSecond / 3600;
 	int nMinute = (m_nTimeSecond % 3600) / 60;
 	int nSecond = (m_nTimeSecond % 3600) % 60;
@@ -1800,7 +1805,8 @@ void CStudentWindow::doDrawRightArea(QPainter & inPainter)
 	inPainter.fillRect(rcViewTeacher, QColor(46, 48, 55));
 	// 进行右侧窗口的预览窗口位置调整...
 	rcViewTeacher.setTop(rcRightArea.top() + 1);
-	if (!m_viewTeacher.isNull() && rcViewTeacher != m_viewTeacher->geometry()) {
+	// 注意：如果已经处于全屏状态，不能进行右侧讲师端窗口的位置和大小调整...
+	if (!m_viewTeacher.isNull() && !m_viewTeacher->isFullScreen() && rcViewTeacher != m_viewTeacher->geometry()) {
 		m_viewTeacher->setGeometry(rcViewTeacher);
 	}
 	// 最后绘制整个右侧区域的边框位置...

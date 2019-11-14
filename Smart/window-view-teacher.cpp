@@ -8,6 +8,8 @@
 
 #include <QPainter>
 #include <QResource>
+#include <QKeyEvent>
+#include <QTimer>
 
 CViewTeacher::CViewTeacher(QWidget *parent, Qt::WindowFlags flags)
 	: OBSQTDisplay(parent, flags)
@@ -269,9 +271,13 @@ void CViewTeacher::onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine)
 		return;
 	// 更新正在尝试连接的文字标签信息...
 	this->onUpdateTeacherLabel(bIsLiveOnLine ? "Render.Window.ConnectServer" : "Render.Window.TeacherNotice");
+	// 在线时，判断是否处于全屏，如果不是全屏，进入全屏状态...
+	if (bIsLiveOnLine && !this->isFullScreen()) {
+		this->onFullScreenAction();
+	}
 	// 无论在线还是离线，都要重新显示文字提示信息...
 	m_bIsDrawImage = false;
-	// 保存老师端数据源是否在线，以便显示使用...
+	// 保存老师端数据源是否在线，目前没有使用...
 	m_bTeacherOnLine = bIsLiveOnLine;
 	// 尝试创建右侧老师端播放画面对象...
 	obs_data_t * lpSettings = obs_source_get_settings(lpTeacherSource);
@@ -287,4 +293,47 @@ void CViewTeacher::onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine)
 	obs_source_update(lpTeacherSource, lpSettings);
 	// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏...
 	obs_data_release(lpSettings);
+}
+
+void CViewTeacher::mouseDoubleClickEvent(QMouseEvent *event)
+{
+	this->onFullScreenAction();
+}
+
+void CViewTeacher::onFullScreenAction()
+{
+	if (this->isFullScreen()) {
+		// 窗口退出全屏状态...
+		this->setWindowFlags(Qt::SubWindow);
+		this->showNormal();
+		// 需要恢复到全屏前的矩形区域...
+		this->setGeometry(m_rcNoramlRect);
+	} else {
+		// 需要先保存全屏前的矩形区域...
+		m_rcNoramlRect = this->geometry();
+		// 窗口进入全屏状态...
+		this->setWindowFlags(Qt::Window);
+		this->showFullScreen();
+	}
+}
+
+void CViewTeacher::keyPressEvent(QKeyEvent *event)
+{
+	int nKeyItem = event->key();
+	if (nKeyItem != Qt::Key_Escape)
+		return;
+	if (!this->isFullScreen())
+		return;
+	this->onFullScreenAction();
+}
+
+void CViewTeacher::closeEvent(QCloseEvent *event)
+{
+	// 全屏状态下不能关闭窗口...
+	if (this->isFullScreen()) {
+		event->ignore();
+		return;
+	}
+	// 调用窗口的基础接口函数...
+	QWidget::closeEvent(event);
 }
