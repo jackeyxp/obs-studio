@@ -43,7 +43,6 @@ private:
 	QString m_strUserNickName;
 	QRect m_rcSrcGeometry;
 	obs_scene_t  * m_obsScene = nullptr;             // 唯一主场景...
-	obs_sceneitem_t * m_dshowSceneItem = nullptr;    // 本地摄像头...
 	QPointer<CViewCamera> m_viewCamera = nullptr;    // 预览本地摄像头...
 	QPointer<CViewTeacher> m_viewTeacher = nullptr;  // 预览老师端画面...
 	QNetworkAccessManager  m_objNetManager;	         // QT 网络管理对象...
@@ -97,11 +96,7 @@ private:
 	void  ClearSceneData();
 	void  InitOBSCallbacks();
 	void  Load(const char *file);
-	void  RefreshSceneCollections();
 	void  CreateDefaultScene(bool firstStart);
-	void  doCreateDShowSource(obs_scene_t * lpObsScene);
-	void  doCreateTeacherSource(obs_scene_t * lpObsScene);
-	void  ResetAudioDevice(const char *sourceId, const char *deviceId, const char *deviceDesc, int channel);
 
 	void  initWindow();
 	void  doWebGetUserHead();
@@ -124,7 +119,6 @@ private:
 	virtual void closeEvent(QCloseEvent *event) override;
 public:
 	inline obs_scene_t * GetObsScene() { return m_obsScene; }
-	inline obs_sceneitem_t * GetDShowSceneItem() { return m_dshowSceneItem; }
 	inline void SetSlientClose(bool bIsSlient) { m_bIsSlientClose = bIsSlient; }
 public:
 	explicit CStudentWindow(QWidget *parent = NULL);

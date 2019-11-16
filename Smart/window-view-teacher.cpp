@@ -42,6 +42,26 @@ void CViewTeacher::initWindow()
 {
 }
 
+// 初始化讲师端窗口对象 => 创建数据源...
+bool CViewTeacher::doInitTeacher()
+{
+	// 首先加载默认的无讲师图片数据源...
+	this->doLoadNoTeacherImage();
+	this->doLoadNoTeacherLabel();
+	// 创建讲师端数据源对象...
+	this->doCreateTeacherSource();
+	// 设置显示回调接口函数...
+	auto addTeacherDrawCallback = [this](OBSQTDisplay *window) {
+		// 注意：只有这里才能改变背景，避免造成背景颜色混乱的问题...
+		this->SetDisplayBackgroundColor(QColor(46, 48, 55));
+		// 关联当前类的绘制函数接口 => 在 show() 的时候才能到达这里...
+		obs_display_add_draw_callback(window->GetDisplay(), CViewTeacher::doDrawTeacherPreview, this);
+	};
+	// 设置 DisplayCreated 对应的显示回调函数接口...
+	connect(this, &OBSQTDisplay::DisplayCreated, addTeacherDrawCallback);
+	return true;
+}
+
 void CViewTeacher::doRemoveDrawCallback()
 {
 	obs_display_remove_draw_callback(this->GetDisplay(), CViewTeacher::doDrawTeacherPreview, this);
@@ -170,26 +190,6 @@ void CViewTeacher::doCreateTeacherSource()
 	m_teacherSceneItem = lpTeacherItem;
 }
 
-// 初始化摄像头对象 => 创建数据源...
-bool CViewTeacher::doInitTeacher()
-{
-	// 首先加载默认的无讲师图片数据源...
-	this->doLoadNoTeacherImage();
-	this->doLoadNoTeacherLabel();
-	// 创建讲师端数据源对象...
-	this->doCreateTeacherSource();
-	// 设置显示回调接口函数...
-	auto addTeacherDrawCallback = [this](OBSQTDisplay *window) {
-		// 注意：这里进行了背景修改，避免造成背景颜色混乱的问题...
-		this->SetDisplayBackgroundColor(QColor(46, 48, 55));
-		// 关联当前类的绘制函数接口 => 在 show() 的时候才能到达这里...
-		obs_display_add_draw_callback(window->GetDisplay(), CViewTeacher::doDrawTeacherPreview, this);
-	};
-	// 设置 DisplayCreated 对应的显示回调函数接口...
-	connect(this, &OBSQTDisplay::DisplayCreated, addTeacherDrawCallback);
-	return true;
-}
-
 void CViewTeacher::doRenderTeacherSource(uint32_t cx, uint32_t cy)
 {
 	obs_source_t * lpTeacherSource = obs_sceneitem_get_source(m_teacherSceneItem);
@@ -201,9 +201,11 @@ void CViewTeacher::doRenderTeacherSource(uint32_t cx, uint32_t cy)
 	uint32_t sourceCX = max(obs_source_get_width(lpTeacherSource), 1u);
 	uint32_t sourceCY = max(obs_source_get_height(lpTeacherSource), 1u);
 	GetScaleAndCenterPos(sourceCX, sourceCY, cx, cy, x, y, scale);
+	// 这个接口调用非常重要，它决定了整个原始数据源画布的大小范围...
 	gs_ortho(0.0f, float(sourceCX), 0.0f, float(sourceCY), -100.0f, 100.0f);
 	newCX = int(scale * float(sourceCX));
 	newCY = int(scale * float(sourceCY));
+	// 这个接口是设定视图在画布当中的投影...
 	gs_set_viewport(x, y, newCX, newCY);
 	obs_source_video_render(lpTeacherSource);
 }
@@ -219,9 +221,11 @@ void CViewTeacher::doRenderNoTeacherImage(uint32_t cx, uint32_t cy)
 	uint32_t sourceCX = max(obs_source_get_width(lpTeacherSource), 1u);
 	uint32_t sourceCY = max(obs_source_get_height(lpTeacherSource), 1u);
 	GetCenterPosFromFixedScale(sourceCX, sourceCY, cx, cy, x, y, scale);
+	// 这个接口调用非常重要，它决定了整个原始数据源画布的大小范围...
 	gs_ortho(0.0f, float(sourceCX), 0.0f, float(sourceCY), -100.0f, 100.0f);
 	newCX = int(scale * float(sourceCX));
 	newCY = int(scale * float(sourceCY));
+	// 这个接口是设定视图在画布当中的投影...
 	gs_set_viewport(x, y - 120, newCX, newCY);
 	obs_source_video_render(lpTeacherSource);
 }
@@ -237,9 +241,11 @@ void CViewTeacher::doRenderNoTeacherLabel(uint32_t cx, uint32_t cy)
 	uint32_t sourceCX = max(obs_source_get_width(lpTeacherSource), 1u);
 	uint32_t sourceCY = max(obs_source_get_height(lpTeacherSource), 1u);
 	GetCenterPosFromFixedScale(sourceCX, sourceCY, cx, cy, x, y, scale);
+	// 这个接口调用非常重要，它决定了整个原始数据源画布的大小范围...
 	gs_ortho(0.0f, float(sourceCX), 0.0f, float(sourceCY), -100.0f, 100.0f);
 	newCX = int(scale * float(sourceCX));
 	newCY = int(scale * float(sourceCY));
+	// 这个接口是设定视图在画布当中的投影...
 	gs_set_viewport(x, y, newCX, newCY);
 	obs_source_video_render(lpTeacherSource);
 }

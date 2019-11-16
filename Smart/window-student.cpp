@@ -159,14 +159,13 @@ void CStudentWindow::AddSceneItem(OBSSceneItem item)
 		obs_source_get_id(itemSource),
 		obs_source_get_name(sceneSource));
 	// 根据数据源id判断并保存摄像头数据源 => 保存场景条目，计数器在数据源上...
-	bool bIsDShowInput = ((astrcmpi(obs_source_get_id(itemSource), App()->DShowInputSource()) == 0) ? true : false);
-	if (itemSource != nullptr && bIsDShowInput && m_dshowSceneItem == nullptr) {
-		obs_source_addref(itemSource);
-		m_dshowSceneItem = item;
+	/*bool bIsDShowInput = ((astrcmpi(obs_source_get_id(itemSource), App()->DShowInputSource()) == 0) ? true : false);
+	if (itemSource != nullptr && bIsDShowInput && m_viewCamera.isNull()) {
+		m_viewCamera->SaveDShowSceneItem(item);
 	}
 	// 如果是smart_source数据源 => 老师端数据源，直接存放到右侧窗口对象当中...
-	/*bool bIsTeacherSource = ((astrcmpi(obs_source_get_id(itemSource), App()->InteractSmartSource()) == 0) ? true : false);
-	if (itemSource != nullptr && bIsTeacherSource && m_viewTeacher != nullptr) {
+	bool bIsTeacherSource = ((astrcmpi(obs_source_get_id(itemSource), App()->InteractSmartSource()) == 0) ? true : false);
+	if (itemSource != nullptr && bIsTeacherSource && m_viewTeacher.isNull()) {
 		m_viewTeacher->SaveTeacherSceneItem(item);
 	}*/
 }
@@ -314,38 +313,35 @@ void CStudentWindow::DeferredLoad(const QString &file, int requeueCount)
 			Q_ARG(int, requeueCount));
 		return;
 	}
+	// 创建摄像头预览窗口，关联预览函数接口...
+	m_viewCamera = new CViewCamera(this);
 	// 创建右侧教师预览窗口，关联预览函数接口...
 	m_viewTeacher = new CViewTeacher(this);
 	// 这里的操作为了避免发生闪烁...
 	m_viewTeacher->resize(0, 0);
+	m_viewCamera->resize(0, 0);
+
 	// 加载系统各种配置参数...
 	this->Load(QT_TO_UTF8(file));
+
 	// 加载场景配置之后再初始化并显示窗口...
 	m_viewTeacher->doInitTeacher();
 	m_viewTeacher->show();
+	// 加载场景配置之后再初始化并显示窗口...
+	m_viewCamera->doInitCamera();
+	m_viewCamera->show();
+
 	// 注意：这里必须在 Load() 之后调用，否则无法执行 CreateDefaultScene()...
 	// 注意：RefreshSceneCollections() 放在 DeferredLoad() 里面的 Load() 之后执行...
-	this->RefreshSceneCollections();
+	//this->RefreshSceneCollections();
+
+	// 打印场景列表...
+	this->LogScenes();
+
 	// 设置已加载完毕的标志...
 	m_bIsLoaded = true;
 	// 立即启动远程连接...
 	App()->doCheckRemote();
-}
-
-void CStudentWindow::RefreshSceneCollections()
-{
-	// 创建摄像头预览窗口，关联预览函数接口...
-	m_viewCamera = new CViewCamera(this);
-	m_viewCamera->doInitCamera();
-	// 这里的操作为了避免发生闪烁...
-	m_viewCamera->resize(0, 0);
-	m_viewCamera->show();
-	// 创建右侧教师预览窗口，关联预览函数接口...
-	//m_viewTeacher = new CViewTeacher(this);
-	//m_viewTeacher->doInitTeacher();
-	// 这里的操作为了避免发生闪烁...
-	//m_viewTeacher->resize(0, 0);
-	//m_viewTeacher->show();
 }
 
 static void LoadAudioDevice(const char *name, int channel, obs_data_t *parent)
@@ -378,6 +374,10 @@ void CStudentWindow::Load(const char *file)
 		//this->SaveProject();
 		return;
 	}
+	/////////////////////////////////////////////////////////////////////
+	// 注意：这里需要后续改造，从json文件加载场景内容还没有具体改造...
+	// 注意：这里需要结合 AddSceneItem 才能配合完成具体改造...
+	/////////////////////////////////////////////////////////////////////
 
 	// 已经读取到有效的场景数据...
 	this->ClearSceneData();
@@ -408,9 +408,6 @@ void CStudentWindow::Load(const char *file)
 	// 释放引用计数器对象...
 	obs_data_array_release(sources);
 	obs_data_release(data);
-
-	// 打印场景列表...
-	this->LogScenes();
 
 	disableSaving--;
 }
@@ -549,71 +546,9 @@ void CStudentWindow::SaveProject()
 	obs_data_release(saveData);
 }
 
-static inline bool HasAudioDevices(const char *source_id)
-{
-	const char *output_id = source_id;
-	obs_properties_t *props = obs_get_source_properties(output_id);
-	size_t count = 0;
-
-	if (!props) return false;
-
-	obs_property_t *devices = obs_properties_get(props, "device_id");
-	if (devices) {
-		count = obs_property_list_item_count(devices);
-	}
-	obs_properties_destroy(props);
-
-	return count != 0;
-}
-
-void CStudentWindow::ResetAudioDevice(const char *sourceId, const char *deviceId,
-                                      const char *deviceDesc, int channel)
-{
-	bool disable = deviceId && strcmp(deviceId, "disabled") == 0;
-	obs_source_t * source;
-	obs_data_t * settings;
-
-	source = obs_get_output_source(channel);
-	if (source) {
-		if (disable) {
-			obs_set_output_source(channel, nullptr);
-		} else {
-			settings = obs_source_get_settings(source);
-			const char *oldId = obs_data_get_string(settings, "device_id");
-			if (strcmp(oldId, deviceId) != 0) {
-				obs_data_set_string(settings, "device_id", deviceId);
-				obs_source_update(source, settings);
-			}
-			obs_data_release(settings);
-		}
-		obs_source_release(source);
-	} else if (!disable) {
-		settings = obs_data_create();
-		obs_data_set_string(settings, "device_id", deviceId);
-		source = obs_source_create(sourceId, deviceDesc, settings, nullptr);
-		obs_data_release(settings);
-
-		obs_set_output_source(channel, source);
-		obs_source_release(source);
-		// 如果是音频输入设备，自动加入噪音抑制过滤器|自动屏蔽第三轨道混音...
-		if (strcmp(sourceId, App()->InputAudioSource()) == 0) {
-			//OBSBasicSourceSelect::AddFilterToSourceByID(source, App()->GetNSFilter());
-			// 思路错误 => 轨道3(索引编号是2)专门用来本地统一播放使用的混音通道...
-			//uint32_t new_mixers = obs_source_get_audio_mixers(source) & (~(1 << 2));
-			//obs_source_set_audio_mixers(source, new_mixers);
-		}
-		// 如果是音频输出设备，自动设置为静音状态，避免发生多次叠加啸叫...
-		if (strcmp(sourceId, App()->OutputAudioSource()) == 0) {
-			obs_source_set_muted(source, true);
-		}
-	}
-}
-
 void CStudentWindow::CreateDefaultScene(bool firstStart)
 {
 	disableSaving++;
-
-	//this->ClearSceneData();
 
 	// 查看是否有桌面的输入输出音频设备...
 	//bool hasDesktopAudio = HasAudioDevices(App()->OutputAudioSource());
@@ -640,79 +575,6 @@ void CStudentWindow::CreateDefaultScene(bool firstStart)
 	//this->doCreateTeacherSource(lpObsScene);
 
 	disableSaving--;
-}
-
-void CStudentWindow::doCreateTeacherSource(obs_scene_t * lpObsScene)
-{
-	const char * lpSmartID = App()->InteractSmartSource();
-	const char * lpSmartName = obs_source_get_display_name(lpSmartID);
-	obs_source_t * lpTeacherSource = obs_source_create(lpSmartID, lpSmartName, NULL, nullptr);
-	// 如果没有获取到了默认的Smart数据源 => 直接返回 => 注意处理存盘标志...
-	if (lpObsScene == nullptr || lpSmartID == nullptr && lpTeacherSource == nullptr)
-		return;
-	// 初始化默认数据源...
-	obs_enter_graphics();
-	vec2 vPos = { 120.0f, 120.0f };
-	// 这里的位置是相对整个MainTexure的位置 => 不能设定为0点位置...
-	obs_sceneitem_t * lpTeacherItem = obs_scene_add(lpObsScene, lpTeacherSource);
-	// 注意：这里会激发信号事件AddSceneItem => 需要减少引用计数器...
-	obs_source_release(lpTeacherSource);
-	// 设置摄像头可见，以及设定初始位置...
-	// 注意：0点位置的数据源是需要对外输出的数据源...
-	obs_sceneitem_set_visible(lpTeacherItem, true);
-	obs_sceneitem_set_pos(lpTeacherItem, &vPos);
-	obs_leave_graphics();
-	// 这里需要设置老师端数据源的音频为只播放不输出状态，默认是NONE，既不输出也不本地播放...
-	obs_source_set_monitoring_type(lpTeacherSource, OBS_MONITORING_TYPE_MONITOR_ONLY);
-	blog(LOG_INFO, "User changed audio monitoring for source '%s' to: %s", obs_source_get_name(lpTeacherSource), "monitor only");
-}
-
-void CStudentWindow::doCreateDShowSource(obs_scene_t * lpObsScene)
-{
-	// 创建默认的本地摄像头对象...
-	const char * lpDShowID = App()->DShowInputSource();
-	const char * lpDShowName = obs_source_get_display_name(lpDShowID);
-	obs_source_t * lpDShowSource = obs_source_create(lpDShowID, lpDShowName, NULL, nullptr);
-	// 如果没有获取到了默认的DShow数据源 => 直接返回 => 注意处理存盘标志...
-	if (lpObsScene == nullptr || lpDShowName == nullptr && lpDShowSource == nullptr)
-		return;
-	// 初始化默认数据源...
-	obs_enter_graphics();
-	vec2 vPos = { 0.0f, 0.0f };
-	// 这里的位置是相对整个MainTexure的位置...
-	obs_sceneitem_t * lpDShowItem = obs_scene_add(lpObsScene, lpDShowSource);
-	// 注意：这里会激发信号事件AddSceneItem => 需要减少引用计数器...
-	obs_source_release(lpDShowSource);
-	// 设置摄像头可见，以及设定初始位置...
-	// 注意：0点位置的数据源是需要对外输出的数据源...
-	obs_sceneitem_set_visible(lpDShowItem, true);
-	obs_sceneitem_set_pos(lpDShowItem, &vPos);
-	obs_leave_graphics();
-	// 对本地摄像头数据源进行常规配置...
-	obs_properties_t * props = obs_source_properties(lpDShowSource);
-	obs_property_t * property = obs_properties_get(props, "video_device_id");
-	obs_property_type prop_type = obs_property_get_type(property);
-	obs_combo_type comb_type = obs_property_list_type(property);
-	obs_combo_format comb_format = obs_property_list_format(property);
-	size_t comb_count = obs_property_list_item_count(property);
-	const char * item_name = obs_property_list_item_name(property, 0);
-	const char * item_data = obs_property_list_item_string(property, 0);
-
-	// 设置并更新配置 => 注意释放引用计数器...
-	if (item_name != nullptr && item_data != nullptr) {
-		OBSData settings = obs_source_get_settings(lpDShowSource);
-		obs_data_set_string(settings, "video_device_id", item_data);
-		obs_source_update(lpDShowSource, settings);
-		obs_data_release(settings);
-	}
-	// 数据源属性对象也要进行释放操作...
-	obs_properties_destroy(props);
-
-	// 关联数据源的预览窗口相关配置 => 只要创建就显示...
-	//enum obs_source_type type = obs_source_get_type(lpDShowSource);
-	//uint32_t caps = obs_source_get_output_flags(lpDShowSource);
-	//bool drawable_type = type == OBS_SOURCE_TYPE_INPUT || type == OBS_SOURCE_TYPE_SCENE;
-	//bool drawable_preview = (caps & OBS_SOURCE_VIDEO) != 0;
 }
 
 void CStudentWindow::ClearSceneData()
@@ -753,12 +615,6 @@ void CStudentWindow::ClearSceneData()
 	if (!m_viewTeacher.isNull()) {
 		delete m_viewTeacher;
 		m_viewTeacher = nullptr;
-	}
-	// 频道0 => 先释放所有主动创建的数据源对象...
-	if (m_dshowSceneItem != nullptr) {
-		obs_source_release(obs_sceneitem_get_source(m_dshowSceneItem));
-		obs_sceneitem_remove(m_dshowSceneItem);
-		m_dshowSceneItem = nullptr;
 	}
 	// 频道0 => 再释放场景数据源对象...
 	if (m_obsScene != nullptr) {
@@ -1742,11 +1598,10 @@ void CStudentWindow::doStartRecording()
 float CStudentWindow::doDShowCheckRatio()
 {
 	float ratioScale = 3.0 / 4.0;
-	obs_source_t * lpDShowSource = obs_sceneitem_get_source(m_dshowSceneItem);
 	uint32_t baseCX = (uint32_t)config_get_uint(basicConfig, "Student", "BaseCX");
 	uint32_t baseCY = (uint32_t)config_get_uint(basicConfig, "Student", "BaseCY");
-	uint32_t sourceCX = ((lpDShowSource != NULL) ? obs_source_get_width(lpDShowSource) : 0);
-	uint32_t sourceCY = ((lpDShowSource != NULL) ? obs_source_get_height(lpDShowSource) : 0);
+	uint32_t sourceCX = m_viewCamera.isNull() ? 0 : m_viewCamera->doGetCameraWidth();
+	uint32_t sourceCY = m_viewCamera.isNull() ? 0 : m_viewCamera->doGetCameraHeight();
 	// 摄像头的分辨率有效，需要进行相关的实际操作...
 	if (sourceCX > 0 && sourceCY > 0) {
 		// 计算当前摄像头有效的高宽比例...
@@ -1796,7 +1651,8 @@ void CStudentWindow::doDrawRightArea(QPainter & inPainter)
 	rcViewCamera.setTop(rcRightSelf.top() + (rcRightSelf.height() - rcViewCamera.width()) / 2);
 	rcViewCamera.setHeight(rcViewCamera.width() * ratioScale);
 	// 如果预览窗口有效，并且计算的新位置与当前获取的坐标位置不一致...
-	if (!m_viewCamera.isNull() && rcViewCamera != m_viewCamera->geometry()) {
+	if (!m_viewCamera.isNull() && !m_viewCamera->isFullScreen() &&
+		rcViewCamera != m_viewCamera->geometry()) {
 		m_viewCamera->setGeometry(rcViewCamera);
 	}
 	// 绘制右侧老师画面区域...
@@ -1806,7 +1662,8 @@ void CStudentWindow::doDrawRightArea(QPainter & inPainter)
 	// 进行右侧窗口的预览窗口位置调整...
 	rcViewTeacher.setTop(rcRightArea.top() + 1);
 	// 注意：如果已经处于全屏状态，不能进行右侧讲师端窗口的位置和大小调整...
-	if (!m_viewTeacher.isNull() && !m_viewTeacher->isFullScreen() && rcViewTeacher != m_viewTeacher->geometry()) {
+	if (!m_viewTeacher.isNull() && !m_viewTeacher->isFullScreen() &&
+		rcViewTeacher != m_viewTeacher->geometry()) {
 		m_viewTeacher->setGeometry(rcViewTeacher);
 	}
 	// 最后绘制整个右侧区域的边框位置...

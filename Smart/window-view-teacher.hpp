@@ -17,11 +17,11 @@ public:
 	void  doRemoveDrawCallback();
 	void  doUpdatedSmartSource(OBSSource source);
 	void  onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine);
-	void  onFullScreenAction();
 public:
 	bool  IsDrawImage() { return m_bIsDrawImage; }
 private:
 	void  initWindow();
+	void  onFullScreenAction();
 	void  doCreateTeacherSource();
 	bool  doLoadNoTeacherImage();
 	bool  doLoadNoTeacherLabel();

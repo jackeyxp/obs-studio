@@ -1061,6 +1061,9 @@ DShowInput::GetColorRange(obs_data_t *settings) const
 
 inline bool DShowInput::Activate(obs_data_t *settings)
 {
+	// 这里需要设置标志，供外层界面进行显示使用...
+	obs_data_set_bool(settings, "draw_image", false);
+
 	if (!device.ResetGraph())
 		return false;
 
@@ -1085,6 +1088,9 @@ inline bool DShowInput::Activate(obs_data_t *settings)
 	if (device.Start() != Result::Success)
 		return false;
 
+	// 这里需要设置标志，供外层界面进行显示使用...
+	obs_data_set_bool(settings, "draw_image", true);
+
 	bool success = video_format_get_parameters(cs, frame.range,
 						   frame.color_matrix,
 						   frame.color_range_min,
@@ -1101,6 +1107,13 @@ inline bool DShowInput::Activate(obs_data_t *settings)
 
 inline void DShowInput::Deactivate()
 {
+	// 这里需要设置标志，供外层界面进行显示使用...
+	obs_data_t * settings = obs_source_get_settings(source);
+	if (settings != nullptr) {
+		obs_data_set_bool(settings, "draw_image", false);
+		obs_data_release(settings);
+	}
+
 	device.ResetGraph();
 	obs_source_output_video2(source, nullptr);
 }
