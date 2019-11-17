@@ -24,12 +24,9 @@ string GetDeviceName(IMMDevice *device)
 			size_t len = wcslen(nameVar.pwszVal);
 			size_t size;
 
-			size = os_wcs_to_utf8(nameVar.pwszVal, len, nullptr,
-					      0) +
-			       1;
+			size = os_wcs_to_utf8(nameVar.pwszVal, len, nullptr, 0) + 1;
 			device_name.resize(size);
-			os_wcs_to_utf8(nameVar.pwszVal, len, &device_name[0],
-				       size);
+			os_wcs_to_utf8(nameVar.pwszVal, len, &device_name[0], size);
 		}
 	}
 
@@ -50,8 +47,7 @@ void GetWASAPIAudioDevices_(vector<AudioDeviceInfo> &devices, bool input)
 		throw HRError("Failed to create enumerator", res);
 
 	res = enumerator->EnumAudioEndpoints(input ? eCapture : eRender,
-					     DEVICE_STATE_ACTIVE,
-					     collection.Assign());
+					     DEVICE_STATE_ACTIVE, collection.Assign());
 	if (FAILED(res))
 		throw HRError("Failed to enumerate devices", res);
 
@@ -92,7 +88,7 @@ void GetWASAPIAudioDevices(vector<AudioDeviceInfo> &devices, bool input)
 		GetWASAPIAudioDevices_(devices, input);
 
 	} catch (HRError &error) {
-		blog(LOG_WARNING, "[GetWASAPIAudioDevices] %s: %lX", error.str,
-		     error.hr);
+		blog(LOG_WARNING, "[GetWASAPIAudioDevices] %s: %lX",
+			error.str, error.hr);
 	}
 }

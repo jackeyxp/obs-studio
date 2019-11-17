@@ -1,0 +1,470 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="AEC Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="NS Files">
+      <UniqueIdentifier>{3ca5601c-789a-422a-982a-123a839dc8df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib Files">
+      <UniqueIdentifier>{c44f6c3d-c810-4064-948d-eb443e60b6d7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\aec_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\aec_core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\aec_core_optimized_methods.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\aec_resampler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\aligned_malloc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\apm_data_dumper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\arch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\array_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\array_view.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\arraysize.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\atomicops.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\audio_buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\audio_frame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\audio_frame_view.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\audio_generator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\audio_processing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\audio_processing_statistics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\audio_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\block_mean_calculator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\channel_buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\checks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\common_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\compile_assert_c.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\constructormagic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\cpu_features_wrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\criticalsection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\delay_estimator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\delay_estimator_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\delay_estimator_wrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\deprecation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\dot_product_with_scale.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\echo_cancellation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\echo_canceller3_config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\echo_control.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\gtest_prod_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\histogram_percentile_counter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\inline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\logging.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\metrics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\metrics_default.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\ooura_fft.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\ooura_fft_tables_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\ooura_fft_tables_neon_sse2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\optional.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\platform_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\platform_thread_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\push_sinc_resampler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\real_fft.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\refcount.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\ring_buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\safe_compare.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\safe_conversions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\safe_conversions_impl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\safe_minmax.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\sanitizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\scoped_ref_ptr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\signal_processing_library.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\sinc_resampler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\sparse_fir_filter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\spl_inl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\splitting_filter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\string_builder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\stringencode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\stringutils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\thread_annotations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\three_band_filter_bank.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\timeutils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\type_traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\typedefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\unused.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\wav_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\inc\wav_header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\ns\noise_suppression.h">
+      <Filter>NS Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\ns\ns_core.h">
+      <Filter>NS Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\ns\defines.h">
+      <Filter>NS Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\ns\fft4g.h">
+      <Filter>NS Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\ns\windows_private.h">
+      <Filter>NS Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\ns\noise_suppression_x.h">
+      <Filter>NS Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\ns\nsx_core.h">
+      <Filter>NS Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\ns\nsx_defines.h">
+      <Filter>NS Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\lib\complex_fft_tables.h">
+      <Filter>Lib Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebrtc-aec\lib\spl_sqrt_floor.h">
+      <Filter>Lib Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\libwebrtc-aec\src\aec_core.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\aec_core_sse2.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\aec_resampler.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\aligned_malloc.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\apm_data_dumper.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\array_util.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\audio_buffer.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\audio_frame.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\audio_processing.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\audio_processing_statistics.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\audio_util.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\block_mean_calculator.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\channel_buffer.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\checks.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\config.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\cpu_features.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\criticalsection.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\delay_estimator.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\delay_estimator_wrapper.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\dot_product_with_scale.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\echo_cancellation.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\echo_canceller3_config.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\histogram_percentile_counter.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\logging.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\metrics_default.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\ooura_fft.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\ooura_fft_sse2.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\platform_file.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\platform_thread_types.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\push_sinc_resampler.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\randomization_functions.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\ring_buffer.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\sinc_resampler.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\sinc_resampler_sse.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\sparse_fir_filter.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\splitting_filter.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\splitting_filter_impl.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\string_builder.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\stringencode.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\stringutils.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\three_band_filter_bank.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\timeutils.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\wav_file.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\src\wav_header.cpp">
+      <Filter>AEC Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\ns\noise_suppression.c">
+      <Filter>NS Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\ns\ns_core.c">
+      <Filter>NS Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\ns\fft4g.c">
+      <Filter>NS Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\ns\noise_suppression_x.c">
+      <Filter>NS Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\ns\nsx_core.c">
+      <Filter>NS Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\ns\nsx_core_c.c">
+      <Filter>NS Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\spl_init.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\spl_inl.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\spl_sqrt.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\real_fft.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\complex_fft.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\complex_bit_reverse.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\min_max_operations.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\vector_scaling_operations.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\cross_correlation.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\downsample_fast.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\copy_set_operations.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\spl_sqrt_floor.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\division_operations.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\energy.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebrtc-aec\lib\get_scaling_square.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

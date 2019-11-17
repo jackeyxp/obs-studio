@@ -82,7 +82,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>F:\obs-studio\libobs;F:\obs-studio\vsbuild\config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\obs-studio\libobs;F:\obs-studio\vsbuild\config;F:\obs-studio\libwebrtc-aec\inc;F:\obs-studio\libwebrtc-aec\ns;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>Debug/</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -112,7 +112,8 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>			</Message>
+      <Message>
+      </Message>
       <Command>setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/plugins/win-wasapi/Debug/win-wasapi.dll F:/obs-studio/vsbuild/rundir/Debug/obs-plugins/32bit/win-wasapi.dll
 if %errorlevel% neq 0 goto :cmEnd
@@ -151,7 +152,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>..\..\libobs\Debug\obs.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>..\..\libobs\Debug\obs.lib;..\..\libwebrtc-aec\Debug\libwebrtc-aecD.lib;..\..\deps\w32-pthreads\Debug\w32-pthreads.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
       <GenerateDebugInformation>Debug</GenerateDebugInformation>
@@ -197,7 +198,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>			</Message>
+      <Message>
+      </Message>
       <Command>setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/plugins/win-wasapi/Release/win-wasapi.dll F:/obs-studio/vsbuild/rundir/Release/obs-plugins/32bit/win-wasapi.dll
 if %errorlevel% neq 0 goto :cmEnd
@@ -282,7 +284,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>			</Message>
+      <Message>
+      </Message>
       <Command>setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/plugins/win-wasapi/MinSizeRel/win-wasapi.dll F:/obs-studio/vsbuild/rundir/MinSizeRel/obs-plugins/32bit/win-wasapi.dll
 if %errorlevel% neq 0 goto :cmEnd
@@ -366,7 +369,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>			</Message>
+      <Message>
+      </Message>
       <Command>setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/plugins/win-wasapi/RelWithDebInfo/win-wasapi.dll F:/obs-studio/vsbuild/rundir/RelWithDebInfo/obs-plugins/32bit/win-wasapi.dll
 if %errorlevel% neq 0 goto :cmEnd
