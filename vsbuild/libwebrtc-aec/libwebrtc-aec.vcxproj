@@ -233,7 +233,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>E:\obs-studio\vsbuild\libwebrtc-aec\Release\</OutDir>
+    <OutDir>F:\obs-studio\vsbuild\libwebrtc-aec\Release\</OutDir>
     <IntDir>libwebrtc-aec.dir\Release\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

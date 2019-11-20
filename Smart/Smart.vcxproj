@@ -472,7 +472,7 @@
     <OutDir>F:\obs-studio\vsbuild\UI\Debug\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>F:\obs-studio\vsbuild\UI\Release\</OutDir>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
     <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
@@ -509,13 +509,13 @@
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <AdditionalLibraryDirectories>$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(QTDIR)\lib\Qt5Networkd.lib;$(QTDIR)\lib\Qt5Widgetsd.lib;$(QTDIR)\lib\Qt5Guid.lib;$(QTDIR)\lib\Qt5Cored.lib;$(QTDIR)\lib\qtmaind.lib;$(QTDIR)\lib\Qt5Svgd.lib;$(QTDIR)\lib\Qt5AxBased.lib;$(QTDIR)\lib\Qt5AxContainerd.lib;..\..\obs-deps\win32\bin\avcodec.lib;..\..\obs-deps\win32\bin\avutil.lib;..\..\obs-deps\win32\bin\avformat.lib;..\..\obs-deps\win32\bin\libcurl.lib;..\..\obs-studio\vsbuild\libobs\Debug\obs.lib;..\..\obs-studio\vsbuild\deps\blake2\Debug\blake2.lib;..\..\obs-studio\vsbuild\deps\jansson\lib\Debug\jansson_d.lib;..\..\obs-studio\vsbuild\deps\w32-pthreads\Debug\w32-pthreads.lib;..\..\obs-studio\vsbuild\UI\obs-frontend-api\Debug\obs-frontend-api.lib;crypt32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(QTDIR)\lib\Qt5Networkd.lib;$(QTDIR)\lib\Qt5Widgetsd.lib;$(QTDIR)\lib\Qt5Guid.lib;$(QTDIR)\lib\Qt5Cored.lib;$(QTDIR)\lib\qtmaind.lib;$(QTDIR)\lib\Qt5Svgd.lib;$(QTDIR)\lib\Qt5AxBased.lib;$(QTDIR)\lib\Qt5AxContainerd.lib;..\..\obs-deps\win32\bin\avcodec.lib;..\..\obs-deps\win32\bin\avutil.lib;..\..\obs-deps\win32\bin\avformat.lib;..\..\obs-deps\win32\bin\libcurl.lib;..\..\obs-studio\vsbuild\libobs\Debug\obs.lib;..\..\obs-studio\vsbuild\deps\blake2\Debug\blake2.lib;..\..\obs-studio\vsbuild\deps\jansson\lib\Debug\jansson_d.lib;..\..\obs-studio\vsbuild\deps\w32-pthreads\Debug\w32-pthreads.lib;..\..\obs-studio\vsbuild\UI\obs-frontend-api\Debug\obs-frontend-api.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LinkTimeCodeGeneration>
       </LinkTimeCodeGeneration>
     </Link>
     <QtMoc>
-      <Define>WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL=libobs-opengl.dll;DL_D3D9= -DDL_D3D11=libobs-d3d11.dll -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DHAVE_OBSCONFIG_H -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SVG_LIB -DCMAKE_INTDIR=Debug -D%(PreprocessorDefinitions)  -I. -I.\GeneratedFiles\$(ConfigurationName) -IF:\obs-deps\win32\include -IF:\obs-studio\libobs -IF:\obs-studio\deps\libff -IF:\obs-studio\deps\json11 -IF:\obs-studio\deps\blake2\src -IF:\obs-studio\vsbuild\config -IF:\obs-studio\deps\w32-pthreads -I$(QTDIR)\include -I$(QTDIR)\include\QtCore -I$(QTDIR)\include\QtGui -I$(QTDIR)\include\QtANGLE -I$(QTDIR)\include\QtWidgets -I$(QTDIR)\include\QtNetwork -I$(QTDIR)\mkspecs\win32-msvc2015</Define>
+      <Define>WIN32;_WINDOWS;DEBUG=1;_DEBUG=1;DL_OPENGL="libobs-opengl.dll";DL_D3D9="";DL_D3D11="libobs-d3d11.dll";UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;HAVE_OBSCONFIG_H;QT_WIDGETS_LIB;QT_GUI_LIB;QT_CORE_LIB;QT_SVG_LIB;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</Define>
       <IncludePath>.;json;fastdfs;win-update;obs-frontend-api;..\Server\common;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);..\..\obs-deps\win32\include;..\..\obs-studio\libobs;..\..\obs-studio\deps\libff;..\..\obs-studio\vsbuild\config;..\..\obs-studio\deps\blake2\src;..\..\obs-studio\deps\w32-pthreads;..\..\obs-studio\deps\jansson\src;..\..\obs-studio\vsbuild\deps\jansson\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtNetwork;$(QTDIR)\mkspecs\win32-msvc2015;%(AdditionalIncludeDirectories)</IncludePath>
       <OutputFile>.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</OutputFile>
       <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
@@ -552,10 +552,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>UNICODE;WIN32;WIN64;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;UNICODE;_UNICODE;NDEBUG;DL_OPENGL="libobs-opengl.dll";DL_D3D9="";DL_D3D11="libobs-d3d11.dll";_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;HAVE_OBSCONFIG_H;QT_WIDGETS_LIB;QT_GUI_LIB;QT_CORE_LIB;QT_SVG_LIB;QT_NO_DEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat />
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;json;fastdfs;win-update;obs-frontend-api;..\Server\common;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);..\..\obs-deps\win32\include;..\..\obs-studio\libobs;..\..\obs-studio\deps\libff;..\..\obs-studio\vsbuild\config;..\..\obs-studio\deps\blake2\src;..\..\obs-studio\deps\w32-pthreads;..\..\obs-studio\deps\jansson\src;..\..\obs-studio\vsbuild\deps\jansson\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtNetwork;$(QTDIR)\mkspecs\win32-msvc2015;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
     </ClCompile>
     <Link>
@@ -563,11 +563,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <AdditionalLibraryDirectories>$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>qtmain.lib;Qt5Core.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(QTDIR)\lib\Qt5Network.lib;$(QTDIR)\lib\Qt5Widgets.lib;$(QTDIR)\lib\Qt5Gui.lib;$(QTDIR)\lib\Qt5Core.lib;$(QTDIR)\lib\qtmain.lib;$(QTDIR)\lib\Qt5Svg.lib;$(QTDIR)\lib\Qt5AxBase.lib;$(QTDIR)\lib\Qt5AxContainer.lib;..\..\obs-deps\win32\bin\avcodec.lib;..\..\obs-deps\win32\bin\avutil.lib;..\..\obs-deps\win32\bin\avformat.lib;..\..\obs-deps\win32\bin\libcurl.lib;..\..\obs-studio\vsbuild\libobs\Release\obs.lib;..\..\obs-studio\vsbuild\deps\blake2\Release\blake2.lib;..\..\obs-studio\vsbuild\deps\jansson\lib\Release\jansson.lib;..\..\obs-studio\vsbuild\deps\w32-pthreads\Release\w32-pthreads.lib;..\..\obs-studio\vsbuild\UI\obs-frontend-api\Release\obs-frontend-api.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <QtMoc>
-      <Define>UNICODE;WIN32;WIN64;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;%(PreprocessorDefinitions)</Define>
-      <IncludePath>.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;%(AdditionalIncludeDirectories)</IncludePath>
+      <Define>WIN32;_WINDOWS;UNICODE;_UNICODE;NDEBUG;DL_OPENGL="libobs-opengl.dll";DL_D3D9="";DL_D3D11="libobs-d3d11.dll";_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;HAVE_OBSCONFIG_H;QT_WIDGETS_LIB;QT_GUI_LIB;QT_CORE_LIB;QT_SVG_LIB;QT_NO_DEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</Define>
+      <IncludePath>.;json;fastdfs;win-update;obs-frontend-api;..\Server\common;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);..\..\obs-deps\win32\include;..\..\obs-studio\libobs;..\..\obs-studio\deps\libff;..\..\obs-studio\vsbuild\config;..\..\obs-studio\deps\blake2\src;..\..\obs-studio\deps\w32-pthreads;..\..\obs-studio\deps\jansson\src;..\..\obs-studio\vsbuild\deps\jansson\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtNetwork;$(QTDIR)\mkspecs\win32-msvc2015;%(AdditionalIncludeDirectories)</IncludePath>
       <OutputFile>.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</OutputFile>
       <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
     </QtMoc>
@@ -579,6 +580,26 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ExecutionDescription>Rcc'ing %(Identity)...</ExecutionDescription>
       <OutputFile>.\GeneratedFiles\qrc_%(Filename).cpp</OutputFile>
     </QtRcc>
+    <PostBuildEvent>
+      <Command>setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/UI/Release/Smart.exe F:/obs-studio/vsbuild/rundir/Release/bin/32bit/Smart.exe
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy_directory F:/obs-studio/UI/data F:/obs-studio/vsbuild/rundir/Release/data/obs-studio
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

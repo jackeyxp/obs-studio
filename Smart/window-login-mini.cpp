@@ -646,13 +646,13 @@ void CLoginMini::onTriggerTcpConnect()
 	// 每隔30秒检测一次，终端在中心服务器上在线汇报通知...
 	m_nOnLineTimer = this->startTimer(30 * 1000);
 	// 发起获取小程序Token值的网络命令...
-	//this->doWebGetMiniToken();
+	this->doWebGetMiniToken();
 	
 	/*== 仅供快速测试 ==*/
-	m_nDBUserID = 1;
-	m_nDBRoomID = 10001;
+	//m_nDBUserID = 1;
+	//m_nDBRoomID = 10001;
 	// 一切正常，开始登录指定的房间...
-	this->doWebGetMiniLoginRoom();  
+	//this->doWebGetMiniLoginRoom();  
 }
 
 // 响应中心会话反馈的小程序绑定登录信号槽事件通知...
