@@ -474,11 +474,13 @@ void CLoginMini::onProcMiniUserInfo(QNetworkReply *reply)
 			break;
 		}
 		// 判断获取到的用户信息是否有效...
+		CLIENT_TYPE nClientType = App()->GetClientType();
 		int nDBUserID = atoi(OBSApp::getJsonString(value["user"]["user_id"]).c_str());
 		int nUserType = atoi(OBSApp::getJsonString(value["user"]["user_type"]).c_str());
 		ASSERT(nDBUserID == m_nDBUserID);
-		// 身份类型必须大于等于讲师身份...
-		if (nUserType < 2) {
+		// 如果是学生端 => 对用户身份没有特殊要求...
+		// 如果是讲师端 => 用户类型不能小于讲师身份...
+		if ((nClientType == kClientTeacher) && (nUserType < kTeacherUser)) {
 			m_strScan = QStringLiteral("错误提示：登录用户低于讲师身份，无法使用讲师端软件。");
 			bIsError = true;
 			break;
