@@ -9,9 +9,11 @@
 注意 => github => 直接通过 同步菜单，就能提取服务器上的最新版本，并更新覆盖到本地版本；
 注意 => github => 通常都在master分支上进行操作 => 本地master => 远端master
 注意 => 版本更新日志  => E:\GitHub\build\rpm_bin\version.txt
-注意 => 旧日志参考位  => E:\GitHub\HaoYiYun\Document\进度日志.txt
-注意 => 新日志参考位  => E:\GitHub\HaoYiYun\Document\Smart日志.txt
+注意 => 云录播旧日志  => E:\GitHub\HaoYiYun\Document\进度日志.txt
+注意 => 云录播新日志  => E:\GitHub\HaoYiYun\Document\浩一云日志.txt
 注意 => 思考日志存放  => E:\GitHub\HaoYiYun\Document\阿里云\思考日志.txt
+注意 => 双师旧版日志  => E:\GitHub\HaoYiNoDelay\Document\进度日志.txt
+注意 => Smart开发日志 => F:\obs-studio\Document\Smart日志.txt
 注意 => Smart开发目录 => F:\obs-studio
 注意 => Smart服务器端 => /weike/server
 注意 => Smart网站位置 => /weike/smart
@@ -26,6 +28,13 @@
 单路编码器+HDMI  => 支持rtsp拉流 => https://item.taobao.com/item.htm?id=561510843519
 音频不能外置+SDI => 支持rtsp拉流 => https://item.taobao.com/item.htm?id=606447609194
 音频可以外置+SDI => 支持rtsp拉流 => https://item.taobao.com/item.htm?id=593712250882
+
+2019.12.02 - 物理吸音板解决空间回音方案
+===============================================================================================
+声博士全频吸音板 1200mm*300mm*30mm => https://detail.tmall.com/item.htm?id=543374947574&skuId=4416364090949
+环保聚酯纤维吸音板 8.5mm厚 => https://detail.tmall.com/item.htm?id=574571302113&skuId=3760917113495
+纤维吸音板专用工具包 1套 => https://detail.tmall.com/item.htm?id=582532732411&skuId=3914342081307
+纤维吸音板专用胶 5罐 => https://detail.tmall.com/item.htm?id=574571302113&skuId=3760917113501
 
 2019.11.16 - 演示记录 => 需要新增的功能列表
 ===============================================================================================
