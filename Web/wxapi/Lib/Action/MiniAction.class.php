@@ -742,7 +742,7 @@ class MiniAction extends Action
       // 根据id字段判断是否有记录...
       if( isset($dbUser['user_id']) ) {
         // 更新已有的用户记录...
-        $dbUser['update_time'] = date('Y-m-d H:i:s');
+        $dbUser['updated'] = date('Y-m-d H:i:s');
         $condition['user_id'] = $dbUser['user_id'];
         D('user')->where($condition)->save($dbUser);
       } else {
