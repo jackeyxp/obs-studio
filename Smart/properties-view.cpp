@@ -27,6 +27,7 @@
 #include "qt-wrappers.hpp"
 #include "properties-view.hpp"
 #include "properties-view.moc.hpp"
+#include "window-basic-main.hpp"
 #include "window-wait-ppt.hpp"
 #include "obs-app.hpp"
 
@@ -133,18 +134,175 @@ void OBSPropertiesView::RefreshProperties()
 	SetScrollPos(h, v);
 	setSizePolicy(mainPolicy);
 
+	// 如果是rtp数据源，进行特殊处理...
+	if( m_bUseRtpSource ) {
+		// 添加选择摄像头的提示信息框...
+		QLabel * selectLabel = new QLabel(QTStr("Basic.PropertiesWindow.SelectCamera"));
+		layout->addWidget(selectLabel);
+		// 添加自定义列表框...
+		m_listCamera = new QListWidget();
+		m_listCamera->setResizeMode(QListView::Adjust);
+		m_listCamera->setMinimumSize(100, 480);
+		m_listCamera->setSizePolicy(mainPolicy);
+		layout->addWidget(m_listCamera);
+		// 设置单选模式，设置选中记录的背景色...
+		m_listCamera->setSelectionMode(QAbstractItemView::SingleSelection);
+		m_listCamera->setStyleSheet("QListView::item:selected {background: #4FC3F7;}");
+		// 设置关联信号槽，这样可以简化很多判断操作 => 支持多路之后，这个接口需要去掉了...
+		//this->connect(m_listCamera, SIGNAL(itemSelectionChanged()), this, SLOT(onListCameraSelectionChanged()));
+		// 调用App的接口，从中转服务器获取当前房间里在线的摄像头列表...
+		App()->doSendCameraOnLineListCmd();
+	}
+
 	lastFocused.clear();
 	if (lastWidget) {
 		lastWidget->setFocus(Qt::OtherFocusReason);
 		lastWidget = nullptr;
 	}
 
-	if (hasNoProperties) {
+	// 如果没有属性，并且不是rtp数据源，才显示没有属性标签...
+	if (hasNoProperties && !m_bUseRtpSource) {
 		QLabel *noPropertiesLabel = new QLabel(NO_PROPERTIES_STRING);
 		layout->addWidget(noPropertiesLabel);
 	}
 
 	emit PropertiesRefreshed();
+}
+
+bool OBSPropertiesView::doCheckCamera(int nDBCameraID)
+{
+	// 定义一个结构体...
+	struct ItemInfo {
+		int   nDBCameraID;
+		bool  bIsCameraUse;
+	} info = { nDBCameraID, false };
+	// 获取主窗口对象，并枚举场景对象里面的所有rtp数据源...
+	OBSBasic * main = reinterpret_cast<OBSBasic*>(App()->GetMainWindow());
+	auto func = [](obs_scene_t *, obs_sceneitem_t *item, void *param) {
+		ItemInfo * lpInfo = reinterpret_cast<ItemInfo*>(param);
+		obs_source_t * lpSource = obs_sceneitem_get_source(item);
+		const char * lpSrcID = obs_source_get_id(lpSource);
+		// 进行ID判断，如果不是rtp资源，返回true，继续查找...
+		if (astrcmpi(lpSrcID, App()->InteractSmartSource()) != 0)
+			return true;
+		// 如果是rtp资源，找到摄像头通道编号和场景资源配置对象...
+		obs_data_t * lpSettings = obs_source_get_settings(lpSource);
+		int theDBCameraID = obs_data_get_int(lpSettings, "live_id");
+		// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏...
+		obs_data_release(lpSettings);
+		// 如果与输入的摄像头编号一致，赋值跳出查找...
+		if (theDBCameraID == lpInfo->nDBCameraID) {
+			lpInfo->bIsCameraUse = true;
+			return false;
+		}
+		// 继续查找...
+		return true;
+	};
+	// 枚举所有的有效在线场景数据源列表...
+	obs_scene_enum_items(main->GetCurrentScene(), func, &info);
+	return info.bIsCameraUse;
+}
+
+// 响应服务器发送的当前房间在线的摄像头列表事件通知...
+void OBSPropertiesView::onTriggerCameraList(Json::Value & value)
+{
+	// 必须是rtp数据源，并且列表框对象必须有效...
+	if (!m_bUseRtpSource || m_listCamera == NULL)
+		return;
+	// 如果不是数组，或者数组长度为0，直接返回...
+	if (!value.isArray() || value.size() <= 0)
+		return;
+	// 从配置文件中读取之前选中的摄像头通道编号，保存到变量当中...
+	int nCurSelDBCameraID = obs_data_get_int(this->GetSettings(), "live_id");
+	// 变量数组，获取每行数据内容 => room_id|camera_id|camera_name|pc_name
+	QListWidgetItem * theSelectItem = nullptr;
+	for (int i = 0; i < value.size(); ++i) {
+		int nDBCameraID = atoi(OBSApp::getJsonString(value[i]["camera_id"]).c_str());
+		int nRoomID = atoi(OBSApp::getJsonString(value[i]["room_id"]).c_str());
+		bool bIsCameraUsed = this->doCheckCamera(nDBCameraID);
+		QIcon theIcon = QIcon(QString(":/res/images/camera%1").arg(bIsCameraUsed ? "_on.png" : ".png"));
+		QString strCameraName = QString::fromUtf8(OBSApp::getJsonString(value[i]["camera_name"]).c_str());
+		QString strPCName = QString::fromUtf8(OBSApp::getJsonString(value[i]["pc_name"]).c_str());
+		QString strItemValue = QString("%1 - %2 - ID: %3").arg(strPCName).arg(strCameraName).arg(nDBCameraID);
+		QListWidgetItem * theListItem = new QListWidgetItem(theIcon, strItemValue);
+		theListItem->setData(Qt::UserRole, nDBCameraID);
+		m_listCamera->insertItem(0, theListItem);
+		// 如果选中摄像头与当前条目一致，保存选中条目...
+		theSelectItem = (nCurSelDBCameraID == nDBCameraID) ? theListItem : theSelectItem;
+	}
+	// 如果行数不为0，选中第一行内容...
+	if (theSelectItem != nullptr) {
+		m_listCamera->setCurrentItem(theSelectItem);
+	} else {
+		m_listCamera->setCurrentRow(0);
+	}
+}
+
+bool OBSPropertiesView::doCheckRtpSource()
+{
+	// 如果不是rtp数据源，直接返回 。。。
+	if (!m_bUseRtpSource || m_listCamera == NULL)
+		return true;
+	// 获取当前正在使用的拉流通道编号...
+	int nCurDBCameraID = (int)obs_data_get_int(this->GetSettings(), "live_id");
+	// 找到当前选中的记录编号，没有选中记录，直接返回...
+	QListWidgetItem * lpCurItem = m_listCamera->currentItem();
+	if (lpCurItem == NULL || obj == NULL)
+		return true;
+	// 获取当前已经选中的通道编号...
+	QString strCameraName = lpCurItem->text();
+	int nSelDBCameraID = lpCurItem->data(Qt::UserRole).toInt();
+	// 当前选中的通道编号与rtp-source里面的通道编号一致，直接返回...
+	if (nSelDBCameraID == nCurDBCameraID)
+		return true;
+	ASSERT(nSelDBCameraID > 0 && nSelDBCameraID != nCurDBCameraID);
+	// 如果当前选中的摄像头通道已经被占用，返回失败，更新提示信息...
+	if (this->doCheckCamera(nSelDBCameraID)) {
+		OBSMessageBox::information(this,
+			QTStr("Smart.Error.Title"),
+			QTStr("Basic.PropertiesWindow.UsedCamera"));
+		return false;
+	}
+	// 停止当前正在运行的拉流线程对象，设置配置变化标志...
+	obs_data_set_bool(this->GetSettings(), "live_on", false);
+	// 直接调用接口，更新当前资源的配置信息，停止接收数据...
+	this->UpdateSettings();
+	// 注意：一定要保证服务器反馈kCmd_Camera_LiveStop命令，响应onRemoteCameraLiveStop接口...
+	// 如果当前通道有效，通知正在拉流通道对应的学生端，停止推流 => 服务器必须反馈相同命令...
+	if (nCurDBCameraID > 0) {
+		App()->doSendCameraLiveStopCmd(nCurDBCameraID);
+		// 服务器反馈之后，调用doRtpStopClose()关闭属性窗口...
+		return false;
+	}
+	// 当前数据源所保存的摄像头通道编号无效，选中通道有效，直接发起开始命令...
+	ASSERT(nCurDBCameraID <= 0 && nSelDBCameraID > 0);
+	// 如果当前通道无效，直接发起新通道的开启命令，省掉了先发起停止命令再发起开始命令的过程...
+	obs_data_set_string(this->GetSettings(), "live_name", strCameraName.toStdString().c_str());
+	obs_data_set_int(this->GetSettings(), "live_id", nSelDBCameraID);
+	App()->doSendCameraLiveStartCmd(nSelDBCameraID);
+	return true;
+}
+
+// 响应服务器返回的学生端指定通道停止推流成功的事件通知...
+void OBSPropertiesView::onTriggerCameraLiveStop(int nDBCameraID)
+{
+	///////////////////////////////////////////////////////////
+	// 注意：nDBCameraID是之前被停止的通道编号...
+	///////////////////////////////////////////////////////////
+	// 如果不是rtp数据源，直接返回...
+	if (!m_bUseRtpSource || m_listCamera == NULL)
+		return;
+	// 找到当前选中的记录编号，没有选中记录，直接返回...
+	QListWidgetItem * lpCurItem = m_listCamera->currentItem();
+	if (lpCurItem == NULL || obj == NULL)
+		return;
+	// 获取当前已经选中的通道编号...
+	QString strCameraName = lpCurItem->text();
+	int nSelDBCameraID = lpCurItem->data(Qt::UserRole).toInt();
+	// 调用远程接口向中转服务器发送开启推流命令 => 服务器反馈之后，再通过 OBSBasic::doRemoteLiveOnLine()，重新创建拉流线程...
+	obs_data_set_string(this->GetSettings(), "live_name", strCameraName.toStdString().c_str());
+	obs_data_set_int(this->GetSettings(), "live_id", nSelDBCameraID);
+	App()->doSendCameraLiveStartCmd(nSelDBCameraID);
 }
 
 void OBSPropertiesView::SetScrollPos(int h, int v)
@@ -172,17 +330,19 @@ void OBSPropertiesView::GetScrollPos(int &h, int &v)
 }
 
 OBSPropertiesView::OBSPropertiesView(OBSData settings_, void *obj_,
-				     PropertiesReloadCallback reloadCallback,
-				     PropertiesUpdateCallback callback_,
-				     int minSize_)
+		PropertiesReloadCallback reloadCallback,
+		PropertiesUpdateCallback callback_, 
+		bool inUseRtpSource, int minSize_)
 	: VScrollArea(nullptr),
 	  properties(nullptr, obs_properties_destroy),
 	  settings(settings_),
 	  obj(obj_),
 	  reloadCallback(reloadCallback),
 	  callback(callback_),
-	  minSize(minSize_)
+	  minSize(minSize_),
+	  m_bUseRtpSource(inUseRtpSource)
 {
+	m_listCamera = NULL;
 	setFrameShape(QFrame::NoFrame);
 	ReloadProperties();
 }
@@ -197,6 +357,8 @@ OBSPropertiesView::OBSPropertiesView(OBSData settings_, const char *type_,
 	  reloadCallback(reloadCallback_),
 	  minSize(minSize_)
 {
+	m_listCamera = NULL;
+	m_bUseRtpSource = false;
 	setFrameShape(QFrame::NoFrame);
 	ReloadProperties();
 }

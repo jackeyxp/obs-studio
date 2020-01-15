@@ -1057,7 +1057,7 @@ retryScene:
 
 	// 注意：必须在加载完毕之后再删除...
 	// 新增删除交互学生数据源操作...
-	this->doRemoveSmartSource();
+	//this->doRemoveSmartSource();
 }
 
 #define SERVICE_PATH "service.json"
@@ -4033,7 +4033,7 @@ void OBSBasic::closeEvent(QCloseEvent *event)
 	
 	//注意：这里不能完全删除smart_source，还有OBSRef存在，是需要异步删除的...
 	//注意：退出时，只能删除smart_source_item，还会将source信息存盘，等待启动时再删除之...
-	this->doRemoveSmartSource();
+	//this->doRemoveSmartSource();
 
 	blog(LOG_INFO, SHUTDOWN_SEPARATOR);
 
@@ -4952,9 +4952,10 @@ QMenu *OBSBasic::BuildAddSourcePopupMenu()
 		// 去掉 图片幻灯片 的菜单添加入口...
 		//if (astrcmpi(type, "slideshow") == 0)
 		//	continue;
-		// 去掉 smart_source 的菜单添加入口...
-		if (astrcmpi(type, App()->InteractSmartSource()) == 0)
-			continue;
+		// 修改 smart_source 的菜单默认名称...
+		if (astrcmpi(type, App()->InteractSmartSource()) == 0) {
+			name = Str("Basic.Main.Student.Source");
+		}
 		// 去掉 色源 的菜单添加入口...
 		if (astrcmpi(type, "color_source") == 0)
 			continue;
@@ -5336,6 +5337,10 @@ void OBSBasic::OpenSceneFilters()
 	"==== Streaming Start ==============================================="
 #define STREAMING_STOP \
 	"==== Streaming Stop ================================================"
+
+void OBSBasic::StreamingStatus(bool bIsDelete, int nTotalKbps, int nAudioKbps, int nVideoKbps)
+{
+}
 
 void OBSBasic::StartStreaming()
 {
@@ -8354,7 +8359,10 @@ void OBSBasic::CheckDiskSpaceRemaining()
 
 void OBSBasic::onRemoteUdpLogout(int nLiveID, int tmTag, int idTag)
 {
-
+	// 如果不是讲师端对象 => 直接返回...
+	if (tmTag != TM_TAG_TEACHER)
+		return;
+	this->onRemoteLiveOnLine(nLiveID, false);
 }
 
 // 响应服务器发送的登录事件通知...
@@ -8362,8 +8370,79 @@ void OBSBasic::onRemoteSmartLogin(int nLiveID)
 {
 }
 
+void OBSBasic::onRemoteCameraPullStart(int nDBCameraID)
+{
+}
+
+// 响应服务器发送的当前房间在线的摄像头列表事件通知...
+void OBSBasic::onRemoteCameraList(Json::Value & value)
+{
+	if (properties == NULL) return;
+	OBSPropertiesView * lpView = properties->GetPropView();
+	((lpView != NULL) ? lpView->onTriggerCameraList(value) : NULL);
+}
+
+// 响应服务器返回的学生端指定通道停止推流成功的事件通知...
+void OBSBasic::onRemoteCameraLiveStop(int nDBCameraID)
+{
+	if (properties == NULL) return;
+	OBSPropertiesView * lpView = properties->GetPropView();
+	((lpView != NULL) ? lpView->onTriggerCameraLiveStop(nDBCameraID) : NULL);
+	// 响应完毕之后，关闭属性配置窗口...
+	properties->doRtpStopClose();
+}
+
+void OBSBasic::onRemoteCameraLiveStart(int nDBCameraID)
+{
+}
+
+void OBSBasic::onRemoteDeleteExAudioThread()
+{
+}
+
 // 响应服务器发送的smart_source重建事件通知...
 void OBSBasic::onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine)
+{
+	// 通过摄像头编号查找场景对应的数据源...
+	for (int i = 0; i < ui->sources->count(); i++) {
+		obs_sceneitem_t * lpSceneitem = ui->sources->Get(i);
+		obs_source_t * lpFindSource = obs_sceneitem_get_source(lpSceneitem);
+		obs_data_t * lpSettings = obs_source_get_settings(lpFindSource);
+		const char * lpID = obs_source_get_id(lpFindSource);
+		// 场景配置无效，继续寻找...
+		if (lpSettings == NULL)
+			continue;
+		// 如果不是互动学生端数据源，继续寻找...
+		if (astrcmpi(lpID, App()->InteractSmartSource()) != 0) {
+			obs_data_release(lpSettings);
+			continue;
+		}
+		// 推流编号和场景配置不一致，继续寻找...
+		if (nLiveID != obs_data_get_int(lpSettings, "live_id")) {
+			obs_data_release(lpSettings);
+			continue;
+		}
+		// 如果云台窗口有效，需要更新...
+		this->doUpdatePTZ(nLiveID);
+		// 将rtp_source需要的参数写入配置结构当中...
+		int nRoomID = atoi(App()->GetRoomIDStr().c_str());
+		obs_data_set_int(lpSettings, "room_id", nRoomID);
+		obs_data_set_int(lpSettings, "live_id", nLiveID);
+		obs_data_set_bool(lpSettings, "live_on", bIsLiveOnLine);
+		obs_data_set_int(lpSettings, "udp_port", App()->GetUdpPort());
+		obs_data_set_string(lpSettings, "udp_addr", App()->GetUdpAddr().c_str());
+		obs_data_set_int(lpSettings, "tcp_socket", App()->GetRemoteTcpSockFD());
+		obs_data_set_int(lpSettings, "client_type", App()->GetClientType());
+		// 将新的资源配置应用到当前rtp_source资源对象当中...
+		obs_source_update(lpFindSource, lpSettings);
+		// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏...
+		obs_data_release(lpSettings);
+		// 跳出查找循环...
+		break;
+	}
+}
+
+/*void OBSBasic::onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine)
 {
 	// 在线状态 => 直接新建数据源...
 	// 离线状态 => 直接删除数据源...
@@ -8416,7 +8495,6 @@ void OBSBasic::onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine)
 	// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏...
 	obs_data_release(lpNewSettings);
 }
-
 void OBSBasic::doRemoveSmartSource()
 {
 	for (int i = 0; i < ui->sources->count(); i++) {
@@ -8426,4 +8504,4 @@ void OBSBasic::doRemoveSmartSource()
 			obs_sceneitem_remove(lpSceneitem);
 		}
 	}
-}
+}*/

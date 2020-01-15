@@ -42,6 +42,11 @@ const char * get_command_name(int inCmd)
 	case kCmd_Smart_OnLine:         return "Smart_OnLine";
 	case kCmd_Live_OnLine:          return "Live_OnLine";
 	case kCmd_UDP_Logout:           return "UDP_Logout";
+	case kCmd_Camera_PullStart:     return "Camera_PullStart";
+	case kCmd_Camera_PullStop:      return "Camera_PullStop";
+	case kCmd_Camera_OnLineList:    return "Camera_OnLineList";
+	case kCmd_Camera_LiveStart:     return "Camera_LiveStart";
+	case kCmd_Camera_LiveStop:      return "Camera_LiveStop";
 	case kCmd_UdpServer_Login:      return "UdpServer_Login";
 	case kCmd_UdpServer_OnLine:     return "UdpServer_OnLine";
 	case kCmd_UdpServer_AddTeacher: return "UdpServer_AddTeacher";
@@ -508,8 +513,10 @@ void CRemoteSession::onReadyRead()
 		case kCmd_Smart_OnLine:        bResult = this->doCmdSmartOnLine(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		case kCmd_Live_OnLine:         bResult = this->doCmdLiveOnLine(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		case kCmd_UDP_Logout:          bResult = this->doCmdUdpLogout(lpDataPtr, lpCmdHeader->m_pkg_len); break;
-		//case kCmd_Camera_LiveStop:   bResult = this->doCmdTeacherCameraLiveStop(lpDataPtr, lpCmdHeader->m_pkg_len); break;
-		//case kCmd_Camera_OnLineList: bResult = this->doCmdTeacherCameraList(lpDataPtr, lpCmdHeader->m_pkg_len); break;
+		case kCmd_Camera_PullStart:    bResult = this->doCmdCameraPullStart(lpDataPtr, lpCmdHeader->m_pkg_len); break;
+		case kCmd_Camera_OnLineList:   bResult = this->doCmdCameraList(lpDataPtr, lpCmdHeader->m_pkg_len); break;
+		case kCmd_Camera_LiveStop:     bResult = this->doCmdCameraLiveStop(lpDataPtr, lpCmdHeader->m_pkg_len); break;
+		case kCmd_Camera_LiveStart:    bResult = this->doCmdCameraLiveStart(lpDataPtr, lpCmdHeader->m_pkg_len); break;
 		//case kCmd_Screen_Packet:     bResult = this->doCmdScreenPacket(lpDataPtr, lpCmdHeader); break;
 		//case kCmd_Screen_Finish:     bResult = this->doCmdScreenFinish(lpDataPtr, lpCmdHeader); break;
 		}
@@ -517,6 +524,20 @@ void CRemoteSession::onReadyRead()
 		m_strRecv.erase(0, lpCmdHeader->m_pkg_len + sizeof(Cmd_Header));
 		// 如果还有数据，则继续解析命令...
 	}
+}
+
+bool CRemoteSession::doCmdCameraPullStart(const char * lpData, int nSize)
+{
+	Json::Value value;
+	// 进行Json数据包的内容解析...
+	if (!this->doParseJson(lpData, nSize, value)) {
+		blog(LOG_INFO, "CRemoteSession::doParseJson Error!");
+		return false;
+	}
+	// 获取返回得到的camera_id编号 => 便于定位...
+	int nDBCameraID = atoi(OBSApp::getJsonString(value["camera_id"]).c_str());
+	emit this->doTriggerCameraPullStart(nDBCameraID);
+	return true;
 }
 
 bool CRemoteSession::doCmdSmartLogin(const char * lpData, int nSize)
@@ -679,10 +700,10 @@ bool CRemoteSession::doCmdScreenFinish(const char * lpData, Cmd_Header * lpCmdHe
 	// 需要通过信号槽，通知界面层，更新学生屏幕分享数据源...
 	emit doTriggerScreenFinish(nScreenID, QString("%1").arg(strUserName.c_str()), strQFileName);
 	return true;
-}
+}*/
 
 // 处理由服务器返回的学生端指定通道停止推流成功的事件通知...
-bool CRemoteSession::doCmdTeacherCameraLiveStop(const char * lpData, int nSize)
+bool CRemoteSession::doCmdCameraLiveStop(const char * lpData, int nSize)
 {
 	Json::Value value;
 	// 进行Json数据包的内容解析...
@@ -697,8 +718,24 @@ bool CRemoteSession::doCmdTeacherCameraLiveStop(const char * lpData, int nSize)
 	return true;
 }
 
+bool CRemoteSession::doCmdCameraLiveStart(const char * lpData, int nSize)
+{
+	Json::Value value;
+	// 进行Json数据包的内容解析...
+	if (!this->doParseJson(lpData, nSize, value)) {
+		blog(LOG_INFO, "CRemoteSession::doParseJson Error!");
+		return false;
+	}
+	// 获取服务器发送过来的数据信息 => 只需要摄像头通道编号就可以了...
+	int nDBCameraID = atoi(OBSApp::getJsonString(value["camera_id"]).c_str());
+	// 通知左侧窗口，对应通道可以创建推流线程了...
+	emit this->doTriggerCameraLiveStart(nDBCameraID);
+	emit this->doTriggerDeleteExAudioThread();
+	return true;
+}
+
 // 处理由服务器返回的讲师端所在房间的在线摄像头列表...
-bool CRemoteSession::doCmdTeacherCameraList(const char * lpData, int nSize)
+bool CRemoteSession::doCmdCameraList(const char * lpData, int nSize)
 {
 	Json::Value value;
 	// 进行Json数据包的内容解析...
@@ -715,7 +752,7 @@ bool CRemoteSession::doCmdTeacherCameraList(const char * lpData, int nSize)
 	// 通知主窗口界面，已获取摄像头在线列表成功...
 	emit this->doTriggerCameraList(value["list_data"]);
 	return true;
-}*/
+}
 
 void CRemoteSession::onDisConnected()
 {
@@ -737,7 +774,7 @@ void CRemoteSession::onError(QAbstractSocket::SocketError nError)
 }
 
 // 通过中转服务器向学生端发送停止通道推流工作...
-/*bool CRemoteSession::doSendCameraLiveStopCmd(int nDBCameraID)
+bool CRemoteSession::doSendCameraLiveStopCmd(int nDBCameraID)
 {
 	// 没有处于链接状态，直接返回...
 	if (!m_bIsConnected)
@@ -747,8 +784,6 @@ void CRemoteSession::onError(QAbstractSocket::SocketError nError)
 	char szDataBuf[32] = { 0 };
 	sprintf(szDataBuf, "%d", nDBCameraID);
 	root["camera_id"] = szDataBuf;
-	//sprintf(szDataBuf, "%d", nSceneItemID);
-	//root["sitem_id"] = szDataBuf;
 	strJson = root.toStyledString();
 	// 打印json数据包，测试使用...
 	//blog(LOG_INFO, "Json => %d, %s", strJson.size(), strJson.c_str());
@@ -767,14 +802,12 @@ bool CRemoteSession::doSendCameraLiveStartCmd(int nDBCameraID)
 	char szDataBuf[32] = { 0 };
 	sprintf(szDataBuf, "%d", nDBCameraID);
 	root["camera_id"] = szDataBuf;
-	//sprintf(szDataBuf, "%d", nSceneItemID);
-	//root["sitem_id"] = szDataBuf;
 	strJson = root.toStyledString();
 	// 调用统一的接口进行命令数据的发送操作...
 	return this->doSendCommonCmd(kCmd_Camera_LiveStart, strJson.c_str(), strJson.size());
 }
 
-bool CRemoteSession::doSendCameraPTZCmd(int nDBCameraID, int nCmdID, int nSpeedVal)
+/*bool CRemoteSession::doSendCameraPTZCmd(int nDBCameraID, int nCmdID, int nSpeedVal)
 {
 	// 没有处于链接状态，直接返回...
 	if (!m_bIsConnected)
@@ -806,7 +839,7 @@ bool CRemoteSession::doSendCameraPusherIDCmd(int nDBCameraID)
 	strJson = root.toStyledString();
 	// 调用统一的接口进行命令数据的发送操作...
 	return this->doSendCommonCmd(kCmd_Camera_PusherID, strJson.c_str(), strJson.size());
-}
+}*/
 
 // 获取讲师端所在房间的所有在线摄像头列表...
 bool CRemoteSession::doSendCameraOnLineListCmd()
@@ -817,7 +850,41 @@ bool CRemoteSession::doSendCameraOnLineListCmd()
 	ASSERT(m_bIsConnected);
 	// 调用统一的接口进行命令数据的发送操作...
 	return this->doSendCommonCmd(kCmd_Camera_OnLineList);
-}*/
+}
+
+// 向中转服务器发送通道在线(启动)通知...
+bool CRemoteSession::doSendCameraPullStartCmd(int nDBCameraID)
+{
+	// 没有处于链接状态，直接返回...
+	if (!m_bIsConnected)
+		return false;
+	// 组合命令需要的JSON数据包 => 通道编号|名称...
+	string strJson;	Json::Value root;
+	char szDataBuf[32] = { 0 };
+	sprintf(szDataBuf, "%d", nDBCameraID);
+	root["camera_id"] = szDataBuf;
+	root["room_id"] = App()->GetRoomIDStr();
+	root["camera_name"] = App()->GetCameraSName(nDBCameraID);
+	strJson = root.toStyledString(); ASSERT(strJson.size() > 0);
+	// 调用统一的接口进行命令数据的发送操作...
+	return this->doSendCommonCmd(kCmd_Camera_PullStart, strJson.c_str(), strJson.size());
+}
+
+// 向中转服务器发送通道离线(停止)通知...
+bool CRemoteSession::doSendCameraPullStopCmd(int nDBCameraID)
+{
+	// 没有处于链接状态，直接返回...
+	if (!m_bIsConnected)
+		return false;
+	// 组合命令需要的JSON数据包 => 通道编号...
+	string strJson;	Json::Value root;
+	char szDataBuf[32] = { 0 };
+	sprintf(szDataBuf, "%d", nDBCameraID);
+	root["camera_id"] = szDataBuf;
+	strJson = root.toStyledString();
+	// 调用统一的接口进行命令数据的发送操作...
+	return this->doSendCommonCmd(kCmd_Camera_PullStop, strJson.c_str(), strJson.size());
+}
 
 // 每隔30秒发送在线命令包...
 bool CRemoteSession::doSendOnLineCmd()

@@ -231,9 +231,33 @@ class MiniAction extends Action
       // 填充UDPCenter的地址和端口...
       $arrErr['udpcenter_addr'] = $dbSys['udpcenter_addr'];
       $arrErr['udpcenter_port'] = $dbSys['udpcenter_port'];
+      // 生成与本机相关的唯一本地摄像头和老师摄像头记录...
+      $this->doBuildStudentDBCamera($arrErr['smart_id'], 0, "本地摄像头");
+      $this->doBuildStudentDBCamera($arrErr['smart_id'], 1, "讲师端画面");
+      // 填充所有与本机相关的摄像头列表...
+      $condition['smart_id'] = $arrErr['smart_id'];
+      $arrErr['camera'] = D('camera')->where($condition)->select();
     } while ( false );
     // 直接反馈查询结果...
     echo json_encode($arrErr);
+  }
+  // 通过smart_id查找唯一摄像头编号，没有的话创建新记录...
+  private function doBuildStudentDBCamera($inSmartID, $inType, $inName)
+  {
+    $mapFind['camera_type'] = $inType;
+    $mapFind['smart_id'] = $inSmartID;
+    $dbCamera = D('camera')->where($mapFind)->find();
+    if (count($dbCamera) <= 0) {
+      $arrData['camera_name'] = $inName;
+      $arrData['camera_type'] = $mapFind['camera_type'];
+      $arrData['smart_id'] = $mapFind['smart_id'];
+      $arrData['created'] = date('Y-m-d H:i:s');
+      $arrData['updated'] = date('Y-m-d H:i:s');
+      $theDBCameraID = D('camera')->add($arrData);
+    } else {
+      $theDBCameraID = $dbCamera['camera_id'];
+    }
+    return $theDBCameraID;
   }
   //
   // 处理终端发起的获取登录用户详情的命令接口...

@@ -101,17 +101,22 @@ public:
 	virtual ~CRemoteSession();
 signals:
 	void doTriggerSmartLogin(int nLiveID);
+	void doTriggerCameraPullStart(int nDBCameraID);
 	void doTriggerLiveOnLine(int nLiveID, bool bIsLiveOnLine);
 	void doTriggerUdpLogout(int nLiveID, int tmTag, int idTag);
-	//void doTriggerCameraLiveStop(int nDBCameraID);
-	//void doTriggerCameraList(Json::Value & value);
+	void doTriggerCameraList(Json::Value & value);
+	void doTriggerCameraLiveStop(int nDBCameraID);
+	void doTriggerCameraLiveStart(int nDBCameraID);
+	void doTriggerDeleteExAudioThread();
 	//void doTriggerScreenFinish(int nScreenID, QString strQUser, QString strQFile);
 public:
 	bool IsCanReBuild() { return m_bCanReBuild; }
 	bool doSendOnLineCmd();
-	//bool doSendCameraOnLineListCmd();
-	//bool doSendCameraLiveStopCmd(int nDBCameraID);
-	//bool doSendCameraLiveStartCmd(int nDBCameraID);
+	bool doSendCameraOnLineListCmd();
+	bool doSendCameraPullStartCmd(int nDBCameraID);
+	bool doSendCameraPullStopCmd(int nDBCameraID);
+	bool doSendCameraLiveStopCmd(int nDBCameraID);
+	bool doSendCameraLiveStartCmd(int nDBCameraID);
 	//bool doSendCameraPusherIDCmd(int nDBCameraID);
 	//bool doSendCameraPTZCmd(int nDBCameraID, int nCmdID, int nSpeedVal);
 protected slots:
@@ -127,8 +132,10 @@ private:
 	bool doCmdSmartOnLine(const char * lpData, int nSize);
 	bool doCmdLiveOnLine(const char * lpData, int nSize);
 	bool doCmdUdpLogout(const char * lpData, int nSize);
-	//bool doCmdTeacherCameraList(const char * lpData, int nSize);
-	//bool doCmdTeacherCameraLiveStop(const char * lpData, int nSize);
+	bool doCmdCameraPullStart(const char * lpData, int nSize);
+	bool doCmdCameraList(const char * lpData, int nSize);
+	bool doCmdCameraLiveStop(const char * lpData, int nSize);
+	bool doCmdCameraLiveStart(const char * lpData, int nSize);
 	//bool doCmdScreenPacket(const char * lpData, Cmd_Header * lpCmdHeader);
 	//bool doCmdScreenFinish(const char * lpData, Cmd_Header * lpCmdHeader);
 	bool SendData(const char * lpDataPtr, int nDataSize);

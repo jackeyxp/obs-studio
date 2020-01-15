@@ -63,13 +63,13 @@ private:
 private slots:
 	void on_buttonBox_clicked(QAbstractButton *button);
 	void AddPreviewButton();
-
 public:
 	OBSBasicProperties(QWidget *parent, OBSSource source_);
 	~OBSBasicProperties();
-
+public:
 	void Init();
-
+	void doRtpStopClose();
+	OBSPropertiesView * GetPropView() { return view; }
 protected:
 	virtual void closeEvent(QCloseEvent *event) override;
 	virtual void reject() override;

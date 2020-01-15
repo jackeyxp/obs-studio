@@ -387,6 +387,8 @@ static inline const char *GetSourceDisplayName(const char *id, bool bIsScreen)
 		return Str("Basic.Scene");
 	if (strcmp(id, "slideshow") == 0 && bIsScreen)
 		return Str("Basic.Student.Screen");
+	if (strcmp(id, App()->InteractSmartSource()) == 0)
+		return Str("Basic.Main.Student.Source");
 	return obs_source_get_display_name(id);
 }
 

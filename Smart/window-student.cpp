@@ -5,7 +5,6 @@
 #include "window-view-camera.hpp"
 #include "window-view-teacher.hpp"
 #include "window-basic-settings.hpp"
-#include "window-student-output.hpp"
 
 #include "display-helpers.hpp"
 #include <util/profiler.hpp>
@@ -61,11 +60,6 @@ CStudentWindow::~CStudentWindow()
 	if (m_nOutputTimer > 0) {
 		this->killTimer(m_nOutputTimer);
 		m_nOutputTimer = -1;
-	}
-	// 释放学生端输出对象集合体...
-	if (m_lpStudentOutput != nullptr) {
-		delete m_lpStudentOutput;
-		m_lpStudentOutput = nullptr;
 	}
 }
 
@@ -160,8 +154,8 @@ void CStudentWindow::AddSceneItem(OBSSceneItem item)
 		obs_source_get_name(sceneSource));
 	// 根据数据源id判断并保存摄像头数据源 => 保存场景条目，计数器在数据源上...
 	/*bool bIsDShowInput = ((astrcmpi(obs_source_get_id(itemSource), App()->DShowInputSource()) == 0) ? true : false);
-	if (itemSource != nullptr && bIsDShowInput && m_viewCamera.isNull()) {
-		m_viewCamera->SaveDShowSceneItem(item);
+	if (itemSource != nullptr && bIsDShowInput && m_viewSoftCamera.isNull()) {
+		m_viewSoftCamera->SaveDShowSceneItem(item);
 	}
 	// 如果是smart_source数据源 => 老师端数据源，直接存放到右侧窗口对象当中...
 	bool bIsTeacherSource = ((astrcmpi(obs_source_get_id(itemSource), App()->InteractSmartSource()) == 0) ? true : false);
@@ -180,12 +174,9 @@ void CStudentWindow::ResetOutputs()
 	ProfileScope("CStudentWindow::ResetOutputs");
 	const char *mode = config_get_string(basicConfig, "Output", "Mode");
 	bool advOut = astrcmpi(mode, "Advanced") == 0;
-	if (m_lpStudentOutput != nullptr) {
-		delete m_lpStudentOutput;
-		m_lpStudentOutput = nullptr;
+	if (!m_viewSoftCamera.isNull()) {
+		m_viewSoftCamera->doResetOutputs();
 	}
-	// 创建新的学生端输出对象集合体 => 录像|推流...
-	m_lpStudentOutput = new CStudentOutput(this);
 }
 
 void CStudentWindow::OBSInit()
@@ -261,8 +252,6 @@ void CStudentWindow::OBSInit()
 
 	blog(LOG_INFO, STARTUP_SEPARATOR);
 
-	this->ResetOutputs();
-
 	//InitPrimitives();
 	
 	// 注意：为了解决Load加载慢的问题，进行了2次异步操作...
@@ -314,12 +303,12 @@ void CStudentWindow::DeferredLoad(const QString &file, int requeueCount)
 		return;
 	}
 	// 创建摄像头预览窗口，关联预览函数接口...
-	m_viewCamera = new CViewCamera(this);
+	m_viewSoftCamera = new CViewCamera(this);
 	// 创建右侧教师预览窗口，关联预览函数接口...
 	m_viewTeacher = new CViewTeacher(this);
 	// 这里的操作为了避免发生闪烁...
 	m_viewTeacher->resize(0, 0);
-	m_viewCamera->resize(0, 0);
+	m_viewSoftCamera->resize(0, 0);
 
 	// 加载系统各种配置参数...
 	this->Load(QT_TO_UTF8(file));
@@ -328,8 +317,8 @@ void CStudentWindow::DeferredLoad(const QString &file, int requeueCount)
 	m_viewTeacher->doInitTeacher();
 	m_viewTeacher->show();
 	// 加载场景配置之后再初始化并显示窗口...
-	m_viewCamera->doInitCamera();
-	m_viewCamera->show();
+	m_viewSoftCamera->doInitCamera();
+	m_viewSoftCamera->show();
 
 	// 注意：这里必须在 Load() 之后调用，否则无法执行 CreateDefaultScene()...
 	// 注意：RefreshSceneCollections() 放在 DeferredLoad() 里面的 Load() 之后执行...
@@ -337,6 +326,9 @@ void CStudentWindow::DeferredLoad(const QString &file, int requeueCount)
 
 	// 打印场景列表...
 	this->LogScenes();
+
+	// 准备就绪，进行推流重置...
+	this->ResetOutputs();
 
 	// 设置已加载完毕的标志...
 	m_bIsLoaded = true;
@@ -582,8 +574,8 @@ void CStudentWindow::ClearSceneData()
 	disableSaving++;
 
 	// 主动移除绑定上去回调接口...
-	if (!m_viewCamera.isNull()) {
-		m_viewCamera->doRemoveDrawCallback();
+	if (!m_viewSoftCamera.isNull()) {
+		m_viewSoftCamera->doRemoveDrawCallback();
 	}
 	// 主动移除绑定上去回调接口...
 	if (!m_viewTeacher.isNull()) {
@@ -608,9 +600,9 @@ void CStudentWindow::ClearSceneData()
 	// 注意：wasapi_input_source是在频道3上，上面obs_set_output_source会自动删除...
 
 	// 主动删除左侧窗口对象...
-	if (!m_viewCamera.isNull()) {
-		delete m_viewCamera;
-		m_viewCamera = nullptr;
+	if (!m_viewSoftCamera.isNull()) {
+		delete m_viewSoftCamera;
+		m_viewSoftCamera = nullptr;
 	}
 	if (!m_viewTeacher.isNull()) {
 		delete m_viewTeacher;
@@ -1506,6 +1498,13 @@ void CStudentWindow::doStartOutput()
 	m_bIsStartOutput = true;
 }*/
 
+void CStudentWindow::onRemoteCameraPullStart(int nDBCameraID)
+{
+	if (!m_viewSoftCamera.isNull() && nDBCameraID == App()->GetDBSoftCameraID()) {
+		m_viewSoftCamera->onRemoteCameraPullStart(nDBCameraID);
+	}
+}
+
 // 老师端发出的直播推流的信号通知 => 直播编号和在线状态...
 void CStudentWindow::onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine)
 {
@@ -1543,6 +1542,35 @@ void CStudentWindow::onRemoteUdpLogout(int nLiveID, int tmTag, int idTag)
 	}
 }
 
+void CStudentWindow::onRemoteCameraList(Json::Value & value)
+{
+}
+
+void CStudentWindow::onRemoteCameraLiveStop(int nDBCameraID)
+{
+	if (!m_viewSoftCamera.isNull()) {
+		m_viewSoftCamera->doStopStreaming();
+	}
+}
+
+void CStudentWindow::onRemoteCameraLiveStart(int nDBCameraID)
+{
+	if (!m_viewSoftCamera.isNull()) {
+		m_viewSoftCamera->doStartStreaming();
+	}
+}
+
+void CStudentWindow::StreamingStatus(bool bIsDelete, int nTotalKbps, int nAudioKbps, int nVideoKbps)
+{
+	if (!m_viewSoftCamera.isNull()) {
+		m_viewSoftCamera->doStatusStreaming(bIsDelete, nTotalKbps, nAudioKbps, nVideoKbps);
+	}
+}
+
+void CStudentWindow::onRemoteDeleteExAudioThread()
+{
+}
+
 void CStudentWindow::doCheckOutput()
 {
 	// 如果发生格式变化...
@@ -1559,40 +1587,10 @@ void CStudentWindow::doCheckOutput()
 	if (!m_bIsStartOutput)
 		return;
 	ASSERT(m_bIsStartOutput);
-	// 调用推流接口函数...
-	this->doStartStreaming();
-	// 调用录像接口函数...
-	//this->doStartRecording();
-}
-
-void CStudentWindow::doStartStreaming()
-{
-	// 输出时钟无效，直接返回...
-	if (m_nOutputTimer <= 0)
-		return;
-	// 学生输出对象无效，直接返回...
-	if (m_lpStudentOutput == nullptr)
-		return;
-	// 如果正在推流，直接返回...
-	if (m_lpStudentOutput->StreamingActive())
-		return;
-	// 开启学生推流操作...
-	m_lpStudentOutput->StartStreaming();
-}
-
-void CStudentWindow::doStartRecording()
-{
-	// 输出时钟无效，直接返回...
-	if (m_nOutputTimer <= 0)
-		return;
-	// 学生输出对象无效，直接返回...
-	if (m_lpStudentOutput == nullptr)
-		return;
-	// 如果正在录像，直接返回...
-	if (m_lpStudentOutput->RecordingActive())
-		return;
-	// 开启学生录像操作...
-	m_lpStudentOutput->StartRecording();
+	// 只有完全能够推流之后才能调用接口汇报通道准备完毕...
+	if (!m_viewSoftCamera.isNull() && !m_viewSoftCamera->IsCameraOnLine()) {
+		m_viewSoftCamera->doSendCameraPullStart();
+	}
 }
 
 float CStudentWindow::doDShowCheckRatio()
@@ -1600,8 +1598,8 @@ float CStudentWindow::doDShowCheckRatio()
 	float ratioScale = 3.0 / 4.0;
 	uint32_t baseCX = (uint32_t)config_get_uint(basicConfig, "Student", "BaseCX");
 	uint32_t baseCY = (uint32_t)config_get_uint(basicConfig, "Student", "BaseCY");
-	uint32_t sourceCX = m_viewCamera.isNull() ? 0 : m_viewCamera->doGetCameraWidth();
-	uint32_t sourceCY = m_viewCamera.isNull() ? 0 : m_viewCamera->doGetCameraHeight();
+	uint32_t sourceCX = m_viewSoftCamera.isNull() ? 0 : m_viewSoftCamera->doGetCameraWidth();
+	uint32_t sourceCY = m_viewSoftCamera.isNull() ? 0 : m_viewSoftCamera->doGetCameraHeight();
 	// 摄像头的分辨率有效，需要进行相关的实际操作...
 	if (sourceCX > 0 && sourceCY > 0) {
 		// 计算当前摄像头有效的高宽比例...
@@ -1651,9 +1649,9 @@ void CStudentWindow::doDrawRightArea(QPainter & inPainter)
 	rcViewCamera.setTop(rcRightSelf.top() + (rcRightSelf.height() - rcViewCamera.width()) / 2);
 	rcViewCamera.setHeight(rcViewCamera.width() * ratioScale);
 	// 如果预览窗口有效，并且计算的新位置与当前获取的坐标位置不一致...
-	if (!m_viewCamera.isNull() && !m_viewCamera->isFullScreen() &&
-		rcViewCamera != m_viewCamera->geometry()) {
-		m_viewCamera->setGeometry(rcViewCamera);
+	if (!m_viewSoftCamera.isNull() && !m_viewSoftCamera->isFullScreen() &&
+		rcViewCamera != m_viewSoftCamera->geometry()) {
+		m_viewSoftCamera->setGeometry(rcViewCamera);
 	}
 	// 绘制右侧老师画面区域...
 	QRect rcViewTeacher = rcRightArea;

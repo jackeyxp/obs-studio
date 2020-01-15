@@ -9,7 +9,7 @@ class UDPSocket;
 class CSmartSendThread : public OSThread
 {
 public:
-	CSmartSendThread(CLIENT_TYPE inType, int nTCPSockFD, int nDBRoomID);
+	CSmartSendThread(CLIENT_TYPE inType, int nTCPSockFD, int nDBRoomID, int nDBLiveID);
 	virtual ~CSmartSendThread();
 	virtual void Entry();
 public:
@@ -23,6 +23,7 @@ protected:
 	BOOL			ParseAVHeader();
 private:
 	void			CloseSocket();
+	void			doCalcAVJamFlag();
 	void			doCalcAVBitRate();
 	void			doSendCreateCmd();
 	void			doSendHeaderCmd();
@@ -62,6 +63,7 @@ private:
 	uint16_t		m_HostServerPort;		// 服务器端口 => host
 	uint32_t	    m_HostServerAddr;		// 服务器地址 => host
 
+	bool            m_bNeedDelete;			// 删除标志 => 没有用户接入或网络严重拥塞...
 	bool			m_bNeedSleep;			// 休息标志 => 只要有发包或收包就不能休息...
 	int32_t			m_start_dts_ms;			// 第一个数据帧的dts时间，0点计时...
 

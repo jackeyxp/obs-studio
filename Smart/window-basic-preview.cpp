@@ -78,7 +78,7 @@ void OBSBasicPreview::doDeleteStudentBtnMic(obs_sceneitem_t * lpSceneItem)
 	OBSBasic * main = reinterpret_cast<OBSBasic*>(App()->GetMainWindow());
 	obs_source_t * lpSourceItem = obs_sceneitem_get_source(lpSceneItem);
 	obs_data_t * lpSettings = obs_source_get_settings(lpSourceItem);
-	int nDBCameraID = obs_data_get_int(lpSettings, "camera_id");
+	int nDBCameraID = obs_data_get_int(lpSettings, "live_id");
 	obs_data_release(lpSettings);
 	// 如果摄像头编号有效，并且与当前正在监听的第三方编号一致，需要归零处理...
 	//if (nDBCameraID > 0 && main->m_nDBCameraPusherID == nDBCameraID) {
@@ -148,8 +148,8 @@ void OBSBasicPreview::onBtnMicClicked()
 	// 获取当前的麦克风按钮状态和数据源的核心状态...
 	bool isActive = lpBtnMic->property("is_active").toBool();
 	obs_data_t * lpSettings = obs_source_get_settings(lpSourceItem);
-	bool bHasRecvThread = obs_data_get_bool(lpSettings, "recv_thread");
-	int nDBCameraID = obs_data_get_int(lpSettings, "camera_id");
+	bool bHasRecvThread = obs_data_get_bool(lpSettings, "live_on");
+	int nDBCameraID = obs_data_get_int(lpSettings, "live_id");
 	obs_data_release(lpSettings);
 	// 先将当前活动状态取反，得到新状态...
 	bool isNewActive = !isActive;
@@ -954,7 +954,7 @@ void OBSBasicPreview::DoSelect(const vec2 &pos, bool selectBelow/* = true*/)
 	// 进行ID判断，如果是rtp资源，需要获取摄像头通道编号...
 	if (astrcmpi(lpSrcID, App()->InteractSmartSource()) == 0) {
 		obs_data_t * lpSettings = obs_source_get_settings(lpSource);
-		int theDBCameraID = obs_data_get_int(lpSettings, "camera_id");
+		int theDBCameraID = obs_data_get_int(lpSettings, "live_id");
 		// 将新的摄像头编号更新到云台控制当中...
 		main->doUpdatePTZ(theDBCameraID);
 		// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏...

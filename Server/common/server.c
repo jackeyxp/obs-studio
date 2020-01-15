@@ -135,6 +135,11 @@ const char * get_command_name(int inCmd)
     case kCmd_Smart_OnLine:         return "Smart_OnLine";
     case kCmd_Live_OnLine:          return "Live_OnLine";
     case kCmd_UDP_Logout:           return "UDP_Logout";
+    case kCmd_Camera_PullStart:     return "Camera_PullStart";
+    case kCmd_Camera_PullStop:      return "Camera_PullStop";
+    case kCmd_Camera_OnLineList:    return "Camera_OnLineList";
+    case kCmd_Camera_LiveStart:     return "Camera_LiveStart";
+    case kCmd_Camera_LiveStop:      return "Camera_LiveStop";
     case kCmd_UdpServer_Login:      return "UdpServer_Login";
     case kCmd_UdpServer_OnLine:     return "UdpServer_OnLine";
     case kCmd_UdpServer_AddTeacher: return "UdpServer_AddTeacher";

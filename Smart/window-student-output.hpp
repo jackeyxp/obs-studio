@@ -47,6 +47,7 @@ private:
 	OBSSignal startRecording;
 	OBSSignal stopRecording;
 
-	OBSSignal startStreaming;
 	OBSSignal stopStreaming;
+	OBSSignal startStreaming;
+	OBSSignal statusStreaming;
 };

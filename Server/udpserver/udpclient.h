@@ -21,6 +21,7 @@ public:
   uint32_t      GetLiveID() { return m_rtp_create.liveID; }
   int           GetTCPSockID() { return m_rtp_create.tcpSock; }
   int           GetLookerCount() { return m_MapUdpLooker.size(); }
+  void          SetCanDetect(bool bFlag) { m_bIsCanDetect = bFlag; }
 public:
   void          doAddUdpLooker(CUDPClient * lpLooker);
   void          doDelUdpLooker(CUDPClient * lpLooker);
@@ -58,6 +59,7 @@ private:
   void          doEraseLoseSeq(uint8_t inPType, uint32_t inSeqID);
   void          doFillLosePack(uint8_t inPType, uint32_t nStartLoseID, uint32_t nEndLoseID);
 protected:
+  bool          m_bIsCanDetect;       // 服务器能否向推流端发送探测数据包标志...
   CRoom    *    m_lpRoom;             // 房间对象
   int           m_nRoomID;            // 房间编号
   int           m_nUdpListenFD;       // UDP监听套接字

@@ -6,6 +6,7 @@
 struct smart_output_t {
 	obs_output_t   * output;
 	int              room_id;
+	int              live_id;
 	const char     * udp_addr;
 	int              udp_port;
 	int              tcp_socket;
@@ -25,6 +26,7 @@ static void smart_output_update(void *data, obs_data_t *settings)
 	// 获取传递过来的输出对象和配置信息...
 	smart_output_t * lpRtpStream = (smart_output_t*)data;
 	lpRtpStream->room_id = (int)obs_data_get_int(settings, "room_id");
+	lpRtpStream->live_id = (int)obs_data_get_int(settings, "live_id");
 	lpRtpStream->udp_addr = obs_data_get_string(settings, "udp_addr");
 	lpRtpStream->udp_port = (int)obs_data_get_int(settings, "udp_port");
 	lpRtpStream->tcp_socket = (int)obs_data_get_int(settings, "tcp_socket");
@@ -41,17 +43,17 @@ static void smart_output_update(void *data, obs_data_t *settings)
 	}
 	ASSERT(lpRtpStream->sendThread == NULL);
 	// 判断房间信息和传递参数是否有效，无效直接返回...
-	if (lpRtpStream->room_id <= 0 || lpRtpStream->tcp_socket <= 0 || lpRtpStream->udp_port <= 0 || lpRtpStream->udp_addr == NULL || lpRtpStream->client_type <= 0) {
-		blog(LOG_INFO, "smart_output_update => Failed, ClientType: %d, RoomID: %d, TCPSock: %d, %s:%d",
-			lpRtpStream->client_type, lpRtpStream->room_id, lpRtpStream->tcp_socket,
+	if (lpRtpStream->room_id <= 0 || lpRtpStream->live_id <= 0 || lpRtpStream->tcp_socket <= 0 || lpRtpStream->udp_port <= 0 || lpRtpStream->udp_addr == NULL || lpRtpStream->client_type <= 0) {
+		blog(LOG_INFO, "smart_output_update => Failed, ClientType: %d, RoomID: %d, LiveID: %d, TCPSock: %d, %s:%d",
+			lpRtpStream->client_type, lpRtpStream->room_id, lpRtpStream->live_id, lpRtpStream->tcp_socket,
 			lpRtpStream->udp_addr, lpRtpStream->udp_port);
 		return;
 	}
 	// 创建新的推流线程对象，延时初始化，将推流线程对象保存到输出管理器当中...
-	lpRtpStream->sendThread = new CSmartSendThread(lpRtpStream->client_type, lpRtpStream->tcp_socket, lpRtpStream->room_id);
-	// 打印成功创建接收线程信息 => client_type | room_id | udp_addr | udp_port | tcp_socket
-	blog(LOG_INFO, "smart_output_update => Success, ClientType: %s, RoomID: %d, TCPSock: %d, %s:%d",
-		lpRtpStream->inner_name, lpRtpStream->room_id, lpRtpStream->tcp_socket,
+	lpRtpStream->sendThread = new CSmartSendThread(lpRtpStream->client_type, lpRtpStream->tcp_socket, lpRtpStream->room_id, lpRtpStream->live_id);
+	// 打印成功创建接收线程信息 => client_type | room_id | live_id | udp_addr | udp_port | tcp_socket
+	blog(LOG_INFO, "smart_output_update => Success, ClientType: %s, RoomID: %d, LiveID: %d, TCPSock: %d, %s:%d",
+		lpRtpStream->inner_name, lpRtpStream->room_id, lpRtpStream->live_id, lpRtpStream->tcp_socket,
 		lpRtpStream->udp_addr, lpRtpStream->udp_port);
 }
 

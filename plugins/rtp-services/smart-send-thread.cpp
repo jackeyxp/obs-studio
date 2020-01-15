@@ -10,7 +10,7 @@ static int32_t get_ms_time(struct encoder_packet *packet, int64_t val)
 	return (int32_t)(val * MILLISECOND_DEN / packet->timebase_den);
 }
 
-CSmartSendThread::CSmartSendThread(CLIENT_TYPE inType, int nTCPSockFD, int nDBRoomID)
+CSmartSendThread::CSmartSendThread(CLIENT_TYPE inType, int nTCPSockFD, int nDBRoomID, int nDBLiveID)
   : m_total_output_bytes(0)
   , m_audio_output_bytes(0)
   , m_video_output_bytes(0)
@@ -26,6 +26,7 @@ CSmartSendThread::CSmartSendThread(CLIENT_TYPE inType, int nTCPSockFD, int nDBRo
   , m_next_detect_ns(-1)
   , m_start_time_ns(0)
   , m_total_time_ms(0)
+  , m_bNeedDelete(false)
   , m_bNeedSleep(false)
   , m_lpUDPSocket(NULL)
   , m_lpObsOutput(NULL)
@@ -75,9 +76,9 @@ CSmartSendThread::CSmartSendThread(CLIENT_TYPE inType, int nTCPSockFD, int nDBRo
 	m_rtp_header.pt = PT_TAG_HEADER;
 	// 填充房间号和直播通道号...
 	m_rtp_create.roomID = nDBRoomID;
-	m_rtp_create.liveID = 0;
+	m_rtp_create.liveID = nDBLiveID;
 	m_rtp_delete.roomID = nDBRoomID;
-	m_rtp_delete.liveID = 0;
+	m_rtp_delete.liveID = nDBLiveID;
 	// 填充与远程关联的TCP套接字...
 	m_rtp_create.tcpSock = nTCPSockFD;
 	// 初始化互斥对象...
@@ -394,6 +395,7 @@ void CSmartSendThread::doCalcAVBitRate()
 	// 打印计算获得的音视频输入输出平均码流值...
 	//blog(LOG_INFO, "%s AVBitRate =>  audio_input: %d kbps,  video_input: %d kbps", m_strInnerName.c_str(), m_audio_input_kbps, m_video_input_kbps);
 	//blog(LOG_INFO, "%s AVBitRate => audio_output: %d kbps, video_output: %d kbps, total_output: %d kbps", m_strInnerName.c_str(), m_audio_output_kbps, m_video_output_kbps, m_total_output_kbps);
+	obs_output_signal_status(m_lpObsOutput, m_bNeedDelete, m_total_output_kbps, m_audio_output_kbps, m_video_output_kbps);
 }
 
 void CSmartSendThread::Entry()
@@ -522,10 +524,9 @@ void CSmartSendThread::doSendDetectCmd()
 	m_rtp_detect.dtDir  = DT_TO_SERVER;
 	m_rtp_detect.dtNum += 1;
 
-	// 注意：推流端本身不会用来针对观看者进行补包，补包都放到服务器端完成...
-	// 因此，采用了根据探测结果进行丢包的处理方法，而不是固定缓存的方法...
-	// 采用了新的拥塞处理 => 删除指定缓存时间点之前的音视频数据包...
-	//this->doCalcAVJamStatus();
+	////////////////////////////////////////////////////////////////////////////////////////////////
+	// 采用了新的拥塞处理 => 判断缓存时间，发生严重拥塞，中断推流，等待讲师端自动触发再次推流...
+	this->doCalcAVJamFlag();
 
 	// 调用接口发送探测命令包 => 推流端只有一个服务器探测方向...
 	GM_Error theErr = m_lpUDPSocket->SendTo((void*)&m_rtp_detect, sizeof(m_rtp_detect));
@@ -538,6 +539,41 @@ void CSmartSendThread::doSendDetectCmd()
 	m_next_detect_ns = os_gettime_ns() + period_ns;
 	// 修改休息状态 => 已经有发包，不能休息...
 	m_bNeedSleep = false;
+}
+
+void CSmartSendThread::doCalcAVJamFlag()
+{
+	// 视频环形队列为空，没有拥塞，直接返回...
+	if (m_video_circle.size <= 0)
+		return;
+	// 对环形队列相关资源进行互斥保护...
+	pthread_mutex_lock(&m_Mutex);
+	// 遍历环形队列，缓存了5秒数据，认为发生了拥塞，设置只能灌输视频关键帧标志...
+	const int nPerPackSize = DEF_MTU_SIZE + sizeof(rtp_hdr_t);
+	char szPacketBuffer[nPerPackSize] = { 0 };
+	circlebuf & cur_circle = m_video_circle;
+	rtp_hdr_t * lpCurHeader = NULL;
+	uint32_t    min_ts = 0;
+	uint32_t    max_ts = 0;
+	// 读取第一个数据包的内容，获取最小时间戳...
+	circlebuf_peek_front(&cur_circle, szPacketBuffer, nPerPackSize);
+	lpCurHeader = (rtp_hdr_t*)szPacketBuffer;
+	min_ts = lpCurHeader->ts;
+	// 读取第大的数据包的内容，获取最大时间戳...
+	circlebuf_peek_back(&cur_circle, szPacketBuffer, nPerPackSize);
+	lpCurHeader = (rtp_hdr_t*)szPacketBuffer;
+	max_ts = lpCurHeader->ts;
+	// 对环形队列相关资源互斥保护结束...
+	pthread_mutex_unlock(&m_Mutex);
+	// 计算环形队列当中总的缓存时间...
+	uint32_t cur_buf_ms = max_ts - min_ts;
+	// 只要视频总缓存时间超过一定毫秒数，判断网络严重拥塞，立即中断推流操作...
+	if (cur_buf_ms >= MAX_SEND_JAM_MS) {
+		m_bNeedDelete = true;
+		blog(LOG_INFO, "%s Jam => Stop Push, Buffered %lu ms video data.", m_strInnerName.c_str(), cur_buf_ms);
+		obs_output_signal_status(m_lpObsOutput, m_bNeedDelete, m_total_output_kbps, m_audio_output_kbps, m_video_output_kbps);
+		return;
+	}
 }
 
 void CSmartSendThread::doSendLosePacket(bool bIsAudio)
@@ -771,13 +807,10 @@ void CSmartSendThread::doTagCreateProcess(char * lpBuffer, int inRecvLen)
 	// 判断数据包的有效性 => 必须是服务器反馈的 Create 命令...
 	if( rtpHdr.tm != TM_TAG_SERVER || rtpHdr.id != ID_TAG_SERVER || rtpHdr.pt != PT_TAG_CREATE )
 		return;
-	// 更新直播编号到相关配置当中...
-	m_rtp_create.liveID = rtpHdr.noset;
-	m_rtp_delete.liveID = rtpHdr.noset;
 	// 修改命令状态 => 开始发送序列头...
 	m_nCmdState = kCmdSendHeader;
 	// 打印收到服务器反馈的创建命令包 => 注意打印直播编号字段...
-	blog(LOG_INFO, "%s Recv Create from Server, LiveID: %u", m_strInnerName.c_str(), rtpHdr.noset);
+	blog(LOG_INFO, "%s Recv Create from Server, LiveID: %u", m_strInnerName.c_str(), m_rtp_create.liveID);
 }
 
 void CSmartSendThread::doTagHeaderProcess(char * lpBuffer, int inRecvLen)

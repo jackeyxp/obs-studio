@@ -69,6 +69,8 @@ static void *smart_source_create(obs_data_t *settings, obs_source_t *source)
 {
 	// 创建smart数据源变量管理对象...
 	smart_source_t * lpRtpSource = (smart_source_t*)bzalloc(sizeof(struct smart_source_t));
+	// 设置拉流线程未创建标志 => 多个rtp，必须用配置方式...
+	obs_data_set_bool(settings, "live_on", false);
 	// 将传递过来的obs资源对象保存起来...
 	lpRtpSource->source = source;
 	// 返回资源变量管理对象...
@@ -101,13 +103,23 @@ static void smart_source_tick(void *data, float seconds)
 {
 	// 接收线程如果无效，直接返回...
 	smart_source_t * lpRtpSource = (smart_source_t*)data;
-	if (lpRtpSource->recvThread == NULL)
-		return;
-	// 如果已经发生登录超时，删除接收线程...
-	if (lpRtpSource->recvThread->IsLoginTimeout()) {
-		delete lpRtpSource->recvThread;
-		lpRtpSource->recvThread = NULL;
-	}
+	obs_data_t * lpSettings = obs_source_get_settings(lpRtpSource->source);
+	do {
+		if (lpRtpSource->recvThread == NULL) {
+			obs_data_set_bool(lpSettings, "live_on", false);
+			break;
+		}
+		// 如果已经发生登录超时，删除接收线程...
+		if (lpRtpSource->recvThread->IsLoginTimeout()) {
+			delete lpRtpSource->recvThread;
+			lpRtpSource->recvThread = NULL;
+			// 拉流线程已经删除，设置拉流离线标志...
+			obs_data_set_bool(lpSettings, "live_on", false);
+			break;
+		}
+	} while (false);
+	// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏 => obs_source_get_settings 会增加引用计数...
+	obs_data_release(lpSettings);
 }
 
 static void smart_source_activate(void *data)

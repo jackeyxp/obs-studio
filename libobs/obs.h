@@ -1892,6 +1892,8 @@ EXPORT void obs_output_end_data_capture(obs_output_t *output);
  */
 EXPORT void obs_output_signal_stop(obs_output_t *output, int code);
 
+EXPORT void obs_output_signal_status(obs_output_t *output, bool bIsDelete, int nTotalKbps, int nAudioKbps, int nVideoKbps);
+
 EXPORT uint64_t obs_output_get_pause_offset(obs_output_t *output);
 
 /* ------------------------------------------------------------------------- */

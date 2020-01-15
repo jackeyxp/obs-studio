@@ -15,6 +15,19 @@ volatile bool recording_active = false;
 volatile bool recording_paused = false;
 volatile bool replaybuf_active = false;
 
+static void OBSStatusStreaming(void *data, calldata_t *params)
+{
+	BasicOutputHandler *output = static_cast<BasicOutputHandler *>(data);
+	bool bIsDelete = calldata_bool(params, "is_delete");
+	int  nTotalKbps = calldata_int(params, "total_kbps");
+	int  nAudioKbps = calldata_int(params, "audio_kbps");
+	int  nVideoKbps = calldata_int(params, "video_kbps");
+
+	QMetaObject::invokeMethod(output->main, "StreamingStatus",
+		Q_ARG(bool, bIsDelete), Q_ARG(int, nTotalKbps),
+		Q_ARG(int, nAudioKbps), Q_ARG(int, nVideoKbps));
+}
+
 static void OBSStreamStarting(void *data, calldata_t *params)
 {
 	BasicOutputHandler *output = static_cast<BasicOutputHandler *>(data);
@@ -419,17 +432,12 @@ void SimpleOutput::Update()
 	obs_data_t *h264Settings = obs_data_create();
 	obs_data_t *aacSettings = obs_data_create();
 
-	int videoBitrate =
-		config_get_uint(main->Config(), "SimpleOutput", "VBitrate");
+	int videoBitrate = config_get_uint(main->Config(), "SimpleOutput", "VBitrate");
 	int audioBitrate = GetAudioBitrate();
-	bool advanced =
-		config_get_bool(main->Config(), "SimpleOutput", "UseAdvanced");
-	bool enforceBitrate = config_get_bool(main->Config(), "SimpleOutput",
-					      "EnforceBitrate");
-	const char *custom = config_get_string(main->Config(), "SimpleOutput",
-					       "x264Settings");
-	const char *encoder = config_get_string(main->Config(), "SimpleOutput",
-						"StreamEncoder");
+	bool advanced = config_get_bool(main->Config(), "SimpleOutput", "UseAdvanced");
+	bool enforceBitrate = config_get_bool(main->Config(), "SimpleOutput", "EnforceBitrate");
+	const char *custom = config_get_string(main->Config(), "SimpleOutput", "x264Settings");
+	const char *encoder = config_get_string(main->Config(), "SimpleOutput", "StreamEncoder");
 	const char *presetType;
 	const char *preset;
 
@@ -460,8 +468,7 @@ void SimpleOutput::Update()
 	obs_data_set_string(aacSettings, "rate_control", "CBR");
 	obs_data_set_int(aacSettings, "bitrate", audioBitrate);
 
-	obs_service_apply_encoder_settings(main->GetService(), h264Settings,
-					   aacSettings);
+	obs_service_apply_encoder_settings(main->GetService(), h264Settings, aacSettings);
 
 	if (advanced && !enforceBitrate) {
 		obs_data_set_int(h264Settings, "bitrate", videoBitrate);
@@ -472,8 +479,7 @@ void SimpleOutput::Update()
 	enum video_format format = video_output_get_format(video);
 
 	if (format != VIDEO_FORMAT_NV12 && format != VIDEO_FORMAT_I420)
-		obs_encoder_set_preferred_video_format(h264Streaming,
-						       VIDEO_FORMAT_NV12);
+		obs_encoder_set_preferred_video_format(h264Streaming, VIDEO_FORMAT_NV12);
 
 	obs_encoder_update(h264Streaming, h264Settings);
 	obs_encoder_update(aacStreaming, aacSettings);
@@ -1238,13 +1244,13 @@ AdvancedOutput::AdvancedOutput(OBSBasic *main_) : BasicOutputHandler(main_)
 
 void AdvancedOutput::UpdateStreamSettings()
 {
-	bool applyServiceSettings = config_get_bool(main->Config(), "AdvOut", "ApplyServiceSettings");
+	//bool applyServiceSettings = config_get_bool(main->Config(), "AdvOut", "ApplyServiceSettings");
 
 	OBSData settings = GetDataFromJsonFile("streamEncoder.json");
 	ApplyEncoderDefaults(settings, h264Streaming);
 
-	if (applyServiceSettings)
-		obs_service_apply_encoder_settings(main->GetService(), settings, nullptr);
+	//if (applyServiceSettings)
+	//	obs_service_apply_encoder_settings(main->GetService(), settings, nullptr);
 
 	video_t *video = obs_get_video();
 	enum video_format format = video_output_get_format(video);
@@ -1355,28 +1361,18 @@ inline void AdvancedOutput::SetupFFmpeg()
 	int vBitrate = config_get_int(main->Config(), "AdvOut", "FFVBitrate");
 	int gopSize = config_get_int(main->Config(), "AdvOut", "FFVGOPSize");
 	bool rescale = config_get_bool(main->Config(), "AdvOut", "FFRescale");
-	const char *rescaleRes =
-		config_get_string(main->Config(), "AdvOut", "FFRescaleRes");
-	const char *formatName =
-		config_get_string(main->Config(), "AdvOut", "FFFormat");
-	const char *mimeType =
-		config_get_string(main->Config(), "AdvOut", "FFFormatMimeType");
-	const char *muxCustom =
-		config_get_string(main->Config(), "AdvOut", "FFMCustom");
-	const char *vEncoder =
-		config_get_string(main->Config(), "AdvOut", "FFVEncoder");
-	int vEncoderId =
-		config_get_int(main->Config(), "AdvOut", "FFVEncoderId");
-	const char *vEncCustom =
-		config_get_string(main->Config(), "AdvOut", "FFVCustom");
+	const char *rescaleRes = config_get_string(main->Config(), "AdvOut", "FFRescaleRes");
+	const char *formatName = config_get_string(main->Config(), "AdvOut", "FFFormat");
+	const char *mimeType = config_get_string(main->Config(), "AdvOut", "FFFormatMimeType");
+	const char *muxCustom = config_get_string(main->Config(), "AdvOut", "FFMCustom");
+	const char *vEncoder = config_get_string(main->Config(), "AdvOut", "FFVEncoder");
+	int vEncoderId = config_get_int(main->Config(), "AdvOut", "FFVEncoderId");
+	const char *vEncCustom = config_get_string(main->Config(), "AdvOut", "FFVCustom");
 	int aBitrate = config_get_int(main->Config(), "AdvOut", "FFABitrate");
 	int aMixes = config_get_int(main->Config(), "AdvOut", "FFAudioMixes");
-	const char *aEncoder =
-		config_get_string(main->Config(), "AdvOut", "FFAEncoder");
-	int aEncoderId =
-		config_get_int(main->Config(), "AdvOut", "FFAEncoderId");
-	const char *aEncCustom =
-		config_get_string(main->Config(), "AdvOut", "FFACustom");
+	const char *aEncoder = config_get_string(main->Config(), "AdvOut", "FFAEncoder");
+	int aEncoderId = config_get_int(main->Config(), "AdvOut", "FFAEncoderId");
+	const char *aEncCustom = config_get_string(main->Config(), "AdvOut", "FFACustom");
 	obs_data_t *settings = obs_data_create();
 
 	obs_data_set_string(settings, "url", url);
@@ -1394,8 +1390,7 @@ inline void AdvancedOutput::SetupFFmpeg()
 	obs_data_set_string(settings, "audio_settings", aEncCustom);
 
 	if (rescale && rescaleRes && *rescaleRes) {
-		int width;
-		int height;
+		int width; int height;
 		int val = sscanf(rescaleRes, "%dx%d", &width, &height);
 
 		if (val == 2 && width && height) {
@@ -1411,18 +1406,15 @@ inline void AdvancedOutput::SetupFFmpeg()
 	obs_data_release(settings);
 }
 
-static inline void SetEncoderName(obs_encoder_t *encoder, const char *name,
-				  const char *defaultName)
+static inline void SetEncoderName(obs_encoder_t *encoder, const char *name, const char *defaultName)
 {
 	obs_encoder_set_name(encoder, (name && *name) ? name : defaultName);
 }
 
 inline void AdvancedOutput::UpdateAudioSettings()
 {
-	bool applyServiceSettings = config_get_bool(main->Config(), "AdvOut",
-						    "ApplyServiceSettings");
-	int streamTrackIndex =
-		config_get_int(main->Config(), "AdvOut", "TrackIndex");
+	bool applyServiceSettings = config_get_bool(main->Config(), "AdvOut", "ApplyServiceSettings");
+	int streamTrackIndex = config_get_int(main->Config(), "AdvOut", "TrackIndex");
 	obs_data_t *settings[MAX_AUDIO_MIXES];
 
 	for (size_t i = 0; i < MAX_AUDIO_MIXES; i++) {
@@ -1434,8 +1426,7 @@ inline void AdvancedOutput::UpdateAudioSettings()
 		string cfg_name = "Track";
 		cfg_name += to_string((int)i + 1);
 		cfg_name += "Name";
-		const char *name = config_get_string(main->Config(), "AdvOut",
-						     cfg_name.c_str());
+		const char *name = config_get_string(main->Config(), "AdvOut", cfg_name.c_str());
 
 		string def_name = "Track";
 		def_name += to_string((int)i + 1);
@@ -1443,21 +1434,18 @@ inline void AdvancedOutput::UpdateAudioSettings()
 	}
 
 	// 这里设定rtmp特有的service配置，因使用了rtp输出，这段就失去意义了...
-	for (size_t i = 0; i < MAX_AUDIO_MIXES; i++) {
+	/*for (size_t i = 0; i < MAX_AUDIO_MIXES; i++) {
 		obs_encoder_update(aacTrack[i], settings[i]);
-
 		if ((int)(i + 1) == streamTrackIndex) {
 			if (applyServiceSettings) {
 				obs_service_apply_encoder_settings(
 					main->GetService(), nullptr,
 					settings[i]);
 			}
-
 			obs_encoder_update(streamAudioEnc, settings[i]);
 		}
-
 		obs_data_release(settings[i]);
-	}
+	}*/
 }
 
 void AdvancedOutput::SetupOutputs()
@@ -1522,6 +1510,7 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 		streamStopping.Disconnect();
 		startStreaming.Disconnect();
 		stopStreaming.Disconnect();
+		statusStreaming.Disconnect();
 
 		streamOutput = obs_output_create(type, "adv_stream", nullptr, nullptr);
 		if (!streamOutput) {
@@ -1543,6 +1532,9 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 		stopStreaming.Connect(
 			obs_output_get_signal_handler(streamOutput), "stop",
 			OBSStopStreaming, this);
+		statusStreaming.Connect(
+			obs_output_get_signal_handler(streamOutput), "status",
+			OBSStatusStreaming, this);
 
 		bool isEncoded = obs_output_get_flags(streamOutput) & OBS_OUTPUT_ENCODED;
 
@@ -1599,9 +1591,10 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 	obs_data_set_bool(settings, "new_socket_loop_enabled", enableNewSocketLoop);
 	obs_data_set_bool(settings, "low_latency_mode_enabled", enableLowLatencyMode);
 	obs_data_set_bool(settings, "dyn_bitrate", enableDynBitrate);
-	// 设置smart推流输出需要的特殊变量 => room_id | udp_addr | udp_port | tcp_socket | client_type
+	// 设置smart推流输出需要的特殊变量 => room_id | live_id | udp_addr | udp_port | tcp_socket | client_type
 	int nRoomID = atoi(App()->GetRoomIDStr().c_str());
 	obs_data_set_int(settings, "room_id", nRoomID);
+	obs_data_set_int(settings, "live_id", App()->GetDBTeacherCameraID());
 	obs_data_set_int(settings, "udp_port", App()->GetUdpPort());
 	obs_data_set_string(settings, "udp_addr", App()->GetUdpAddr().c_str());
 	obs_data_set_int(settings, "tcp_socket", App()->GetRemoteTcpSockFD());

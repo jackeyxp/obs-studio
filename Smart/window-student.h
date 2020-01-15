@@ -14,11 +14,12 @@
 #include <QNetworkAccessManager>
 #include <QPointer>
 
+#include "json.h"
+
 using namespace std;
 
 class CViewCamera;
 class CViewTeacher;
-class CStudentOutput;
 class CStudentWindow : public OBSMainWindow
 {
     Q_OBJECT
@@ -42,12 +43,11 @@ private:
 	QString m_strUserHeadUrl;
 	QString m_strUserNickName;
 	QRect m_rcSrcGeometry;
-	obs_scene_t  * m_obsScene = nullptr;             // 唯一主场景...
-	QPointer<CViewCamera> m_viewCamera = nullptr;    // 预览本地摄像头...
-	QPointer<CViewTeacher> m_viewTeacher = nullptr;  // 预览老师端画面...
-	QNetworkAccessManager  m_objNetManager;	         // QT 网络管理对象...
-	std::vector<OBSSignal> signalHandlers;           // 系统信号量集合...
-	CStudentOutput * m_lpStudentOutput = nullptr;    // 学生端输出对象...
+	obs_scene_t  * m_obsScene = nullptr;              // 唯一主场景...
+	QPointer<CViewCamera> m_viewSoftCamera = nullptr; // 预览本地摄像头...
+	QPointer<CViewTeacher> m_viewTeacher = nullptr;   // 预览老师端画面...
+	QNetworkAccessManager  m_objNetManager;	          // QT 网络管理对象...
+	std::vector<OBSSignal> signalHandlers;            // 系统信号量集合...
 private:
 	enum {
 		kWebGetUserHead   = 0,
@@ -65,9 +65,15 @@ private slots:
 	void DeferredLoad(const QString &file, int requeueCount);
 private slots:
 	void onRemoteSmartLogin(int nLiveID);
+	void onRemoteCameraPullStart(int nDBCameraID);
 	void onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine);
 	void onRemoteUdpLogout(int nLiveID, int tmTag, int idTag);
+	void onRemoteCameraList(Json::Value & value);
+	void onRemoteCameraLiveStop(int nDBCameraID);
+	void onRemoteCameraLiveStart(int nDBCameraID);
+	void onRemoteDeleteExAudioThread();
 private slots:
+	void StreamingStatus(bool bIsDelete, int nTotalKbps, int nAudioKbps, int nVideoKbps);
 	void UpdatedSmartSource(OBSSource source);
 	void AddSceneItem(OBSSceneItem item);
 	void AddScene(OBSSource source);
@@ -107,8 +113,6 @@ private:
 	void  loadStyleSheet(const QString &sheetName);
 	void  onProcGetUserHead(QNetworkReply *reply);
 	float doDShowCheckRatio();
-	void  doStartStreaming();
-	void  doStartRecording();
 	void  doCheckOutput();
 private:
 	void timerEvent(QTimerEvent * inEvent);

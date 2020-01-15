@@ -60,6 +60,8 @@ CLoginMini::CLoginMini(QWidget *parent)
   , m_nDBUserID(-1)
   , m_nDBRoomID(-1)
   , m_nDBSmartID(-1)
+  , m_nDBSoftCameraID(-1)
+  , m_nDBTeacherCameraID(-1)
   , m_lpMovieGif(NULL)
   , m_lpLoadBack(NULL)
   , m_nOnLineTimer(-1)
@@ -593,13 +595,38 @@ void CLoginMini::onProcCenterAddr(QNetworkReply *reply)
 		this->update();
 		return;
 	}
+	// 获取通道记录列表，先清除旧的列表...
+	GM_MapNodeCamera & theNode = App()->GetNodeCamera();
+	Json::Value & theArrCamera = value["camera"];
+	theNode.clear();
+	if (theArrCamera.isArray()) {
+		for (int i = 0; i < theArrCamera.size(); ++i) {
+			GM_MapData dbMapCamera;
+			Json::Value & theDBCamera = theArrCamera[i];
+			int nCameraType = atoi(OBSApp::getJsonString(theDBCamera["camera_type"]).c_str());
+			int nDBCameraID = atoi(OBSApp::getJsonString(theDBCamera["camera_id"]).c_str());
+			if (nCameraType == kCameraTeacher) { m_nDBTeacherCameraID = nDBCameraID; }
+			if (nCameraType == kCameraSoft) { m_nDBSoftCameraID = nDBCameraID; }
+			// 算子itorItem必须放在内部定义，否则，会出现越界问题...
+			for (Json::Value::iterator itorItem = theDBCamera.begin(); itorItem != theDBCamera.end(); ++itorItem) {
+				const char * theKey = itorItem.memberName();
+				dbMapCamera[theKey] = OBSApp::getJsonString(theDBCamera[theKey]);
+			}
+			// 存放摄像头记录到对应的集合当中...
+			theNode[nDBCameraID] = dbMapCamera;
+		}
+	}
+	// 唯一软编码摄像头数据库记录 和 讲师端摄像头记录必须有效...
+	ASSERT(m_nDBSoftCameraID > 0 && m_nDBTeacherCameraID > 0);
 	// 解析json成功，保存smart_id和UDPCenter的TCP地址和端口...
 	m_nDBSmartID = atoi(OBSApp::getJsonString(value["smart_id"]).c_str());
 	m_strCenterTcpAddr = OBSApp::getJsonString(value["udpcenter_addr"]);
 	m_nCenterTcpPort = atoi(OBSApp::getJsonString(value["udpcenter_port"]).c_str());
 	// 将中心服务器地址和端口保存到App当中备用...
-	App()->SetTcpCenterAddr(m_strCenterTcpAddr);
 	App()->SetTcpCenterPort(m_nCenterTcpPort);
+	App()->SetTcpCenterAddr(m_strCenterTcpAddr);
+	App()->SetDBTeacherCameraID(m_nDBTeacherCameraID);
+	App()->SetDBSoftCameraID(m_nDBSoftCameraID);
 	App()->SetDBSmartID(m_nDBSmartID);
 	// 发起连接中心服务器的会话对象...
 	this->doTcpConnCenterAddr();
@@ -648,13 +675,13 @@ void CLoginMini::onTriggerTcpConnect()
 	// 每隔30秒检测一次，终端在中心服务器上在线汇报通知...
 	m_nOnLineTimer = this->startTimer(30 * 1000);
 	// 发起获取小程序Token值的网络命令...
-	this->doWebGetMiniToken();
+	//this->doWebGetMiniToken();
 	
 	/*== 仅供快速测试 ==*/
-	//m_nDBUserID = 1;
-	//m_nDBRoomID = 10001;
+	m_nDBUserID = 1;
+	m_nDBRoomID = 10001;
 	// 一切正常，开始登录指定的房间...
-	//this->doWebGetMiniLoginRoom();  
+	this->doWebGetMiniLoginRoom();  
 }
 
 // 响应中心会话反馈的小程序绑定登录信号槽事件通知...

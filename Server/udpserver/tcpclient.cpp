@@ -275,11 +275,124 @@ int CTCPClient::doTeacherClient(Cmd_Header * lpHeader, const char * lpJsonPtr)
   int nResult = -1;
   switch(lpHeader->m_cmd)
   {
-    case kCmd_Smart_Login:      nResult = this->doCmdSmartLogin(); break;
-    case kCmd_Smart_OnLine:     nResult = this->doCmdSmartOnLine(); break;
+    case kCmd_Smart_Login:       nResult = this->doCmdSmartLogin(); break;
+    case kCmd_Smart_OnLine:      nResult = this->doCmdSmartOnLine(); break;
+    case kCmd_Camera_LiveStop:   nResult = this->doCmdTeacherCameraLiveStop(); break;
+    case kCmd_Camera_LiveStart:  nResult = this->doCmdTeacherCameraLiveStart(); break;
+    case kCmd_Camera_OnLineList: nResult = this->doCmdTeacherCameraOnLineList(); break;
   }
   // 默认全部返回正确...
   return 0;
+}
+
+// 处理Teacher主动发起停止学生端摄像头推流事件通知...
+int CTCPClient::doCmdTeacherCameraLiveStop()
+{
+  // 解析命令数据，判断传递JSON数据有效性...
+  if( m_lpRoom == NULL || m_MapJson.find("camera_id") == m_MapJson.end() )
+    return -1;
+  int nDBCameraID = atoi(m_MapJson["camera_id"].c_str());
+  // 删除UDP房间里的老师观看者对象和学生推流者对象，提前删除避免数据混乱...
+  //m_lpRoom->doDeleteForCameraLiveStop(nDBCameraID);
+  // 将讲师端发起的摄像头停止推流命令转发给摄像头对应的学生端，让学生端发起停止推流命令...
+  int nResult = this->doTransferCameraLiveCmdByTeacher(kCmd_Camera_LiveStop, nDBCameraID);
+  // 注意：没有直接反馈，需要等待学生端的停止命令再反馈...
+  if (nResult >= 0)
+    return nResult;
+  // 注意：转发失败后，必须告诉讲师端，才能发起新的开始推流命令...
+  assert(nResult < 0);
+  // 转发停止通道成功命令到房间里的讲师端...
+  json_object * new_obj = json_object_new_object();
+  json_object_object_add(new_obj, "camera_id", json_object_new_int(nDBCameraID));
+  // 转换成json字符串，获取字符串长度...
+  char * lpNewJson = (char*)json_object_to_json_string(new_obj);
+  // 使用统一的通用命令发送接口函数 => 注意：必须是对应的讲师端的对象...
+  nResult = this->doSendCommonCmd(kCmd_Camera_LiveStop, lpNewJson, strlen(lpNewJson));
+  // json对象引用计数减少...
+  json_object_put(new_obj);
+  // 返回执行结果...
+  return nResult;
+}
+
+// 处理Teacher发起学生端摄像头开始推流事件通知...
+int CTCPClient::doCmdTeacherCameraLiveStart()
+{
+  // 解析命令数据，判断传递JSON数据有效性...
+  if( m_MapJson.find("camera_id") == m_MapJson.end() )
+    return -1;
+  int nDBCameraID = atoi(m_MapJson["camera_id"].c_str());
+  // 将讲师端发起的摄像头推流命令转发给摄像头对应的学生端，让学生端发起推流命令...
+  return this->doTransferCameraLiveCmdByTeacher(kCmd_Camera_LiveStart, nDBCameraID);
+}
+
+// 处理Teacher发起的让学生端指定的摄像头开始|停止推流的命令...
+int CTCPClient::doTransferCameraLiveCmdByTeacher(int nCmdID, int nDBCameraID)
+{
+  // 有可能房间对象为空...
+  if (m_lpRoom == NULL)
+    return -1;
+  // 在房间中查找对应的摄像头对象 => 通过摄像头数据库编号...
+  GM_MapCamera & theMapCamera = m_lpRoom->GetMapCamera();
+  GM_MapCamera::iterator itorItem = theMapCamera.find(nDBCameraID);
+  // 如果没有找到，直接返回...
+  if( itorItem == theMapCamera.end() )
+    return -1;
+  // 查找通道对应的学生端对象...
+  CCamera * lpCamera = itorItem->second;
+  CTCPClient * lpStudent = lpCamera->m_lpTCPClient;
+  // 对这个找到的学生端进行身份验证...
+  if( lpStudent->GetClientType() != kClientStudent )
+    return -1;
+  // 转发相关命令到这个学生端对象当中...
+  json_object * new_obj = json_object_new_object();
+  json_object_object_add(new_obj, "camera_id", json_object_new_int(nDBCameraID));
+  // 转换成json字符串，获取字符串长度...
+  char * lpNewJson = (char*)json_object_to_json_string(new_obj);
+  // 使用统一的通用命令发送接口函数 => 注意：必须是对应的学生端的对象...
+  int nResult = lpStudent->doSendCommonCmd(nCmdID, lpNewJson, strlen(lpNewJson));
+  // json对象引用计数减少...
+  json_object_put(new_obj);
+  // 返回执行结果...
+  return nResult;
+}
+
+// 处理讲师端获取房间里的在线摄像头列表...
+int CTCPClient::doCmdTeacherCameraOnLineList()
+{
+  // 有可能房间对象为空...
+  if (m_lpRoom == NULL)
+    return -1;  
+  // 获取当前房间里的在线摄像头通道列表集合...
+  GM_MapCamera & theMapCamera = m_lpRoom->GetMapCamera();
+  // 构造转发JSON数据块 => 返回在线通道列表...
+  json_object * new_obj = json_object_new_object();
+  // 先计算在线摄像头总数，放入JSON数据包当中...
+  json_object_object_add(new_obj, "list_num", json_object_new_int(theMapCamera.size()));
+  // 在线摄像头数大于0，遍历摄像头通道列表集合，组合要返回的数据内容...
+  if( theMapCamera.size() > 0 ) {
+    GM_MapCamera::iterator itorItem;
+    json_object * new_array = json_object_new_array();
+    for(itorItem = theMapCamera.begin(); itorItem != theMapCamera.end(); ++itorItem) {
+      CCamera * lpCamera = itorItem->second;
+      // 每条数据内容 => room_id|camera_id|camera_name|pc_name
+      json_object * data_obj = json_object_new_object();
+      json_object_object_add(data_obj, "room_id", json_object_new_int(lpCamera->m_nDBRoomID));
+      json_object_object_add(data_obj, "camera_id", json_object_new_int(lpCamera->m_nDBCameraID));
+      json_object_object_add(data_obj, "pc_name", json_object_new_string(lpCamera->m_strPCName.c_str()));
+      json_object_object_add(data_obj, "camera_name", json_object_new_string(lpCamera->m_strCameraName.c_str()));
+      json_object_array_add(new_array, data_obj);
+    }
+    // 将数组放入核心对象当中...
+    json_object_object_add(new_obj, "list_data", new_array);
+  }
+  // 转换成json字符串，获取字符串长度...
+  char * lpNewJson = (char*)json_object_to_json_string(new_obj);
+  // 使用统一的通用命令发送接口函数...
+  int nResult = this->doSendCommonCmd(kCmd_Camera_OnLineList, lpNewJson, strlen(lpNewJson));
+  // json对象引用计数减少...
+  json_object_put(new_obj);
+  // 返回执行结果...
+  return nResult;
 }
 
 // 处理Student命令事件...
@@ -290,8 +403,83 @@ int CTCPClient::doStudentClient(Cmd_Header * lpHeader, const char * lpJsonPtr)
   {
     case kCmd_Smart_Login:      nResult = this->doCmdSmartLogin(); break;
     case kCmd_Smart_OnLine:     nResult = this->doCmdSmartOnLine(); break;
+    case kCmd_Camera_LiveStop:  nResult = this->doCmdStudentCameraLiveStop(); break;
+    case kCmd_Camera_PullStop:  nResult = this->doCmdStudentCameraPullStop(); break;
+    case kCmd_Camera_PullStart: nResult = this->doCmdStudentCameraPullStart(); break;
   }
   // 默认全部返回正确...
+  return 0;
+}
+
+int CTCPClient::doCmdStudentCameraLiveStop()
+{
+  // 判断传递JSON数据有效性...
+  if( m_MapJson.find("camera_id") == m_MapJson.end() )
+    return -1;
+  // 判断学生端所在的房间对象是否有效...
+  if( m_lpRoom == NULL )
+    return -1;
+  // 判断所在房间里的讲师端对象是否有效...
+  CTCPClient * lpTeacher = m_lpRoom->GetTCPTeacher();
+  int nDBCameraID = atoi(m_MapJson["camera_id"].c_str());
+  if( lpTeacher == NULL || lpTeacher->GetClientType() != kClientTeacher )
+    return -1;
+  // 转发停止通道成功命令到房间里的讲师端...
+  json_object * new_obj = json_object_new_object();
+  json_object_object_add(new_obj, "camera_id", json_object_new_int(nDBCameraID));
+  // 转换成json字符串，获取字符串长度...
+  char * lpNewJson = (char*)json_object_to_json_string(new_obj);
+  // 使用统一的通用命令发送接口函数 => 注意：必须是对应的讲师端的对象...
+  int nResult = lpTeacher->doSendCommonCmd(kCmd_Camera_LiveStop, lpNewJson, strlen(lpNewJson));
+  // json对象引用计数减少...
+  json_object_put(new_obj);
+  // 返回执行结果...
+  return nResult;  
+}
+
+// 处理Student发送的通道拉流开启命令...
+int CTCPClient::doCmdStudentCameraPullStart()
+{
+  // 房间对象无效的情况...
+  if (m_lpRoom == NULL)
+    return -1;    
+  // 判断传递JSON数据有效性...
+  if( m_MapJson.find("camera_id") == m_MapJson.end() ||
+    m_MapJson.find("camera_name") == m_MapJson.end() ||
+    m_MapJson.find("room_id") == m_MapJson.end() ) {
+    return -1;
+  }
+  // 获取通道编号和名称，将通道存放到学生端所在房间当中...
+  string & strCameraName = m_MapJson["camera_name"];
+  int nDBRoomID = atoi(m_MapJson["room_id"].c_str());
+  int nDBCameraID = atoi(m_MapJson["camera_id"].c_str());
+  m_lpRoom->doCreateCamera(this, nDBCameraID, m_strPCName, strCameraName);
+  // 构造转发JSON数据块 => 返回摄像头编号信息...
+  json_object * new_obj = json_object_new_object();
+  json_object_object_add(new_obj, "camera_id", json_object_new_int(nDBCameraID));
+  // 转换成json字符串，获取字符串长度...
+  char * lpNewJson = (char*)json_object_to_json_string(new_obj);
+  // 使用统一的通用命令发送接口函数...
+  int nResult = this->doSendCommonCmd(kCmd_Camera_PullStart, lpNewJson, strlen(lpNewJson));
+  // json对象引用计数减少...
+  json_object_put(new_obj);
+  // 返回执行结果...
+  return nResult;
+}
+
+// 处理Student发送的通道拉流停止命令...
+int CTCPClient::doCmdStudentCameraPullStop()
+{
+  // 房间对象无效的情况...
+  if (m_lpRoom == NULL)
+    return -1;    
+  // 判断传递JSON数据有效性...
+  if( m_MapJson.find("camera_id") == m_MapJson.end() )
+    return -1;
+  // 获取通道编号，用通道编号删除摄像头对象...
+  int nDBCameraID = atoi(m_MapJson["camera_id"].c_str());
+  m_lpRoom->doDeleteCamera(nDBCameraID);
+  // 返回执行结果...
   return 0;
 }
 

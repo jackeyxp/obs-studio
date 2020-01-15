@@ -4,9 +4,11 @@
 #include <obs.hpp>
 #include <vector>
 #include <memory>
+#include "json.h"
 
 class QFormLayout;
 class OBSPropertiesView;
+class QListWidget;
 class QLabel;
 
 typedef obs_properties_t *(*PropertiesReloadCallback)(void *obj);
@@ -69,8 +71,7 @@ class OBSPropertiesView : public VScrollArea {
 	friend class CPPTWait;
 
 	using properties_delete_t = decltype(&obs_properties_destroy);
-	using properties_t =
-		std::unique_ptr<obs_properties_t, properties_delete_t>;
+	using properties_t = std::unique_ptr<obs_properties_t, properties_delete_t>;
 
 private:
 	QWidget *widget = nullptr;
@@ -86,22 +87,20 @@ private:
 	QWidget *lastWidget = nullptr;
 	bool deferUpdate;
 
-	QWidget *NewWidget(obs_property_t *prop, QWidget *widget,
-			   const char *signal);
+	bool          m_bUseRtpSource = false;
+	QListWidget * m_listCamera = nullptr;
+
+	QWidget *NewWidget(obs_property_t *prop, QWidget *widget, const char *signal);
 
 	QWidget *AddCheckbox(obs_property_t *prop);
-	QWidget *AddText(obs_property_t *prop, QFormLayout *layout,
-			 QLabel *&label);
+	QWidget *AddText(obs_property_t *prop, QFormLayout *layout, QLabel *&label);
 	void AddPath(obs_property_t *prop, QFormLayout *layout, QLabel **label);
 	void AddInt(obs_property_t *prop, QFormLayout *layout, QLabel **label);
-	void AddFloat(obs_property_t *prop, QFormLayout *layout,
-		      QLabel **label);
+	void AddFloat(obs_property_t *prop, QFormLayout *layout, QLabel **label);
 	QWidget *AddList(obs_property_t *prop, bool &warning);
-	void AddEditableList(obs_property_t *prop, QFormLayout *layout,
-			     QLabel *&label);
+	void AddEditableList(obs_property_t *prop, QFormLayout *layout, QLabel *&label);
 	QWidget *AddButton(obs_property_t *prop);
-	void AddColor(obs_property_t *prop, QFormLayout *layout,
-		      QLabel *&label);
+	void AddColor(obs_property_t *prop, QFormLayout *layout, QLabel *&label);
 	void AddFont(obs_property_t *prop, QFormLayout *layout, QLabel *&label);
 	void AddFrameRate(obs_property_t *prop, bool &warning,
 			  QFormLayout *layout, QLabel *&label);
@@ -128,11 +127,19 @@ signals:
 public:
 	OBSPropertiesView(OBSData settings, void *obj,
 			  PropertiesReloadCallback reloadCallback,
-			  PropertiesUpdateCallback callback, int minSize = 0);
+			  PropertiesUpdateCallback callback, 
+			  bool inUseRtpSource = false,
+			  int minSize = 0);
 	OBSPropertiesView(OBSData settings, const char *type,
 			  PropertiesReloadCallback reloadCallback,
 			  int minSize = 0);
 
+	bool doCheckRtpSource();
+	bool doCheckCamera(int nDBCameraID);
+	void onTriggerCameraLiveStop(int nDBCameraID);
+	void onTriggerCameraList(Json::Value & value);
+	inline bool IsUseRtpSource() { return m_bUseRtpSource; }
+	
 	inline obs_data_t *GetSettings() const { return settings; }
 
 	inline void UpdateSettings() { callback(obj, settings); }

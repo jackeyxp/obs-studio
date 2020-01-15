@@ -1,4 +1,5 @@
 
+#include "window-student-output.hpp"
 #include "window-view-camera.hpp"
 #include "display-helpers.hpp"
 #include "window-student.h"
@@ -22,6 +23,11 @@ CViewCamera::CViewCamera(QWidget *parent, Qt::WindowFlags flags)
 
 CViewCamera::~CViewCamera()
 {
+	// 释放学生端输出对象集合体...
+	if (m_lpStudentOutput != nullptr) {
+		delete m_lpStudentOutput;
+		m_lpStudentOutput = nullptr;
+	}
 	// 频道0 => 先释放所有主动创建的数据源对象...
 	if (m_dshowCameraItem != nullptr) {
 		obs_sceneitem_remove(m_dshowCameraItem);
@@ -37,6 +43,61 @@ CViewCamera::~CViewCamera()
 		obs_source_release(m_lpImageSource);
 		m_lpImageSource = nullptr;
 	}
+}
+
+bool CViewCamera::doSendCameraPullStart()
+{
+	int nDBCameraID = App()->GetDBSoftCameraID();
+	return App()->doSendCameraPullStartCmd(nDBCameraID);
+}
+
+void CViewCamera::onRemoteCameraPullStart(int nDBCameraID)
+{
+	m_bIsOnLine = true;
+}
+
+void CViewCamera::doResetOutputs()
+{
+	if (m_lpStudentOutput != nullptr) {
+		delete m_lpStudentOutput;
+		m_lpStudentOutput = nullptr;
+	}
+	// 创建新的学生端输出对象集合体 => 录像|推流...
+	m_lpStudentOutput = new CStudentOutput(m_lpStudentWindow);
+}
+
+void CViewCamera::doStartStreaming()
+{
+	// 学生输出对象无效，直接返回...
+	if (m_lpStudentOutput == nullptr)
+		return;
+	// 如果正在推流，直接返回...
+	if (m_lpStudentOutput->StreamingActive())
+		return;
+	// 开启学生推流操作...
+	m_lpStudentOutput->StartStreaming();
+}
+
+void CViewCamera::doStopStreaming()
+{
+	// 学生输出对象无效，直接返回...
+	if (m_lpStudentOutput == nullptr)
+		return;
+	// 如果不是正在推流，直接返回...
+	if (!m_lpStudentOutput->StreamingActive())
+		return;
+	// 开启学生录像操作...
+	m_lpStudentOutput->StopStreaming();
+}
+
+void CViewCamera::doStatusStreaming(bool bIsDelete, int nTotalKbps, int nAudioKbps, int nVideoKbps)
+{
+	// 如果需要被删除 => 停止退出...
+	if (bIsDelete) {
+		this->doStopStreaming();
+		return;
+	}
+	// 在界面上显示音视频码流信息...
 }
 
 void CViewCamera::initWindow()

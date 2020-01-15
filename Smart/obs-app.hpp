@@ -68,6 +68,7 @@ class CRemoteSession;
 class OBSApp : public QApplication {
 	Q_OBJECT
 private:
+	GM_MapNodeCamera               m_MapNodeCamera;				    // 监控通道配置信息(数据库CameraID）
 	std::string                    m_strWebCenterAddr;              // 中心网站服务器地址 => 可以带上端口号...
 	string                         m_strCenterTcpAddr;              // 中心服务器的TCP地址...
 	int                            m_nCenterTcpPort = 0;            // 中心服务器的TCP端口...
@@ -82,6 +83,8 @@ private:
 	int                            m_nDBFlowID = 0;                 // 从服务器获取到的流量统计数据库编号...
 	int                            m_nDBUserID = 0;                 // 已登录用户的数据库编号...
 	int                            m_nDBSmartID = 0;                // 本机在网站端数据库中的编号...
+	int                            m_nDBSoftCameraID = 0;           // 本机唯一软编码摄像头的数据库编号...
+	int                            m_nDBTeacherCameraID = 0;        // 本机唯一讲师端摄像头的数据库编号...
 	std::string                    m_strRoomID;                     // 登录的房间号...
 	std::string                    m_strMacAddr;                    // 本机MAC地址...
 	std::string                    m_strIPAddr;                     // 本机IP地址...
@@ -134,6 +137,8 @@ public:
 	int      GetDBFlowID() { return m_nDBFlowID; }
 	int      GetDBUserID() { return m_nDBUserID; }
 	int      GetDBSmartID() { return m_nDBSmartID; }
+	int      GetDBSoftCameraID() { return m_nDBSoftCameraID; }
+	int      GetDBTeacherCameraID() { return m_nDBTeacherCameraID; }
 	string & GetLocalIPAddr() { return m_strIPAddr; }
 	string & GetLocalMacAddr() { return m_strMacAddr; }
 	string & GetRoomIDStr() { return m_strRoomID; }
@@ -172,8 +177,17 @@ public:
 	void	 SetTcpCenterAddr(const string & strAddr) { m_strCenterTcpAddr = strAddr; }
 	void     SetTcpCenterPort(int nPort) { m_nCenterTcpPort = nPort; }
 	void     SetClientType(CLIENT_TYPE inType) { m_nClientType = inType; }
+	void     SetDBTeacherCameraID(int nDBCameraID) { m_nDBTeacherCameraID = nDBCameraID; }
+	void     SetDBSoftCameraID(int nDBCameraID) { m_nDBSoftCameraID = nDBCameraID; }
 	void     SetDBSmartID(int nDBSmartID) { m_nDBSmartID = nDBSmartID; }
 	void     SetJsonUser(Json::Value & inUser) { m_JsonUser = inUser; }
+
+	string   GetCameraSName(int nDBCameraID);
+	QString  GetCameraQName(int nDBCameraID);
+
+	void	 SetCamera(int nDBCameraID, GM_MapData & inMapData) { m_MapNodeCamera[nDBCameraID] = inMapData; }
+	void	 GetCamera(int nDBCameraID, GM_MapData & outMapData) { outMapData = m_MapNodeCamera[nDBCameraID]; }
+	GM_MapNodeCamera & GetNodeCamera() { return m_MapNodeCamera; }
 public:
 	OBSApp(int &argc, char **argv, profiler_name_store_t *store);
 	~OBSApp();
@@ -185,10 +199,19 @@ public:
 	void doLogoutEvent();
 	void doProcessCmdLine(int argc, char * argv[]);
 
+	bool doSendCameraOnLineListCmd();
+	bool doSendCameraPullStartCmd(int nDBCameraID);
+	bool doSendCameraPullStopCmd(int nDBCameraID);
+	bool doSendCameraLiveStopCmd(int nDBCameraID);
+	bool doSendCameraLiveStartCmd(int nDBCameraID);
+	//bool doSendCameraPusherIDCmd(int nDBCameraID);
+	//bool doSendCameraPTZCmd(int nDBCameraID, int nCmdID, int nSpeedVal);
+
 	void doCheckFDFS();
 	void doCheckRemote();
 	void doCheckOnLine();
 	void doCheckSmartFlow();
+	void doCheckRtpSource();
 
 	void timerEvent(QTimerEvent * inEvent);
 

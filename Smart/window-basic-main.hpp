@@ -427,6 +427,7 @@ public slots:
 	void StreamingStart();
 	void StreamStopping();
 	void StreamingStop(int errorcode, QString last_error);
+	void StreamingStatus(bool bIsDelete, int nTotalKbps, int nAudioKbps, int nVideoKbps);
 
 	void StartRecording();
 	void StopRecording();
@@ -464,8 +465,13 @@ public slots:
 
 private slots:
 	void onRemoteSmartLogin(int nLiveID);
+	void onRemoteCameraPullStart(int nDBCameraID);
 	void onRemoteLiveOnLine(int nLiveID, bool bIsLiveOnLine);
 	void onRemoteUdpLogout(int nLiveID, int tmTag, int idTag);
+	void onRemoteCameraList(Json::Value & value);
+	void onRemoteCameraLiveStop(int nDBCameraID);
+	void onRemoteCameraLiveStart(int nDBCameraID);
+	void onRemoteDeleteExAudioThread();
 private slots:
 	void AddSceneItem(OBSSceneItem item);
 	void AddScene(OBSSource source);
@@ -568,8 +574,6 @@ private:
 
 	bool LowDiskSpace();
 	void DiskSpaceMessage();
-
-	void doRemoveSmartSource();
 public:
 	inline obs_sceneitem_t * GetZeroSceneItem() { return m_lpZeroSceneItem; }
 	inline void SetSlientClose(bool bIsSlient) { m_bIsSlientClose = bIsSlient; }

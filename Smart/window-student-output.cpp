@@ -194,6 +194,19 @@ static void OBSStopStreaming(void *data, calldata_t *params)
 	//	Q_ARG(int, code), Q_ARG(QString, arg_last_error));
 }
 
+static void OBSStatusStreaming(void *data, calldata_t *params)
+{
+	CStudentOutput *output = static_cast<CStudentOutput *>(data);
+	bool bIsDelete  = calldata_bool(params, "is_delete");
+	int  nTotalKbps = calldata_int(params, "total_kbps");
+	int  nAudioKbps = calldata_int(params, "audio_kbps");
+	int  nVideoKbps = calldata_int(params, "video_kbps");
+
+	QMetaObject::invokeMethod(output->m_lpStudentMain, "StreamingStatus",
+		Q_ARG(bool, bIsDelete), Q_ARG(int, nTotalKbps), 
+		Q_ARG(int, nAudioKbps), Q_ARG(int, nVideoKbps));
+}
+
 int CStudentOutput::GetAudioBitrate(size_t i) const
 {
 	static const char *names[] = {
@@ -309,16 +322,18 @@ bool CStudentOutput::StartStreaming()
 	int streamTrack = config_get_int(m_lpStudentMain->Config(), "AdvOut", "TrackIndex") - 1;
 	// 注意：这里直接指定使用smart输出流...
 	const char * type = "smart_output";
-	startStreaming.Disconnect();
 	stopStreaming.Disconnect();
+	startStreaming.Disconnect();
+	statusStreaming.Disconnect();
 	streamOutput = obs_output_create(type, "adv_stream", nullptr, nullptr);
 	if (!streamOutput) {
 		blog(LOG_WARNING, "Creation of stream output type '%s' failed!", type);
 		return false;
 	}
 	obs_output_release(streamOutput);
-	startStreaming.Connect(obs_output_get_signal_handler(streamOutput), "starting", OBSStartStreaming, this);
 	stopStreaming.Connect(obs_output_get_signal_handler(streamOutput), "stopping", OBSStopStreaming, this);
+	startStreaming.Connect(obs_output_get_signal_handler(streamOutput), "starting", OBSStartStreaming, this);
+	statusStreaming.Connect(obs_output_get_signal_handler(streamOutput), "status", OBSStatusStreaming, this);
 
 	bool isEncoded = obs_output_get_flags(streamOutput) & OBS_OUTPUT_ENCODED;
 	const char *codec = obs_output_get_supported_audio_codecs(streamOutput);
@@ -346,9 +361,10 @@ bool CStudentOutput::StartStreaming()
 	obs_data_set_bool(settings, "new_socket_loop_enabled", enableNewSocketLoop);
 	obs_data_set_bool(settings, "low_latency_mode_enabled", enableLowLatencyMode);
 	obs_data_set_bool(settings, "dyn_bitrate", enableDynBitrate);
-	// 设置smart推流输出需要的特殊变量 => room_id | udp_addr | udp_port | tcp_socket | client_type
+	// 设置smart推流输出需要的特殊变量 => room_id | live_id | udp_addr | udp_port | tcp_socket | client_type
 	int nRoomID = atoi(App()->GetRoomIDStr().c_str());
 	obs_data_set_int(settings, "room_id", nRoomID);
+	obs_data_set_int(settings, "live_id", App()->GetDBSoftCameraID());
 	obs_data_set_int(settings, "udp_port", App()->GetUdpPort());
 	obs_data_set_string(settings, "udp_addr", App()->GetUdpAddr().c_str());
 	obs_data_set_int(settings, "tcp_socket", App()->GetRemoteTcpSockFD());

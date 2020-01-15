@@ -1590,6 +1590,52 @@ void OBSApp::doCheckOnLine()
 void OBSApp::doCheckFDFS()
 {
 	this->doCheckRemote();
+	this->doCheckRtpSource();
+}
+
+// 自动检测rtp_source资源，向中转服务器发送开启推流命令...
+void OBSApp::doCheckRtpSource()
+{
+	// 如果不是讲师端对象，直接返回...
+	if (this->GetClientType() != kClientTeacher)
+		return;
+	// 如果主窗口还没有加载完毕，不能创建远程对象，因为无法读取资源配置...
+	OBSBasic * lpBasicWnd = qobject_cast<OBSBasic*>(mainWindow);
+	if (!lpBasicWnd->IsLoaded())
+		return;
+	// 如果远程会话无效 或 远程会话没有成功连接，直接返回...
+	if (m_RemoteSession == NULL || !m_RemoteSession->IsConnected())
+		return;
+	// 场景资源遍历回调函数 => 找到rtp_source，执行相关操作...
+	auto func = [](obs_scene_t *, obs_sceneitem_t *item, void *param)
+	{
+		OBSApp * obsApp = reinterpret_cast<OBSApp*>(param);
+		obs_source_t * lpSource = obs_sceneitem_get_source(item);
+		const char * lpSrcID = obs_source_get_id(lpSource);
+		// 进行ID判断，如果不是rtp资源，返回true，继续查找...
+		if (astrcmpi(lpSrcID, obsApp->InteractSmartSource()) != 0)
+			return true;
+		// 如果是rtp资源，找到场景资源编号和场景资源配置对象...
+		int nSceneItemID = (int)obs_sceneitem_get_id(item);
+		obs_data_t * lpSettings = obs_source_get_settings(lpSource);
+		// 获取rtp_source资源是否已经创建了拉流线程标志，摄像头通道编号...
+		bool bHasLiveOnLine = obs_data_get_bool(lpSettings, "live_on");
+		int nDBCameraID = obs_data_get_int(lpSettings, "live_id");
+		// 注意：这里必须手动进行引用计数减少，否则，会造成内存泄漏 => obs_source_get_settings 会增加引用计数...
+		obs_data_release(lpSettings);
+		// 如果摄像头通道无效 或 场景资源编号无效，直接返回...
+		if (nDBCameraID <= 0 || nSceneItemID <= 0)
+			return true;
+		// 如果资源里面的拉流线程正在有效运行，直接返回...
+		if (bHasLiveOnLine)
+			return true;
+		// 通过中转服务器向学生端发送开启指定通道的推流工作...
+		obsApp->doSendCameraLiveStartCmd(nDBCameraID);
+		// 返回true，继续下一条记录...
+		return true;
+	};
+	// 遍历当前场景所有的互动教室资源，尝试启动拉流...
+	obs_scene_enum_items(lpBasicWnd->GetCurrentScene(), func, this);
 }
 
 // 自动检测并创建RemoteSession...
@@ -1616,12 +1662,13 @@ void OBSApp::doCheckRemote()
 	// 注意：学生端 => CStudentWindow | 老师端 => OBSBasic，都使用同样的基类 => OBSMainWindow
 	// 关联UDP连接被服务器删除时的事件通知信号槽、获取在线通道列表的信号槽、开启或删除rtp资源的信号槽...
 	this->connect(m_RemoteSession, SIGNAL(doTriggerSmartLogin(int)), mainWindow, SLOT(onRemoteSmartLogin(int)));
+	this->connect(m_RemoteSession, SIGNAL(doTriggerCameraPullStart(int)), mainWindow, SLOT(onRemoteCameraPullStart(int)));
 	this->connect(m_RemoteSession, SIGNAL(doTriggerLiveOnLine(int, bool)), mainWindow, SLOT(onRemoteLiveOnLine(int, bool)));
 	this->connect(m_RemoteSession, SIGNAL(doTriggerUdpLogout(int, int, int)), mainWindow, SLOT(onRemoteUdpLogout(int, int, int)));
-
-	//this->connect(m_RemoteSession, SIGNAL(doTriggerLiveOnLine(int, bool)), lpBasicWnd, SLOT(onTriggerLiveOnLine(int, bool)));
-	//this->connect(m_RemoteSession, SIGNAL(doTriggerCameraList(Json::Value&)), lpBasicWnd, SLOT(onTriggerCameraList(Json::Value&)));
-	//this->connect(m_RemoteSession, SIGNAL(doTriggerCameraLiveStop(int)), lpBasicWnd, SLOT(onTriggerCameraLiveStop(int)));
+	this->connect(m_RemoteSession, SIGNAL(doTriggerCameraList(Json::Value&)), mainWindow, SLOT(onRemoteCameraList(Json::Value&)));
+	this->connect(m_RemoteSession, SIGNAL(doTriggerCameraLiveStop(int)), mainWindow, SLOT(onRemoteCameraLiveStop(int)));
+	this->connect(m_RemoteSession, SIGNAL(doTriggerCameraLiveStart(int)), mainWindow, SLOT(onRemoteCameraLiveStart(int)));
+	this->connect(m_RemoteSession, SIGNAL(doTriggerDeleteExAudioThread()), mainWindow, SLOT(onRemoteDeleteExAudioThread()));
 	//this->connect(m_RemoteSession, SIGNAL(doTriggerScreenFinish(int, QString, QString)), lpBasicWnd, SLOT(onTriggerScreenFinish(int, QString, QString)), Qt::QueuedConnection);
 }
 
@@ -1659,6 +1706,83 @@ void OBSApp::onReplyFinished(QNetworkReply *reply)
 	string & strData = theByteArray.toStdString();
 	//blog(LOG_DEBUG, "QT Reply Data => %s", strData.c_str());
 }
+
+string OBSApp::GetCameraSName(int nDBCameraID)
+{
+	string strCameraName;
+	GM_MapNodeCamera::iterator itorItem = m_MapNodeCamera.find(nDBCameraID);
+	if (itorItem == m_MapNodeCamera.end())
+		return strCameraName;
+	GM_MapData & theMapData = itorItem->second;
+	return theMapData["camera_name"];
+}
+
+QString OBSApp::GetCameraQName(int nDBCameraID)
+{
+	QString strQCameraName = QTStr("None");
+	GM_MapNodeCamera::iterator itorItem = m_MapNodeCamera.find(nDBCameraID);
+	if (itorItem == m_MapNodeCamera.end())
+		return strQCameraName;
+	WCHAR szWBuffer[MAX_PATH] = { 0 };
+	GM_MapData & theMapData = itorItem->second;
+	string & strUTF8Name = theMapData["camera_name"];
+	os_utf8_to_wcs(strUTF8Name.c_str(), strUTF8Name.size(), szWBuffer, MAX_PATH);
+	return QString((QChar*)szWBuffer);
+}
+
+// 向中转服务器请求当前房间在线的摄像头列表...
+bool OBSApp::doSendCameraOnLineListCmd()
+{
+	if (m_RemoteSession == NULL)
+		return false;
+	return m_RemoteSession->doSendCameraOnLineListCmd();
+}
+
+bool OBSApp::doSendCameraPullStartCmd(int nDBCameraID)
+{
+	if (m_RemoteSession == NULL)
+		return false;
+	return m_RemoteSession->doSendCameraPullStartCmd(nDBCameraID);
+}
+
+bool OBSApp::doSendCameraPullStopCmd(int nDBCameraID)
+{
+	if (m_RemoteSession == NULL)
+		return false;
+	return m_RemoteSession->doSendCameraPullStopCmd(nDBCameraID);
+}
+
+// 通过中转服务器向学生端发送停止通道推流工作...
+bool OBSApp::doSendCameraLiveStopCmd(int nDBCameraID)
+{
+	if (m_RemoteSession == NULL)
+		return false;
+	return m_RemoteSession->doSendCameraLiveStopCmd(nDBCameraID);
+}
+
+// 通过中转服务器向学生端发送开启通道推流工作...
+bool OBSApp::doSendCameraLiveStartCmd(int nDBCameraID)
+{
+	if (m_RemoteSession == NULL)
+		return false;
+	return m_RemoteSession->doSendCameraLiveStartCmd(nDBCameraID);
+}
+
+/*// 通过中转服务器向学生端发送云台操作命令...
+bool OBSApp::doSendCameraPTZCmd(int nDBCameraID, int nCmdID, int nSpeedVal)
+{
+	if (m_RemoteSession == NULL || nDBCameraID <= 0)
+		return false;
+	return m_RemoteSession->doSendCameraPTZCmd(nDBCameraID, nCmdID, nSpeedVal);
+}
+
+bool OBSApp::doSendCameraPusherIDCmd(int nDBCameraID)
+{
+	if (m_RemoteSession == NULL)
+		return false;
+	// 注意：可以允许 nDBCameraID 是无效内容...
+	return m_RemoteSession->doSendCameraPusherIDCmd(nDBCameraID);
+}*/
 
 string OBSApp::GetVersionString() const
 {

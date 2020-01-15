@@ -82,6 +82,7 @@ static const char *output_signals[] = {
 	"void deactivate(ptr output)",
 	"void reconnect(ptr output)",
 	"void reconnect_success(ptr output)",
+	"void status(ptr output)",
 	NULL,
 };
 
@@ -2319,6 +2320,20 @@ static inline bool can_reconnect(const obs_output_t *output, int code)
 
 	return (reconnecting(output) && code != OBS_OUTPUT_SUCCESS) ||
 	       (reconnect_active && code == OBS_OUTPUT_DISCONNECTED);
+}
+
+void obs_output_signal_status(obs_output_t *output, bool bIsDelete, int nTotalKbps, int nAudioKbps, int nVideoKbps)
+{
+	struct calldata params;
+	uint8_t stack[128];
+
+	calldata_init_fixed(&params, stack, sizeof(stack));
+	calldata_set_ptr(&params, "output", output);
+	calldata_set_bool(&params, "is_delete", bIsDelete);
+	calldata_set_int(&params, "total_kbps", nTotalKbps);
+	calldata_set_int(&params, "audio_kbps", nAudioKbps);
+	calldata_set_int(&params, "video_kbps", nVideoKbps);
+	signal_handler_signal(output->context.signals, "status", &params);
 }
 
 void obs_output_signal_stop(obs_output_t *output, int code)

@@ -29,8 +29,7 @@
 
 using namespace std;
 
-static void CreateTransitionScene(OBSSource scene, const char *text,
-				  uint32_t color);
+static void CreateTransitionScene(OBSSource scene, const char *text, uint32_t color);
 
 OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 	: QDialog(parent),
@@ -45,10 +44,8 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 	  oldSettings(obs_data_create()),
 	  buttonBox(new QDialogButtonBox(this))
 {
-	int cx = (int)config_get_int(App()->GlobalConfig(), "PropertiesWindow",
-				     "cx");
-	int cy = (int)config_get_int(App()->GlobalConfig(), "PropertiesWindow",
-				     "cy");
+	int cx = (int)config_get_int(App()->GlobalConfig(), "PropertiesWindow", "cx");
+	int cy = (int)config_get_int(App()->GlobalConfig(), "PropertiesWindow", "cy");
 
 	enum obs_source_type type = obs_source_get_type(source);
 
@@ -59,8 +56,7 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 
 	buttonBox->button(QDialogButtonBox::Ok)->setText(QTStr("OK"));
 	buttonBox->button(QDialogButtonBox::Cancel)->setText(QTStr("Cancel"));
-	buttonBox->button(QDialogButtonBox::RestoreDefaults)
-		->setText(QTStr("Defaults"));
+	buttonBox->button(QDialogButtonBox::RestoreDefaults)->setText(QTStr("Defaults"));
 
 	if (cx > 400 && cy > 400)
 		resize(cx, cy);
@@ -78,14 +74,25 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 	obs_data_apply(oldSettings, settings);
 	obs_data_release(settings);
 
-	view = new OBSPropertiesView(
-		settings, source,
-		(PropertiesReloadCallback)obs_source_properties,
-		(PropertiesUpdateCallback)obs_source_update);
+	// 判断是否是rtp数据源类型标志...
+	const char *id = obs_source_get_id(source);
+	bool bUseRtpSource = ((astrcmpi(id, App()->InteractSmartSource()) == 0) ? true : false);
+
+	view = new OBSPropertiesView(settings, source,
+			(PropertiesReloadCallback)obs_source_properties,
+			(PropertiesUpdateCallback)obs_source_update, bUseRtpSource);
+	view->setSizePolicy(QSizePolicy::Expanding,	QSizePolicy::Expanding);
 	view->setMinimumHeight(150);
 
-	preview->setMinimumSize(20, 150);
-	preview->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+	preview->setMinimumSize(50, 150);
+	preview->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+	// 如果是rtp数据源，隐藏预览窗口对象，隐藏恢复默认按钮...
+	if( bUseRtpSource ) {
+		preview->setVisible(false);
+		view->setMinimumSize(50, 520);
+		buttonBox->button(QDialogButtonBox::RestoreDefaults)->setVisible(false);
+	}
 
 	// Create a QSplitter to keep a unified workflow here.
 	windowSplitter = new QSplitter(Qt::Orientation::Vertical, this);
@@ -123,8 +130,7 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 
 	auto addDrawCallback = [this]() {
 		obs_display_add_draw_callback(preview->GetDisplay(),
-					      OBSBasicProperties::DrawPreview,
-					      this);
+					      OBSBasicProperties::DrawPreview, this);
 	};
 	auto addTransitionDrawCallback = [this]() {
 		obs_display_add_draw_callback(
@@ -137,9 +143,7 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 	bool drawable_preview = (caps & OBS_SOURCE_VIDEO) != 0;
 
 	if (drawable_preview && drawable_type) {
-		preview->show();
 		connect(preview.data(), &OBSQTDisplay::DisplayCreated, addDrawCallback);
-
 	} else if (type == OBS_SOURCE_TYPE_TRANSITION) {
 		sourceA = obs_source_create_private("scene", "sourceA", nullptr);
 		sourceB = obs_source_create_private("scene", "sourceB", nullptr);
@@ -186,7 +190,6 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 
 		preview->show();
 		connect(preview.data(), &OBSQTDisplay::DisplayCreated, addTransitionDrawCallback);
-
 	} else {
 		preview->hide();
 	}
@@ -329,37 +332,58 @@ void OBSBasicProperties::UpdateProperties(void *data, calldata_t *)
 				  "ReloadProperties");
 }
 
+void OBSBasicProperties::doRtpStopClose()
+{
+	// 如果相关的视图无效或不是rtp数据源，直接返回...
+	if (view == nullptr || !view->IsUseRtpSource())
+		return;
+	// 设定标志，关闭窗口...
+	acceptClicked = true;
+	this->close();
+	// 配置发生变化，更新配置...
+	if (view->DeferUpdate()) {
+		view->UpdateSettings();
+	}
+}
+
 void OBSBasicProperties::on_buttonBox_clicked(QAbstractButton *button)
 {
 	QDialogButtonBox::ButtonRole val = buttonBox->buttonRole(button);
 
 	if (val == QDialogButtonBox::AcceptRole) {
+		// 验证选中的rtp数据源是否有效...
+		if (!view->doCheckRtpSource())
+			return;
+		// 设定标志，关闭窗口...
 		acceptClicked = true;
-		close();
-
-		if (view->DeferUpdate())
+		this->close();
+		// 配置发生变化，更新配置...
+		if (view->DeferUpdate()) {
 			view->UpdateSettings();
-
+		}
 	} else if (val == QDialogButtonBox::RejectRole) {
-		obs_data_t *settings = obs_source_get_settings(source);
-		obs_data_clear(settings);
-		obs_data_release(settings);
-
-		if (view->DeferUpdate())
-			obs_data_apply(settings, oldSettings);
-		else
-			obs_source_update(source, oldSettings);
-
-		close();
-
+		// 如果就是rtp资源，点击取消，不要清理配置，否则会出问题...
+		// 如果不是rtp资源，点击取消，需要对配置进行还原更新处理...
+		if (!view->IsUseRtpSource()) {
+			obs_data_t *settings = obs_source_get_settings(source);
+			obs_data_clear(settings);
+			obs_data_release(settings);
+			if (view->DeferUpdate()) {
+				obs_data_apply(settings, oldSettings);
+			} else {
+				obs_source_update(source, oldSettings);
+			}
+		}
+		// 关闭窗口...
+		this->close();
 	} else if (val == QDialogButtonBox::ResetRole) {
 		obs_data_t *settings = obs_source_get_settings(source);
 		obs_data_clear(settings);
 		obs_data_release(settings);
 
-		if (!view->DeferUpdate())
+		if (!view->DeferUpdate()) {
 			obs_source_update(source, nullptr);
-
+		}
 		view->ReloadProperties();
 	}
 }
@@ -441,9 +465,12 @@ void OBSBasicProperties::Cleanup()
 
 void OBSBasicProperties::reject()
 {
-	if (!acceptClicked && (CheckSettings() != 0)) {
-		if (!ConfirmQuit()) {
-			return;
+	// 如果不是rtp资源，点击取消，需要对配置进行还原更新处理...
+	if (!view->IsUseRtpSource()) {
+		if (!acceptClicked && (CheckSettings() != 0)) {
+			if (!ConfirmQuit()) {
+				return;
+			}
 		}
 	}
 
@@ -453,10 +480,13 @@ void OBSBasicProperties::reject()
 
 void OBSBasicProperties::closeEvent(QCloseEvent *event)
 {
-	if (!acceptClicked && (CheckSettings() != 0)) {
-		if (!ConfirmQuit()) {
-			event->ignore();
-			return;
+	// 如果不是rtp资源，点击取消，需要对配置进行还原更新处理...
+	if (!view->IsUseRtpSource()) {
+		if (!acceptClicked && (CheckSettings() != 0)) {
+			if (!ConfirmQuit()) {
+				event->ignore();
+				return;
+			}
 		}
 	}
 

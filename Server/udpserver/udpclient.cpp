@@ -8,6 +8,7 @@ CUDPClient::CUDPClient(int inUdpListenFD, uint8_t tmTag, uint8_t idTag, uint32_t
   , m_nHostAddr(inHostAddr)
   , m_nHostPort(inHostPort)
   , m_server_rtt_var_ms(-1)
+  , m_bIsCanDetect(true)
   , m_server_rtt_ms(-1)
   , m_nCurVPushSeq(0)
   , m_lpRoom(NULL)
@@ -70,6 +71,10 @@ bool CUDPClient::doServerSendDetect()
   // 采用了新的拥塞处理 => 删除指定缓存时间点之前的音视频数据包...
   this->doCalcAVJamStatus(false);
   this->doCalcAVJamStatus(true);
+  // 注意：不能探测后，推流端会累积缓存，直到溢出自动删除...
+  // 如果有不能进行探测标志，直接返回...
+  if( !m_bIsCanDetect )
+    return false;
   // 填充探测命令包 => 服务器主动发起...
   m_server_rtp_detect.tm     = TM_TAG_SERVER;
   m_server_rtp_detect.id     = ID_TAG_SERVER;
@@ -300,8 +305,6 @@ bool CUDPClient::doCreateForPusher(char * lpBuffer, int inBufSize)
   rtpHdr.tm = TM_TAG_SERVER;
   rtpHdr.id = ID_TAG_SERVER;
   rtpHdr.pt = PT_TAG_CREATE;
-  // 新增反馈直播编号 => 服务器生成...
-  rtpHdr.noset = this->GetLiveID();
   // 回复推流端 => 房间已经创建成功，不要再发创建命令了...
   return this->doTransferToFrom((char*)&rtpHdr, sizeof(rtpHdr));
 }
