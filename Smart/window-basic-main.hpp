@@ -574,6 +574,9 @@ private:
 
 	bool LowDiskSpace();
 	void DiskSpaceMessage();
+
+	void doSceneCreateMonitor();
+	void doSceneDestoryMonitor();
 public:
 	inline obs_sceneitem_t * GetZeroSceneItem() { return m_lpZeroSceneItem; }
 	inline void SetSlientClose(bool bIsSlient) { m_bIsSlientClose = bIsSlient; }

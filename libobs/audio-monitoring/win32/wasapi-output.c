@@ -34,12 +34,17 @@ struct audio_monitor {
 	enum speaker_layout speakers;
 	bool source_has_video;
 	bool ignore;
+	
+	bool               is_on;
+	bool               is_muted;
+	uint32_t           max_frame_size;
+	struct circlebuf   play_buffer;
+	DARRAY(float)      buf_play;
 
 	int64_t lowest_audio_offset;
 	struct circlebuf delay_buffer;
-	uint32_t delay_size;
 
-	DARRAY(float) buf;
+	DARRAY(float)      buf_delay;
 	pthread_mutex_t playback_mutex;
 };
 
@@ -81,13 +86,10 @@ static bool process_audio_delay(struct audio_monitor *monitor, float **data,
 		size_t size;
 		bool bad_diff;
 
-		circlebuf_peek_front(&monitor->delay_buffer, &cur_ts,
-				     sizeof(ts));
-		front_ts = cur_ts - ((uint64_t)pad * 1000000000ULL /
-				     (uint64_t)monitor->sample_rate);
+		circlebuf_peek_front(&monitor->delay_buffer, &cur_ts, sizeof(ts));
+		front_ts = cur_ts - ((uint64_t)pad * 1000000000ULL / (uint64_t)monitor->sample_rate);
 		diff = (int64_t)front_ts - (int64_t)last_frame_ts;
-		bad_diff = !last_frame_ts || llabs(diff) > 5000000000 ||
-			   monitor->time_since_prev > 100000000ULL;
+		bad_diff = !last_frame_ts || llabs(diff) > 5000000000 || monitor->time_since_prev > 100000000ULL;
 
 		/* delay audio if rushing */
 		if (!bad_diff && diff > 75000000) {
@@ -103,17 +105,14 @@ static bool process_audio_delay(struct audio_monitor *monitor, float **data,
 		}
 
 		circlebuf_pop_front(&monitor->delay_buffer, NULL, sizeof(ts));
-		circlebuf_pop_front(&monitor->delay_buffer, frames,
-				    sizeof(*frames));
+		circlebuf_pop_front(&monitor->delay_buffer, frames, sizeof(*frames));
 
 		size = *frames * blocksize;
-		da_resize(monitor->buf, size);
-		circlebuf_pop_front(&monitor->delay_buffer, monitor->buf.array,
-				    size);
+		da_resize(monitor->buf_delay, size);
+		circlebuf_pop_front(&monitor->delay_buffer,	monitor->buf_delay.array, size);
 
 		/* cut audio if dragging */
-		if (!bad_diff && diff < -75000000 &&
-		    monitor->delay_buffer.size > 0) {
+		if (!bad_diff && diff < -75000000 && monitor->delay_buffer.size > 0) {
 #ifdef DEBUG_AUDIO
 			blog(LOG_INFO,
 			     "audio dragging, cutting audio, "
@@ -138,7 +137,7 @@ static bool process_audio_delay(struct audio_monitor *monitor, float **data,
 			return false;
 		}
 
-		*data = monitor->buf.array;
+		*data = monitor->buf_delay.array;
 		return true;
 	}
 
@@ -178,7 +177,7 @@ static void on_audio_playback(void *param, obs_source_t *source,
 	uint32_t resample_frames;
 	uint64_t ts_offset;
 	bool success;
-	BYTE *output;
+	//BYTE *output;
 
 	if (pthread_mutex_trylock(&monitor->playback_mutex) != 0) {
 		return;
@@ -196,24 +195,26 @@ static void on_audio_playback(void *param, obs_source_t *source,
 	}
 
 	UINT32 pad = 0;
-	monitor->client->lpVtbl->GetCurrentPadding(monitor->client, &pad);
+	//monitor->client->lpVtbl->GetCurrentPadding(monitor->client, &pad);
 
-	bool decouple_audio = source->async_unbuffered &&
-			      source->async_decoupled;
+	bool decouple_audio = source->async_unbuffered && source->async_decoupled;
 
 	if (monitor->source_has_video && !decouple_audio) {
 		uint64_t ts = audio_data->timestamp - ts_offset;
-
-		if (!process_audio_delay(monitor, (float **)(&resample_data[0]),
-					 &resample_frames, ts, pad)) {
+		if (!process_audio_delay(monitor, (float**)(&resample_data[0]), &resample_frames, ts, pad)) {
 			goto unlock;
 		}
 	}
 
-	HRESULT hr = render->lpVtbl->GetBuffer(render, resample_frames, &output);
+	monitor->max_frame_size = max(monitor->max_frame_size, resample_frames);
+	uint32_t audio_size = resample_frames * monitor->channels * sizeof(float);
+	//blog(LOG_DEBUG, "== source_name: %s, audio_frames: %d, audio_ts: %llu, cur_time: %llu ==",
+	//	source->context.name, resample_frames, ts, os_gettime_ns());
+
+	/*HRESULT hr = render->lpVtbl->GetBuffer(render, resample_frames, &output);
 	if (FAILED(hr)) {
 		goto unlock;
-	}
+	}*/
 
 	if (!muted) {
 		/* apply volume */
@@ -224,34 +225,29 @@ static void on_audio_playback(void *param, obs_source_t *source,
 			while (cur < end)
 				*(cur++) *= vol;
 		}
-
+		// 将音频缓存到对应的监视器缓存对象当中 => 直接利用playback_mutex互斥体...
+		circlebuf_push_back(&monitor->play_buffer, resample_data[0], audio_size);
 		// 将转换后的音频数据投递到监视器(扬声器)的缓冲区当中...
-		memcpy(output, resample_data[0], resample_frames * monitor->channels * sizeof(float));
-
-		// (思路错误)注意：目前进行了全新升级 => 所有播放音频混合到轨道3，进行统一的播放，都放到scene场景下面的source当中...
-		// (思路错误)注意：不能用obs自带的直接多路监视音频，再进行多路单独输入回音消除，这种方式回音消除效果很不好...
-		// (思路错误)注意：新的归一化之后，就不用进行焦点处理了，所有音频数据直接投递进行回音消除就可以了...
-		// (最新思路)注意：暂时不能用scene播放音频，只能用数据源混音模式，而不是输出音频混音模式...
-		//assert(astrcmpi(source->info.id, "scene") == 0);
-		if (astrcmpi(source->info.id, "smart_source") == 0) {
-			// 构造需要投递给麦克风数据源的结构体 => 样本总是float格式...
-			struct obs_source_audio theEchoData = { 0 };
-			theEchoData.data[0] = resample_data[0];
-			theEchoData.frames = resample_frames;
-			theEchoData.format = AUDIO_FORMAT_FLOAT;
-			theEchoData.speakers = monitor->speakers;
-			theEchoData.samples_per_sec = monitor->sample_rate;
-			theEchoData.timestamp = audio_data->timestamp;
-			// 枚举所有的音频数据源对象，找到麦克风，进行回音消除...
-			doPushEchoDataToMic(&theEchoData);
+		// memcpy(output, resample_data[0], audio_size);
+		monitor->is_on = true;
+	} else {
+		// 如果静音，并且播放缓存有效，释放之...
+		if (monitor->play_buffer.size > 0) {
+			circlebuf_free(&monitor->play_buffer);
 		}
+		monitor->is_on = false;
 	}
+	// 保存静音标志到当前监视器对象当中...
+	monitor->is_muted = muted;
 
-	render->lpVtbl->ReleaseBuffer(render, resample_frames,
-				      muted ? AUDCLNT_BUFFERFLAGS_SILENT : 0);
-
+	//render->lpVtbl->ReleaseBuffer(render, resample_frames,
+	//		muted ? AUDCLNT_BUFFERFLAGS_SILENT : 0);
 unlock:
 	pthread_mutex_unlock(&monitor->playback_mutex);
+	// 调用场景监听器去进行各个监听通道的混音并投递工作...
+	if (!monitor->is_muted) {
+		scene_monitor_mix_play();
+	}
 }
 
 static inline void audio_monitor_free(struct audio_monitor *monitor)
@@ -272,7 +268,11 @@ static inline void audio_monitor_free(struct audio_monitor *monitor)
 	safe_release(monitor->render);
 	audio_resampler_destroy(monitor->resampler);
 	circlebuf_free(&monitor->delay_buffer);
-	da_free(monitor->buf);
+	da_free(monitor->buf_delay);
+	
+	pthread_mutex_destroy(&monitor->playback_mutex);
+	circlebuf_free(&monitor->play_buffer);
+	da_free(monitor->buf_play);
 }
 
 static enum speaker_layout convert_speaker_layout(DWORD layout, WORD channels)
@@ -373,8 +373,7 @@ static bool audio_monitor_init(struct audio_monitor *monitor,
 	/* ------------------------------------------ *
 	 * Init resampler                             */
 
-	const struct audio_output_info *info =
-		audio_output_get_info(obs->audio.audio);
+	const struct audio_output_info *info = audio_output_get_info(obs->audio.audio);
 	WAVEFORMATEXTENSIBLE *ext = (WAVEFORMATEXTENSIBLE *)wfex;
 	struct resample_info from;
 	struct resample_info to;
@@ -404,8 +403,7 @@ static bool audio_monitor_init(struct audio_monitor *monitor,
 	}
 
 	hr = monitor->client->lpVtbl->GetService(monitor->client,
-						 &IID_IAudioRenderClient,
-						 (void **)&monitor->render);
+			&IID_IAudioRenderClient, (void**)&monitor->render);
 	if (FAILED(hr)) {
 		goto fail;
 	}
@@ -484,15 +482,172 @@ void audio_monitor_reset(struct audio_monitor *monitor)
 	}
 }
 
+// 改进 => 必须整体互斥，否则，混音会发生问题...
 void audio_monitor_destroy(struct audio_monitor *monitor)
 {
+	pthread_mutex_lock(&obs->audio.monitoring_mutex);
 	if (monitor) {
 		audio_monitor_free(monitor);
-
-		pthread_mutex_lock(&obs->audio.monitoring_mutex);
 		da_erase_item(obs->audio.monitors, &monitor);
-		pthread_mutex_unlock(&obs->audio.monitoring_mutex);
-
 		bfree(monitor);
 	}
+	pthread_mutex_unlock(&obs->audio.monitoring_mutex);
+}
+
+/*static void doSaveAudioPCM(uint8_t * lpBufData, int nBufSize, int nAudioRate, int nAudioChannel)
+{
+	// 注意：PCM数据必须用二进制方式打开文件...
+	char szFullPath[MAX_PATH] = { 0 };
+	sprintf(szFullPath, "F:/MP4/PCM/horn_%d_%d_float.pcm", nAudioRate, nAudioChannel);
+	FILE * lpFile = fopen(szFullPath, "ab+");
+	// 打开文件成功，开始写入音频PCM数据内容...
+	if (lpFile != NULL) {
+		fwrite(lpBufData, nBufSize, 1, lpFile);
+		fclose(lpFile);
+	}
+}*/
+
+void scene_monitor_mix_play()
+{
+	struct audio_monitor * monitor_source = NULL;
+	struct obs_core_audio * audio = &obs->audio;
+	struct audio_monitor * monitor_scene = audio->monitor_scene;
+	// 锁定所有的监视器对象...
+	pthread_mutex_lock(&audio->monitoring_mutex);
+	uint32_t nMaxFrameSize = 0;
+	int  nCanMixCount = 0;
+	// 如果没有监视器，直接返回...
+	if (monitor_scene == NULL || audio->monitors.num <= 1)
+		goto unlock;
+	// 计算当前所有监视器中最大数据帧的长度...
+	for (size_t i = 0; i < audio->monitors.num; ++i) {
+		monitor_source = audio->monitors.array[i];
+		// 如果是场景监视器自己，下一个...
+		if (monitor_source == monitor_scene)
+			continue;
+		// 如果当前监视器处于静音状态，下一个...
+		if (audio_monitor_is_muted(monitor_source))
+			continue;
+		// 计算当前所有监视器中最大数据帧的长度 => 所有监视器都要凑够这个数据量...
+		nMaxFrameSize = max(monitor_source->max_frame_size, nMaxFrameSize);
+	}
+	// 如果最大数据帧长度无效，直接返回...
+	if (nMaxFrameSize <= 0)
+		goto unlock;
+	// 对最大混音缓存进行重置操作...
+	size_t total_size = AUDIO_OUTPUT_FRAMES * MAX_AUDIO_CHANNELS * sizeof(float) * 2;
+	memset(audio->monitoring_mix, 0, total_size);
+	// 必须等待所有通道的监视器都有足够混音的数据...
+	for (size_t i = 0; i < audio->monitors.num; ++i) {
+		monitor_source = audio->monitors.array[i];
+		// 如果是场景监视器自己，下一个...
+		if (monitor_source == monitor_scene)
+			continue;
+		// 如果当前监视器处于静音状态，下一个...
+		if (audio_monitor_is_muted(monitor_source))
+			continue;
+		// 如果当前监视器不能混音，直接返回...
+		if (!audio_monitor_can_mix(monitor_source, nMaxFrameSize))
+			goto unlock;
+		// 对当前监视器进行正常的混音处理...
+		audio_monitor_mixer(monitor_source, audio->monitoring_mix, nMaxFrameSize);
+		// 没有静音并且可以混音 => 累加计数器...
+		++nCanMixCount;
+	}
+	// 如果混音计数器无效，直接返回...
+	if (nCanMixCount <= 0)
+		goto unlock;
+	// 混合完毕，使用最后的监视器进行本地播放...
+	// 注意：所有的监视器都是相同的声道和采样率...
+	audio_monitor_play(monitor_scene, audio->monitoring_mix, nMaxFrameSize);
+unlock:
+	pthread_mutex_unlock(&audio->monitoring_mutex);
+}
+
+bool audio_monitor_is_muted(struct audio_monitor *monitor)
+{
+	return (monitor ? (monitor->is_muted || !monitor->is_on) : true);
+}
+
+// 这一步非常重要，需要预先判断该通道能否混音...
+bool audio_monitor_can_mix(struct audio_monitor *monitor, uint32_t inMaxFrameSize)
+{
+	if (monitor == NULL) return false;
+	pthread_mutex_lock(&monitor->playback_mutex);
+	size_t channels = monitor->channels;
+	size_t play_size = monitor->play_buffer.size;
+	size_t audio_size = inMaxFrameSize * channels * sizeof(float);
+	pthread_mutex_unlock(&monitor->playback_mutex);
+	return ((play_size < audio_size) ? false : true);
+}
+
+// 混音前必须等待所有监视通道的声音准备完毕才能操作，否则，会出现断断续续的问题...
+void audio_monitor_mixer(struct audio_monitor *monitor, float *p_out, uint32_t inMaxFrameSize)
+{
+	if (monitor == NULL || p_out == NULL)
+		return;
+	// 如果当前通道处于静音状态，直接返回...
+	if (monitor->is_muted)
+		return;
+	size_t channels = monitor->channels;
+	size_t audio_size = inMaxFrameSize * channels * sizeof(float);
+	// 如果播放缓存不够需要的长度，返回失败...
+	pthread_mutex_lock(&monitor->playback_mutex);
+	if (monitor->play_buffer.size < audio_size) {
+		pthread_mutex_unlock(&monitor->playback_mutex);
+		return;
+	}
+	// 保证临时缓存有效，并从环形队列提取...
+	da_resize(monitor->buf_play, audio_size);
+	circlebuf_pop_front(&monitor->play_buffer, monitor->buf_play.array, audio_size);
+	// 释放监视器的播放互斥对象 => 缓存已经发生了转移...
+	//blog(LOG_DEBUG, "== monitor max-calc: %d, max-self: %d, play-size: %d ==",
+	//	 inMaxFrameSize, monitor->max_frame_size, monitor->play_buffer.size/(channels*sizeof(float)));
+	pthread_mutex_unlock(&monitor->playback_mutex);
+	float * p_in = monitor->buf_play.array;
+	register float *out = p_out;
+	register float *in = p_in + 0;
+	register float *end = in + audio_size;
+	// 对音频进行混音处理...
+	while (in < end) {
+		*(out++) += *(in++);
+	}
+}
+
+void audio_monitor_play(struct audio_monitor *monitor, float *p_mix, uint32_t inMaxFrameSize)
+{
+	if (monitor == NULL || p_mix == NULL)
+		return;
+	UINT32 pad = 0;
+	BYTE * output = NULL;
+	size_t channels = monitor->channels;
+	size_t resample_frames = inMaxFrameSize;
+	size_t audio_size = resample_frames * channels * sizeof(float);
+	IAudioRenderClient *render = monitor->render;
+	monitor->client->lpVtbl->GetCurrentPadding(monitor->client, &pad);
+	// 播放内部遗留缓存超过 75 毫秒，就不能继续投递数据，直接丢弃，继续使用已投递播放缓存里面的数据...
+	int64_t pad_ns_buff = (uint64_t)pad * 1000000000ULL / (uint64_t)monitor->sample_rate;
+	if (pad_ns_buff >= 75 * 1000000) {
+		blog(LOG_DEBUG, "== monitor play, pad_ns_buff: %llu, pad: %lu ==", pad_ns_buff, pad);
+		return;
+	}
+	// 获取投递缓存的头指针 => 播放器内部会分配内存空间...
+	HRESULT hr = render->lpVtbl->GetBuffer(render, resample_frames, &output);
+	if (FAILED(hr))
+		return;
+	// 将混音后的数据投递到扬声器当中...
+	memcpy(output, p_mix, audio_size);
+	// 构造需要投递给麦克风数据源的结构体 => 样本总是float格式...
+	struct obs_source_audio theEchoData = { 0 };
+	theEchoData.data[0] = (uint8_t*)p_mix;
+	theEchoData.frames = resample_frames;
+	theEchoData.format = AUDIO_FORMAT_FLOAT;
+	theEchoData.speakers = monitor->speakers;
+	theEchoData.samples_per_sec = monitor->sample_rate;
+	theEchoData.timestamp = os_gettime_ns();
+	// 注意：采用的是归一法 => 将所有监视音频混音，统一播放...
+	// 枚举所有的音频数据源对象，找到麦克风，进行回音消除...
+	doPushEchoDataToMic(&theEchoData);
+	// 释放扬声器缓存 => 这时，硬件设备才真正开始播放...
+	render->lpVtbl->ReleaseBuffer(render, resample_frames, 0);
 }

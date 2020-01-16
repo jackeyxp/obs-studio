@@ -4557,11 +4557,11 @@ static void receive_scene_audio(void *param, size_t mix_idx, struct audio_data *
 }*/
 
 // 注意：新的模型可以根据数据源的监视状态字段动态创建scene下的监视器对象...
-bool obs_scene_create_monitor(const obs_scene_t *scene, int mix_idx)
+bool obs_scene_create_monitor(const obs_scene_t *scene)
 {
-	/*obs_source_t * source = obs_scene_get_source(scene);
+	obs_source_t * source = obs_scene_get_source(scene);
 	if (!source) return false;
-	// 遍历obs内核所有的音频数据源...
+	/*// 遍历obs内核所有的音频数据源...
 	struct obs_source *audio_source;
 	struct obs_core_data *data = &obs->data;
 	pthread_mutex_lock(&data->audio_sources_mutex);
@@ -4578,38 +4578,27 @@ bool obs_scene_create_monitor(const obs_scene_t *scene, int mix_idx)
 	// 如果不需要创建monitor，全部都是OBS_MONITORING_TYPE_NONE，删除已有的monitor，返回...
 	if (!now_on) {
 		return obs_scene_destory_monitor(scene, mix_idx);
-	}
+	}*/
 	// 如果需要创建monitor，并且monitor有效，直接返回...
 	if (source->monitor)
 		return true;
 	// 创建一个新的监视器对象 => source_has_video 参数很关键...
 	source->monitor = audio_monitor_create(source);
-	if (!source->monitor)
-		return false;
-	// 准备接口调用需要的格式转换参数...
-	audio_t * audio_out = obs_get_audio();
-	struct audio_convert_info audio_info = { 0 };
-	const struct audio_output_info *aoi = audio_output_get_info(audio_out);
-	audio_info.samples_per_sec = aoi->samples_per_sec;
-	audio_info.speakers = aoi->speakers;
-	audio_info.format = aoi->format;
-	// 连接当前scene下面的source混音轨道的本地播放，注册轨道播放的回调函数...
-	return audio_output_connect(audio_out, mix_idx, &audio_info, receive_scene_audio, source);*/
-	return true;
+	obs->audio.monitor_scene = source->monitor;
+	return (source->monitor) ? true : false;
 }
 
-bool obs_scene_destory_monitor(const obs_scene_t *scene, int mix_idx)
+bool obs_scene_destory_monitor(const obs_scene_t *scene)
 {
-	/*obs_source_t * source = obs_scene_get_source(scene);
+	obs_source_t * source = obs_scene_get_source(scene);
 	if (!source) return false;
-	// 断开当前scene下面的source混音轨道的本地播放...
-	audio_t * audio_out = obs_get_audio();
-	audio_output_disconnect(audio_out, mix_idx, receive_scene_audio, source);
 	// 删除已经存在的监视器... 
 	if (source->monitor) {
 		audio_monitor_destroy(source->monitor);
 		source->monitor = NULL;
-	}*/
+	}
+	// 重置obs音频里面的场景监听器...
+	obs->audio.monitor_scene = NULL;
 	return true;
 }
 

@@ -334,6 +334,9 @@ void CStudentWindow::DeferredLoad(const QString &file, int requeueCount)
 	m_bIsLoaded = true;
 	// 立即启动远程连接...
 	App()->doCheckRemote();
+
+	// 需要补充创建场景监视器对象...
+	this->doSceneCreateMonitor();
 }
 
 static void LoadAudioDevice(const char *name, int channel, obs_data_t *parent)
@@ -569,9 +572,27 @@ void CStudentWindow::CreateDefaultScene(bool firstStart)
 	disableSaving--;
 }
 
+void CStudentWindow::doSceneCreateMonitor()
+{
+	OBSScene theCurScene = this->GetObsScene();
+	bool bResult = obs_scene_create_monitor(theCurScene);
+	blog(LOG_INFO, "== Scene Create Monitor result: %d ==", bResult);
+}
+
+void CStudentWindow::doSceneDestoryMonitor()
+{
+	OBSScene theCurScene = this->GetObsScene();
+	bool bResult = obs_scene_destory_monitor(theCurScene);
+	blog(LOG_INFO, "== Scene Destory Monitor result: %d ==", bResult);
+}
+
 void CStudentWindow::ClearSceneData()
 {
 	disableSaving++;
+
+	// 注意：如果不删除，obs核心也会主动删除...
+	// 断开并删除当前scene下面的本地播放监视器...
+	this->doSceneDestoryMonitor();
 
 	// 主动移除绑定上去回调接口...
 	if (!m_viewSoftCamera.isNull()) {

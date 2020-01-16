@@ -2040,7 +2040,7 @@ void OBSBasic::DeferredLoad(const QString &file, int requeueCount)
 	// 为所有的互动学生端数据源创建第三方麦克风按钮...
 	this->doBuildAllStudentBtnMic();
 	// 这里还需补充创建监视器，有可能source在重建时，scene还没有创建...
-	//this->doSceneCreateMonitor();
+	this->doSceneCreateMonitor();
 
 	if (api) {
 		api->on_event(OBS_FRONTEND_EVENT_FINISHED_LOADING);
@@ -2083,6 +2083,20 @@ void OBSBasic::MonitoringSourceChanged(OBSSource source)
 {
 	//this->doSceneDestoryMonitor();
 	//this->doSceneCreateMonitor();
+}
+
+void OBSBasic::doSceneCreateMonitor()
+{
+	OBSScene theCurScene = this->GetCurrentScene();
+	bool bResult = obs_scene_create_monitor(theCurScene);
+	blog(LOG_INFO, "== Scene Create Monitor result: %d ==", bResult);
+}
+
+void OBSBasic::doSceneDestoryMonitor()
+{
+	OBSScene theCurScene = this->GetCurrentScene();
+	bool bResult = obs_scene_destory_monitor(theCurScene);
+	blog(LOG_INFO, "== Scene Destory Monitor result: %d ==", bResult);
 }
 
 /* shows a "what's new" page on startup of new versions using CEF */
@@ -3962,6 +3976,10 @@ void OBSBasic::EnumDialogs()
 void OBSBasic::ClearSceneData()
 {
 	disableSaving++;
+
+	// 注意：如果不删除，obs核心也会主动删除...
+	// 断开并删除当前scene下面的本地播放监视器...
+	this->doSceneDestoryMonitor();
 
 	CloseDialogs();
 

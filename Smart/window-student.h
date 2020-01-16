@@ -114,6 +114,9 @@ private:
 	void  onProcGetUserHead(QNetworkReply *reply);
 	float doDShowCheckRatio();
 	void  doCheckOutput();
+
+	void  doSceneCreateMonitor();
+	void  doSceneDestoryMonitor();
 private:
 	void timerEvent(QTimerEvent * inEvent);
 	virtual void paintEvent(QPaintEvent *event);
