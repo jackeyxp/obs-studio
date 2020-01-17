@@ -4010,7 +4010,7 @@ void OBSBasic::closeEvent(QCloseEvent *event)
 		"BasicWindow", "DockState",
 		saveState().toBase64().constData());
 	// 如果不是沉默退出，并且正在推流，需要弹出停止推流询问框...
-	if (this->m_bIsSlientClose && outputHandler && outputHandler->Active()) {
+	if (!this->m_bIsSlientClose && outputHandler && outputHandler->Active()) {
 		this->SetShowing(true);
 		QMessageBox::StandardButton button = OBSMessageBox::question(
 			this, QTStr("ConfirmExit.Title"),

@@ -17,8 +17,8 @@ UsePreviousGroup=noUsePreviousLanguage=no
 AllowCancelDuringInstall=no
 OutputDir=..\Product
 
-VersionInfoVersion=2.0.1
-OutputBaseFilename=smart-win32-2.0.1
+VersionInfoVersion=2.0.2
+OutputBaseFilename=smart-win32-2.0.2
 
 [Languages]
 Name: "chinese"; MessagesFile: "compiler:Default.isl"

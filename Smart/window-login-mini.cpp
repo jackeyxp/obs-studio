@@ -25,10 +25,13 @@ void CLoginMini::TimedCheckForUpdates()
 	long long lastUpdate = config_get_int(App()->GlobalConfig(), "General", "LastUpdateCheck");
 	uint32_t lastVersion = config_get_int(App()->GlobalConfig(), "General", "LastVersion");
 	// 如果上次升级版本比当前exe存放版本还要小，立即升级...
-	if (lastVersion < LIBOBS_API_VER) {
+	/*if (lastVersion < LIBOBS_API_VER) {
 		lastUpdate = 0;
 		config_set_int(App()->GlobalConfig(), "General", "LastUpdateCheck", 0);
-	}
+	}*/
+	// 永远检查升级...
+	lastUpdate = 0;
+	config_set_int(App()->GlobalConfig(), "General", "LastUpdateCheck", 0);
 	// 计算当前时间与上次升级之间的时间差...
 	long long t = (long long)time(nullptr);
 	long long secs = t - lastUpdate;
