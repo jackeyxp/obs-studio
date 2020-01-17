@@ -396,7 +396,7 @@ static bool ParseUpdateManifest(const char *manifest, bool *updatesAvailable,
 try {
 
 	json_error_t error;
-	Json root(json_loads(manifest, 0, &error));
+	OBSJson root(json_loads(manifest, 0, &error));
 	if (!root)
 		throw strprintf("Failed reading json string (%d): %s",
 				error.line, error.text);

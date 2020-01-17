@@ -11,4 +11,6 @@
 7. 将编译好的 Smart 二进制文件上传到升级服务器对应的目录下面；
 8. 通过github把新的变更上传到代码管理服务器当中；
 9. 转移到 E:\GitHub\HaoYiYun\Install 目录进行打包；
-10. 将打包后的 Smart 上传到网站的下载目录，修改网站文字和连接；
+10.将打包后的 Smart 上传到网站的下载目录，修改网站文字和连接；
+   F:\obs-studio\Web\wxapi\Conf\config.php
+   F:\obs-studio\Web\wxapi\Tpl\default\Index\changelog.htm

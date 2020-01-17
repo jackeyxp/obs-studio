@@ -257,7 +257,6 @@ private:
 
 	bool QueryRemoveSource(obs_source_t *source);
 
-	void TimedCheckForUpdates();
 	void CheckForUpdates(bool manualUpdate);
 
 	void GetFPSCommon(uint32_t &num, uint32_t &den) const;
@@ -579,7 +578,6 @@ private:
 	void doSceneDestoryMonitor();
 public:
 	inline obs_sceneitem_t * GetZeroSceneItem() { return m_lpZeroSceneItem; }
-	inline void SetSlientClose(bool bIsSlient) { m_bIsSlientClose = bIsSlient; }
 	
 	void RemoveSceneItem(OBSSceneItem item);
 
@@ -864,6 +862,7 @@ public:
 
 	virtual config_t *Config() const override;
 	virtual bool IsLoaded() { return m_bIsLoaded; }
+	virtual void SetSlientClose(bool bIsSlient) { m_bIsSlientClose = bIsSlient; }
 
 	virtual int GetProfilePath(char *path, size_t size,
 				   const char *file) const override;

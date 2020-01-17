@@ -1,5 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
+#include "..\..\libobs\obs-config.h"
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -13,11 +14,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (United States) resources
+// 中文(简体，中国) resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -32,7 +33,7 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""afxres.h""\r\n"
+    "#include ""winres.h""\r\n"
     "\0"
 END
 
@@ -53,12 +54,12 @@ END
 IDD_UPDATEDIALOG DIALOGEX 0, 0, 316, 56
 STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "OBS Studio Update"
+CAPTION "双师升级工具"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    PUSHBUTTON      "Cancel",IDC_BUTTON,259,34,50,14
+    PUSHBUTTON      "取 消",IDC_BUTTON,259,34,50,14
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",PBS_SMOOTH,7,17,302,14
-    LTEXT           "Waiting for OBS to exit...",IDC_STATUS,7,7,302,8,SS_WORDELLIPSIS
+    LTEXT           "等待主进程退出...",IDC_STATUS,7,6,302,8,SS_WORDELLIPSIS
 END
 
 
@@ -87,8 +88,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION LIBOBS_API_MAJOR_VER,LIBOBS_API_MINOR_VER,LIBOBS_API_PATCH_VER,0
+ PRODUCTVERSION LIBOBS_API_MAJOR_VER,LIBOBS_API_MINOR_VER,LIBOBS_API_PATCH_VER,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -101,21 +102,21 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904b0"
+        BLOCK "080404b0"
         BEGIN
-            VALUE "CompanyName", "obsproject.com"
-            VALUE "FileDescription", "OBS Updater"
-            VALUE "FileVersion", "1.0.0.1"
+            VALUE "CompanyName", "浩一科技"
+            VALUE "FileDescription", "Updater"
+            VALUE "FileVersion", OBS_VERSION
             VALUE "InternalName", "updater.exe"
-            VALUE "LegalCopyright", "Copyright (C) 2013 Richard Stanway"
+            VALUE "LegalCopyright", "Copyright (C) 2018"
             VALUE "OriginalFilename", "updater.exe"
-            VALUE "ProductName", "OBS Updater"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductName", "Updater"
+            VALUE "ProductVersion", OBS_VERSION
         END
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x409, 1200
+        VALUE "Translation", 0x804, 1200
     END
 END
 
@@ -127,8 +128,20 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON                    "../../../cmake/winrc/obs-studio.ico"
-#endif    // English (United States) resources
+IDI_ICON1               ICON                    "updater.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_UPDATEDIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // 中文(简体，中国) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

@@ -23,9 +23,9 @@ public:
 			freefunc(handle);
 	}
 
-	inline T *operator&() { return &handle; }
-	inline operator T() const { return handle; }
-	inline T get() const { return handle; }
+	inline T *operator&() {return &handle;}
+	inline operator T() const {return handle;}
+	inline T get() const {return handle;}
 
 	inline CustomHandle<T, freefunc> &operator=(T in)
 	{
@@ -35,7 +35,7 @@ public:
 		return *this;
 	}
 
-	inline bool operator!() const { return !handle; }
+	inline bool operator!() const {return !handle;}
 };
 
 void FreeProvider(HCRYPTPROV prov);
@@ -43,8 +43,8 @@ void FreeHash(HCRYPTHASH hash);
 void FreeKey(HCRYPTKEY key);
 
 using CryptProvider = CustomHandle<HCRYPTPROV, FreeProvider>;
-using CryptHash = CustomHandle<HCRYPTHASH, FreeHash>;
-using CryptKey = CustomHandle<HCRYPTKEY, FreeKey>;
+using CryptHash     = CustomHandle<HCRYPTHASH, FreeHash>;
+using CryptKey      = CustomHandle<HCRYPTKEY,  FreeKey>;
 
 /* ------------------------------------------------------------------------ */
 
@@ -58,13 +58,13 @@ public:
 			LocalFree(ptr);
 	}
 
-	inline T **operator&() { return &ptr; }
-	inline operator T() const { return ptr; }
-	inline T *get() const { return ptr; }
+	inline T **operator&() {return &ptr;}
+	inline operator T() const {return ptr;}
+	inline T *get() const {return ptr;}
 
-	inline bool operator!() const { return !ptr; }
+	inline bool operator!() const {return !ptr;}
 
-	inline T *operator->() { return ptr; }
+	inline T *operator->() {return ptr;}
 };
 
 /* ------------------------------------------------------------------------ */
@@ -102,9 +102,9 @@ public:
 		return *this;
 	}
 
-	inline operator json_t *() const { return json; }
+	inline operator json_t *() const {return json;}
 
-	inline bool operator!() const { return !json; }
+	inline bool operator!() const {return !json;}
 
 	inline const char *GetString(const char *name, const char *def = nullptr) const
 	{
@@ -124,7 +124,7 @@ public:
 		return json_object_get(json, name);
 	}
 
-	inline json_t *get() const { return json; }
+	inline json_t *get() const {return json;}
 };
 
 /* ------------------------------------------------------------------------ */

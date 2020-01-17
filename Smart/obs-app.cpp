@@ -25,7 +25,6 @@
 #include "obs-app.hpp"
 #include "FastSession.h"
 #include "window-student.h"
-#include "window-login-mini.h"
 #include "window-basic-main.hpp"
 #include "window-basic-settings.hpp"
 #include "crash-report.hpp"
@@ -1231,10 +1230,6 @@ void OBSApp::doProcessCmdLine(int argc, char * argv[])
 			break;
 		}
 	}
-}
-
-CLoginMini * OBSApp::GetLoginMini() const {
-	return m_LoginMini.data();
 }
 
 OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)

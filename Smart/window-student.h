@@ -126,13 +126,13 @@ private:
 	virtual void closeEvent(QCloseEvent *event) override;
 public:
 	inline obs_scene_t * GetObsScene() { return m_obsScene; }
-	inline void SetSlientClose(bool bIsSlient) { m_bIsSlientClose = bIsSlient; }
 public:
 	explicit CStudentWindow(QWidget *parent = NULL);
 	virtual ~CStudentWindow();
 	virtual void OBSInit() override;
 	virtual config_t *Config() const override;
 	virtual bool IsLoaded() { return m_bIsLoaded; }
+	virtual void SetSlientClose(bool bIsSlient) { m_bIsSlientClose = bIsSlient; }
 	virtual int GetProfilePath(char *path, size_t size, const char *file) const override;
 private:
 	std::unique_ptr<Ui::StudentWindow> ui;

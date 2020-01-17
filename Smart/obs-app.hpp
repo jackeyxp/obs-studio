@@ -36,6 +36,7 @@
 
 #include "HYDefine.h"
 #include "window-main.hpp"
+#include "window-login-mini.h"
 
 using namespace std;
 
@@ -222,7 +223,7 @@ public:
 		return enableHotkeysInFocus;
 	}
 
-	inline CLoginMini *GetLoginMini() const;
+	inline CLoginMini *GetLoginMini() const { return m_LoginMini.data(); }
 	inline QMainWindow *GetMainWindow() const { return mainWindow.data(); }
 	profiler_name_store_t *GetProfilerNameStore() const { return profilerNameStore; }
 	inline config_t *GlobalConfig() const { return globalConfig; }

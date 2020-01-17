@@ -20,16 +20,16 @@
 #include <vector>
 
 #ifdef _MSC_VER
-#define restrict __restrict
-#include <lzma.h>
-#undef restrict
+# define restrict __restrict
+# include <lzma.h>
+# undef restrict
 #else
-#include <lzma.h>
+# include <lzma.h>
 #endif
 
 using namespace std;
 
-#define MAX_BUF_SIZE 262144
+#define MAX_BUF_SIZE  262144
 #define READ_BUF_SIZE 32768
 
 /* ------------------------------------------------------------------------ */
@@ -48,7 +48,10 @@ public:
 
 	inline bool init_decoder()
 	{
-		lzma_ret ret = lzma_stream_decoder(&strm, 200 * 1024 * 1024, 0);
+		lzma_ret ret = lzma_stream_decoder(
+				&strm,
+				200 * 1024 * 1024,
+				0);
 		initialized = (ret == LZMA_OK);
 		return initialized;
 	}
@@ -79,7 +82,7 @@ public:
 struct bspatch_stream {
 	void *opaque;
 	int (*read)(const struct bspatch_stream *stream, void *buffer,
-		    int length);
+			int length);
 };
 
 /* ------------------------------------------------------------------------ */
@@ -113,7 +116,7 @@ static int64_t offtin(const uint8_t *buf)
 /* ------------------------------------------------------------------------ */
 
 static int bspatch(const uint8_t *old, int64_t oldsize, uint8_t *newp,
-		   int64_t newsize, struct bspatch_stream *stream)
+		int64_t newsize, struct bspatch_stream *stream)
 {
 	uint8_t buf[8];
 	int64_t oldpos, newpos;
@@ -166,34 +169,32 @@ static int bspatch(const uint8_t *old, int64_t oldsize, uint8_t *newp,
 /* ------------------------------------------------------------------------ */
 
 struct patch_data {
-	HANDLE h;
-	lzma_stream *strm;
-	uint8_t buf[READ_BUF_SIZE];
+	HANDLE        h;
+	lzma_stream   *strm;
+	uint8_t       buf[READ_BUF_SIZE];
 };
 
 static int read_lzma(const struct bspatch_stream *stream, void *buffer, int len)
 {
-	if (!len)
-		return 0;
+	if (!len) return 0;
 
-	patch_data *data = (patch_data *)stream->opaque;
-	HANDLE h = data->h;
-	lzma_stream *strm = data->strm;
+	patch_data  *data    = (patch_data*)stream->opaque;
+	HANDLE      h        = data->h;
+	lzma_stream *strm    = data->strm;
 
 	strm->avail_out = (size_t)len;
-	strm->next_out = (uint8_t *)buffer;
+	strm->next_out  = (uint8_t *)buffer;
 
 	for (;;) {
 		if (strm->avail_in == 0) {
 			DWORD read_size;
-			if (!ReadFile(h, data->buf, READ_BUF_SIZE, &read_size,
-				      nullptr))
+			if (!ReadFile(h, data->buf, READ_BUF_SIZE, &read_size, nullptr))
 				return -1;
 			if (read_size == 0)
 				return -1;
 
 			strm->avail_in = (size_t)read_size;
-			strm->next_in = data->buf;
+			strm->next_in  = data->buf;
 		}
 
 		lzma_ret ret = lzma_code(strm, LZMA_RUN);
@@ -210,27 +211,23 @@ static int read_lzma(const struct bspatch_stream *stream, void *buffer, int len)
 
 int ApplyPatch(const wchar_t *patchFile, const wchar_t *targetFile)
 try {
-	uint8_t header[24];
-	int64_t newsize;
+	uint8_t               header[24];
+	int64_t               newsize;
 	struct bspatch_stream stream;
-	bool success;
+	bool                  success;
 
-	WinHandle hPatch;
-	WinHandle hTarget;
+	WinHandle  hPatch;
+	WinHandle  hTarget;
 	LZMAStream strm;
 
 	/* --------------------------------- *
 	 * open patch and file to patch      */
 
-	hPatch = CreateFile(patchFile, GENERIC_READ, 0, nullptr, OPEN_EXISTING,
-			    0, nullptr);
-	if (!hPatch.Valid())
-		throw int(GetLastError());
+	hPatch = CreateFile(patchFile, GENERIC_READ, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+	if (!hPatch.Valid()) throw int(GetLastError());
 
-	hTarget = CreateFile(targetFile, GENERIC_READ, 0, nullptr,
-			     OPEN_EXISTING, 0, nullptr);
-	if (!hTarget.Valid())
-		throw int(GetLastError());
+	hTarget = CreateFile(targetFile, GENERIC_READ, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+	if (!hTarget.Valid()) throw int(GetLastError());
 
 	/* --------------------------------- *
 	 * read patch header                 */
@@ -286,14 +283,13 @@ try {
 		throw int(-10);
 
 	patch_data data;
-	data.h = hPatch;
+	data.h    = hPatch;
 	data.strm = strm.get();
 
-	stream.read = read_lzma;
+	stream.read   = read_lzma;
 	stream.opaque = &data;
 
-	int ret = bspatch(oldData.data(), oldData.size(), newData.data(),
-			  newData.size(), &stream);
+	int ret = bspatch(oldData.data(), oldData.size(), newData.data(), newData.size(), &stream);
 	if (ret != 0)
 		throw int(-9);
 
@@ -301,15 +297,13 @@ try {
 	 * write new file                    */
 
 	hTarget = nullptr;
-	hTarget = CreateFile(targetFile, GENERIC_WRITE, 0, nullptr,
-			     CREATE_ALWAYS, 0, nullptr);
+	hTarget = CreateFile(targetFile, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, nullptr);
 	if (!hTarget.Valid())
 		throw int(GetLastError());
 
 	DWORD written;
 
-	success = !!WriteFile(hTarget, newData.data(), (DWORD)newsize, &written,
-			      nullptr);
+	success = !!WriteFile(hTarget, newData.data(), (DWORD)newsize, &written, nullptr);
 	if (!success || written != newsize)
 		throw int(GetLastError());
 

@@ -30,7 +30,7 @@ void CLoginMini::TimedCheckForUpdates()
 		config_set_int(App()->GlobalConfig(), "General", "LastUpdateCheck", 0);
 	}
 	// 计算当前时间与上次升级之间的时间差...
-	long long t    = (long long)time(nullptr);
+	long long t = (long long)time(nullptr);
 	long long secs = t - lastUpdate;
 	// 时间差超过4天，开始检查并执行升级...
 	if (secs > UPDATE_CHECK_INTERVAL) {
@@ -194,7 +194,7 @@ void CLoginMini::initWindow()
 	// 发起获取中心服务器的TCP地址和端口的命令...
 	this->doWebGetCenterAddr();
 	// 只进行一次更新状态检测...
-	//this->TimedCheckForUpdates();
+	this->TimedCheckForUpdates();
 }
 
 void CLoginMini::doUpdateTitle()
@@ -675,13 +675,13 @@ void CLoginMini::onTriggerTcpConnect()
 	// 每隔30秒检测一次，终端在中心服务器上在线汇报通知...
 	m_nOnLineTimer = this->startTimer(30 * 1000);
 	// 发起获取小程序Token值的网络命令...
-	//this->doWebGetMiniToken();
+	this->doWebGetMiniToken();
 	
 	/*== 仅供快速测试 ==*/
-	m_nDBUserID = 1;
-	m_nDBRoomID = 10001;
+	//m_nDBUserID = 1;
+	//m_nDBRoomID = 10001;
 	// 一切正常，开始登录指定的房间...
-	this->doWebGetMiniLoginRoom();  
+	//this->doWebGetMiniLoginRoom();  
 }
 
 // 响应中心会话反馈的小程序绑定登录信号槽事件通知...

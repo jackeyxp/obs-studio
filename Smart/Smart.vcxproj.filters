@@ -65,9 +65,6 @@
     <ClCompile Include="record-button.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="remote-text.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source-label.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -230,6 +227,12 @@
     <ClCompile Include="window-view-teacher.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="update-app.cpp">
+      <Filter>Update Files</Filter>
+    </ClCompile>
+    <ClCompile Include="remote-text.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="obs-app.hpp">
@@ -257,9 +260,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="record-button.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="remote-text.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="source-label.hpp">
@@ -588,6 +588,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="window-student-output.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="update-app.h">
+      <Filter>Update Files</Filter>
+    </ClInclude>
+    <ClInclude Include="remote-text.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

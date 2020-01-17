@@ -16,13 +16,12 @@
 ******************************************************************************/
 
 #include <curl/curl.h>
-#include "obs-app.hpp"
 #include "qt-wrappers.hpp"
 #include "remote-text.hpp"
 
 using namespace std;
 
-static auto curl_deleter = [](CURL *curl) { curl_easy_cleanup(curl); };
+static auto curl_deleter = [] (CURL *curl) {curl_easy_cleanup(curl);};
 using Curl = unique_ptr<CURL, decltype(curl_deleter)>;
 
 static size_t string_write(char *ptr, size_t size, size_t nmemb, string &str)
@@ -34,13 +33,13 @@ static size_t string_write(char *ptr, size_t size, size_t nmemb, string &str)
 	return total;
 }
 
-void RemoteTextThread::run()
+/*void RemoteTextThread::run()
 {
 	char error[CURL_ERROR_SIZE];
 	CURLcode code;
 
 	string versionString("User-Agent: obs-basic ");
-	versionString += App()->GetVersionString();
+	versionString += version;
 
 	string contentTypeString;
 	if (!contentType.empty()) {
@@ -48,7 +47,8 @@ void RemoteTextThread::run()
 		contentTypeString += contentType;
 	}
 
-	Curl curl{curl_easy_init(), curl_deleter};
+	Curl curl { curl_easy_init(), curl_deleter };
+
 	if (curl) {
 		struct curl_slist *header = nullptr;
 		string str;
@@ -56,24 +56,17 @@ void RemoteTextThread::run()
 		header = curl_slist_append(header, versionString.c_str());
 
 		if (!contentTypeString.empty()) {
-			header = curl_slist_append(header,
-						   contentTypeString.c_str());
+			header = curl_slist_append(header, contentTypeString.c_str());
 		}
 
-		for (std::string &h : extraHeaders)
-			header = curl_slist_append(header, h.c_str());
+		curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, 0);
+		curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYHOST, 0);
 
 		curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
-		curl_easy_setopt(curl.get(), CURLOPT_ACCEPT_ENCODING, "");
 		curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, header);
 		curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, error);
-		curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION,
-				 string_write);
+		curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, string_write);
 		curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &str);
-
-		if (timeoutSec)
-			curl_easy_setopt(curl.get(), CURLOPT_TIMEOUT,
-					 timeoutSec);
 
 #if LIBCURL_VERSION_NUM >= 0x072400
 		// A lot of servers don't yet support ALPN
@@ -81,8 +74,7 @@ void RemoteTextThread::run()
 #endif
 
 		if (!postData.empty()) {
-			curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS,
-					 postData.c_str());
+			curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, postData.c_str());
 		}
 
 		code = curl_easy_perform(curl.get());
@@ -94,10 +86,9 @@ void RemoteTextThread::run()
 
 		curl_slist_free_all(header);
 	}
-}
+}*/
 
-static size_t header_write(char *ptr, size_t size, size_t nmemb,
-			   vector<string> &list)
+static size_t header_write(char *ptr, size_t size, size_t nmemb, vector<string> &list)
 {
 	string str;
 
@@ -114,10 +105,16 @@ static size_t header_write(char *ptr, size_t size, size_t nmemb,
 	return total;
 }
 
-bool GetRemoteFile(const char *url, std::string &str, std::string &error,
-		   long *responseCode, const char *contentType,
-		   const char *postData, std::vector<std::string> extraHeaders,
-		   std::string *signature, int timeoutSec)
+bool GetRemoteFile(
+	const char *url,
+	std::string &str,
+	std::string &error,
+	std::string &version,
+	long *responseCode,
+	const char *contentType,
+	const char *postData,
+	std::vector<std::string> extraHeaders,
+	std::string *signature)
 {
 	vector<string> header_in_list;
 	char error_in[CURL_ERROR_SIZE];
@@ -126,7 +123,7 @@ bool GetRemoteFile(const char *url, std::string &str, std::string &error,
 	error_in[0] = 0;
 
 	string versionString("User-Agent: obs-basic ");
-	versionString += App()->GetVersionString();
+	versionString += version;
 
 	string contentTypeString;
 	if (contentType) {
@@ -134,37 +131,32 @@ bool GetRemoteFile(const char *url, std::string &str, std::string &error,
 		contentTypeString += contentType;
 	}
 
-	Curl curl{curl_easy_init(), curl_deleter};
+	Curl curl{ curl_easy_init(), curl_deleter };
 	if (curl) {
 		struct curl_slist *header = nullptr;
 
 		header = curl_slist_append(header, versionString.c_str());
 
 		if (!contentTypeString.empty()) {
-			header = curl_slist_append(header,
-						   contentTypeString.c_str());
+			header = curl_slist_append(header, contentTypeString.c_str());
 		}
 
-		for (std::string &h : extraHeaders)
+		for (std::string &h : extraHeaders) {
 			header = curl_slist_append(header, h.c_str());
+		}
+
+		curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, 0);
+		curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYHOST, 0);
 
 		curl_easy_setopt(curl.get(), CURLOPT_URL, url);
-		curl_easy_setopt(curl.get(), CURLOPT_ACCEPT_ENCODING, "");
 		curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, header);
 		curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, error_in);
-		curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION,
-				 string_write);
+		curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, string_write);
 		curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &str);
 		if (signature) {
-			curl_easy_setopt(curl.get(), CURLOPT_HEADERFUNCTION,
-					 header_write);
-			curl_easy_setopt(curl.get(), CURLOPT_HEADERDATA,
-					 &header_in_list);
+			curl_easy_setopt(curl.get(), CURLOPT_HEADERFUNCTION, header_write);
+			curl_easy_setopt(curl.get(), CURLOPT_HEADERDATA, &header_in_list);
 		}
-
-		if (timeoutSec)
-			curl_easy_setopt(curl.get(), CURLOPT_TIMEOUT,
-					 timeoutSec);
 
 #if LIBCURL_VERSION_NUM >= 0x072400
 		// A lot of servers don't yet support ALPN
@@ -172,22 +164,20 @@ bool GetRemoteFile(const char *url, std::string &str, std::string &error,
 #endif
 
 		if (postData) {
-			curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS,
-					 postData);
+			curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, postData);
 		}
 
 		code = curl_easy_perform(curl.get());
 		if (responseCode)
-			curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE,
-					  responseCode);
+			curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, responseCode);
 
 		if (code != CURLE_OK) {
 			error = error_in;
 		} else if (signature) {
 			for (string &h : header_in_list) {
-				string name = h.substr(0, 13);
-				if (name == "X-Signature: ") {
-					*signature = h.substr(13);
+				string name = h.substr(0, 6);
+				if (name == "ETag: ") {
+					*signature = h.substr(6);
 					break;
 				}
 			}

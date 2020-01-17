@@ -235,15 +235,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Message>
       </Message>
       <Command>setlocal
-E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/UI/Release/obs32.exe F:/obs-studio/vsbuild/rundir/Release/bin/32bit/obs32.exe
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -DCONFIG=Release -DFNAME=obs32.exe -DINPUT=F:/obs-studio/vsbuild/UI/Release -DOUTPUT=F:/obs-studio/vsbuild/UI/pdbs -P F:/obs-studio/cmake/copy_on_debug_helper.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd

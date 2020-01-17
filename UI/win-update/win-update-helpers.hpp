@@ -23,9 +23,9 @@ public:
 			freefunc(handle);
 	}
 
-	inline T *operator&() { return &handle; }
-	inline operator T() const { return handle; }
-	inline T get() const { return handle; }
+	inline T *operator&() {return &handle;}
+	inline operator T() const {return handle;}
+	inline T get() const {return handle;}
 
 	inline CustomHandle<T, freefunc> &operator=(T in)
 	{
@@ -35,7 +35,7 @@ public:
 		return *this;
 	}
 
-	inline bool operator!() const { return !handle; }
+	inline bool operator!() const {return !handle;}
 };
 
 void FreeProvider(HCRYPTPROV prov);
@@ -43,8 +43,8 @@ void FreeHash(HCRYPTHASH hash);
 void FreeKey(HCRYPTKEY key);
 
 using CryptProvider = CustomHandle<HCRYPTPROV, FreeProvider>;
-using CryptHash = CustomHandle<HCRYPTHASH, FreeHash>;
-using CryptKey = CustomHandle<HCRYPTKEY, FreeKey>;
+using CryptHash     = CustomHandle<HCRYPTHASH, FreeHash>;
+using CryptKey      = CustomHandle<HCRYPTKEY,  FreeKey>;
 
 /* ------------------------------------------------------------------------ */
 
@@ -58,65 +58,58 @@ public:
 			LocalFree(ptr);
 	}
 
-	inline T **operator&() { return &ptr; }
-	inline operator T() const { return ptr; }
-	inline T *get() const { return ptr; }
+	inline T **operator&() {return &ptr;}
+	inline operator T() const {return ptr;}
+	inline T *get() const {return ptr;}
 
-	inline bool operator!() const { return !ptr; }
+	inline bool operator!() const {return !ptr;}
 
-	inline T *operator->() { return ptr; }
+	inline T *operator->() {return ptr;}
 };
 
 /* ------------------------------------------------------------------------ */
 
-class Json {
+class OBSJson {
 	json_t *json;
 
 public:
-	inline Json() : json(nullptr) {}
-	explicit inline Json(json_t *json_) : json(json_) {}
-	inline Json(const Json &from) : json(json_incref(from.json)) {}
-	inline Json(Json &&from) : json(from.json) { from.json = nullptr; }
+	inline OBSJson() : json(nullptr) {}
+	explicit inline OBSJson(json_t *json_) : json(json_) {}
+	inline OBSJson(const OBSJson &from) : json(json_incref(from.json)) {}
+	inline OBSJson(OBSJson &&from) : json(from.json) {from.json = nullptr;}
 
-	inline ~Json()
-	{
-		if (json)
-			json_decref(json);
+	inline ~OBSJson() {
+		if (json) json_decref(json);
 	}
 
-	inline Json &operator=(json_t *json_)
+	inline OBSJson &operator=(json_t *json_)
 	{
-		if (json)
-			json_decref(json);
+		if (json) json_decref(json);
 		json = json_;
 		return *this;
 	}
-	inline Json &operator=(const Json &from)
+	inline OBSJson &operator=(const OBSJson &from)
 	{
-		if (json)
-			json_decref(json);
+		if (json) json_decref(json);
 		json = json_incref(from.json);
 		return *this;
 	}
-	inline Json &operator=(Json &&from)
+	inline OBSJson &operator=(OBSJson &&from)
 	{
-		if (json)
-			json_decref(json);
+		if (json) json_decref(json);
 		json = from.json;
 		from.json = nullptr;
 		return *this;
 	}
 
-	inline operator json_t *() const { return json; }
+	inline operator json_t *() const {return json;}
 
-	inline bool operator!() const { return !json; }
+	inline bool operator!() const {return !json;}
 
-	inline const char *GetString(const char *name,
-				     const char *def = nullptr) const
+	inline const char *GetString(const char *name, const char *def = nullptr) const
 	{
 		json_t *obj(json_object_get(json, name));
-		if (!obj)
-			return def;
+		if (!obj) return def;
 		return json_string_value(obj);
 	}
 	inline int64_t GetInt(const char *name, int def = 0) const
@@ -131,7 +124,7 @@ public:
 		return json_object_get(json, name);
 	}
 
-	inline json_t *get() const { return json; }
+	inline json_t *get() const {return json;}
 };
 
 /* ------------------------------------------------------------------------ */

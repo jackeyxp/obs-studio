@@ -1,14 +1,14 @@
+
 #include "win-update-helpers.hpp"
 #include "update-window.hpp"
 #include "remote-text.hpp"
 #include "qt-wrappers.hpp"
 #include "win-update.hpp"
-#include "obs-app.hpp"
+#include "update-app.h"
 
 #include <QMessageBox>
 
 #include <string>
-#include <mutex>
 
 #include <util/windows/WinHandle.hpp>
 #include <util/util.hpp>
@@ -24,25 +24,13 @@ using namespace std;
 
 /* ------------------------------------------------------------------------ */
 
-#ifndef WIN_MANIFEST_URL
-#define WIN_MANIFEST_URL "https://obsproject.com/update_studio/manifest.json"
-#endif
-
-#ifndef WIN_WHATSNEW_URL
-#define WIN_WHATSNEW_URL "https://obsproject.com/update_studio/whatsnew.json"
-#endif
-
-#ifndef WIN_UPDATER_URL
-#define WIN_UPDATER_URL "https://obsproject.com/update_studio/updater.exe"
-#endif
-
-static __declspec(thread) HCRYPTPROV provider = 0;
+static HCRYPTPROV provider = 0;
 
 #pragma pack(push, r1, 1)
 
 typedef struct {
 	BLOBHEADER blobheader;
-	RSAPUBKEY rsapubkey;
+	RSAPUBKEY  rsapubkey;
 } PUBLICKEYHEADER;
 
 #pragma pack(pop, r1)
@@ -120,7 +108,8 @@ static const unsigned char obs_pub[] = {
 	0x42, 0x61, 0x35, 0x66, 0x37, 0x4c, 0x6f, 0x4b, 0x38, 0x43, 0x41, 0x77,
 	0x45, 0x41, 0x41, 0x51, 0x3d, 0x3d, 0x0a, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d,
 	0x45, 0x4e, 0x44, 0x20, 0x50, 0x55, 0x42, 0x4c, 0x49, 0x43, 0x20, 0x4b,
-	0x45, 0x59, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x0a};
+	0x45, 0x59, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x0a
+};
 static const unsigned int obs_pub_len = 800;
 
 /* ------------------------------------------------------------------------ */
@@ -131,22 +120,27 @@ try {
 	if (os_utf8_to_wcs_ptr(file, 0, &w_file) == 0)
 		return false;
 
-	WinHandle handle = CreateFileW(w_file, GENERIC_WRITE, 0, nullptr,
-				       CREATE_ALWAYS, FILE_FLAG_WRITE_THROUGH,
-				       nullptr);
+	WinHandle handle = CreateFileW(
+			w_file,
+			GENERIC_WRITE,
+			0,
+			nullptr,
+			CREATE_ALWAYS,
+			FILE_FLAG_WRITE_THROUGH,
+			nullptr);
 
 	if (handle == INVALID_HANDLE_VALUE)
-		throw strprintf("Failed to open file '%s': %lu", file,
-				GetLastError());
+		throw strprintf("Failed to open file '%s': %lu",
+				file, GetLastError());
 
 	DWORD written;
 	if (!WriteFile(handle, data, (DWORD)size, &written, nullptr))
-		throw strprintf("Failed to write file '%s': %lu", file,
-				GetLastError());
+		throw strprintf("Failed to write file '%s': %lu",
+				file, GetLastError());
 
 	return true;
 
-} catch (string &text) {
+} catch (string text) {
 	blog(LOG_WARNING, "%s: %s", __FUNCTION__, text.c_str());
 	return false;
 }
@@ -157,24 +151,30 @@ try {
 	if (os_utf8_to_wcs_ptr(file, 0, &w_file) == 0)
 		return false;
 
-	WinHandle handle = CreateFileW(w_file, GENERIC_READ, FILE_SHARE_READ,
-				       nullptr, OPEN_EXISTING, 0, nullptr);
+	WinHandle handle = CreateFileW(
+			w_file,
+			GENERIC_READ,
+			FILE_SHARE_READ,
+			nullptr,
+			OPEN_EXISTING,
+			0,
+			nullptr);
 
 	if (handle == INVALID_HANDLE_VALUE)
-		throw strprintf("Failed to open file '%s': %lu", file,
-				GetLastError());
+		throw strprintf("Failed to open file '%s': %lu",
+				file, GetLastError());
 
 	DWORD size = GetFileSize(handle, nullptr);
 	data.resize(size);
 
 	DWORD read;
 	if (!ReadFile(handle, &data[0], size, &read, nullptr))
-		throw strprintf("Failed to write file '%s': %lu", file,
-				GetLastError());
+		throw strprintf("Failed to write file '%s': %lu",
+				file, GetLastError());
 
 	return true;
 
-} catch (string &text) {
+} catch (string text) {
 	blog(LOG_WARNING, "%s: %s", __FUNCTION__, text.c_str());
 	return false;
 }
@@ -184,7 +184,7 @@ static void HashToString(const uint8_t *in, char *out)
 	const char alphabet[] = "0123456789abcdef";
 
 	for (int i = 0; i != BLAKE2_HASH_LENGTH; ++i) {
-		out[2 * i] = alphabet[in[i] / 16];
+		out[2 * i]     = alphabet[in[i] / 16];
 		out[2 * i + 1] = alphabet[in[i] % 16];
 	}
 
@@ -201,21 +201,17 @@ try {
 	if (os_utf8_to_wcs_ptr(path, 0, &w_path) == 0)
 		return false;
 
-	WinHandle handle = CreateFileW(w_path, GENERIC_READ, FILE_SHARE_READ,
-				       nullptr, OPEN_EXISTING, 0, nullptr);
+	WinHandle handle = CreateFileW(w_path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
 	if (handle == INVALID_HANDLE_VALUE)
-		throw strprintf("Failed to open file '%s': %lu", path,
-				GetLastError());
+		throw strprintf("Failed to open file '%s': %lu", path, GetLastError());
 
 	vector<BYTE> buf;
 	buf.resize(65536);
 
 	for (;;) {
 		DWORD read = 0;
-		if (!ReadFile(handle, buf.data(), (DWORD)buf.size(), &read,
-			      nullptr))
-			throw strprintf("Failed to read file '%s': %lu", path,
-					GetLastError());
+		if (!ReadFile(handle, buf.data(), (DWORD)buf.size(), &read, nullptr))
+			throw strprintf("Failed to read file '%s': %lu", path, GetLastError());
 
 		if (!read)
 			break;
@@ -229,27 +225,26 @@ try {
 
 	return true;
 
-} catch (string &text) {
-	blog(LOG_DEBUG, "%s: %s", __FUNCTION__, text.c_str());
+} catch (string text) {
+	blog(LOG_WARNING, "%s: %s", __FUNCTION__, text.c_str());
 	return false;
 }
 
 /* ------------------------------------------------------------------------ */
 
-static bool VerifyDigitalSignature(uint8_t *buf, size_t len, uint8_t *sig,
-				   size_t sigLen)
+static bool VerifyDigitalSignature(uint8_t *buf, size_t len, uint8_t *sig, size_t sigLen)
 {
 	/* ASN of PEM public key */
-	BYTE binaryKey[1024];
+	BYTE  binaryKey[1024];
 	DWORD binaryKeyLen = sizeof(binaryKey);
 
 	/* Windows X509 public key info from ASN */
 	LocalPtr<CERT_PUBLIC_KEY_INFO> publicPBLOB;
-	DWORD iPBLOBSize;
+	DWORD                          iPBLOBSize;
 
 	/* RSA BLOB info from X509 public key */
 	LocalPtr<PUBLICKEYHEADER> rsaPublicBLOB;
-	DWORD rsaPublicBLOBSize;
+	DWORD                     rsaPublicBLOBSize;
 
 	/* Handle to public key */
 	CryptKey keyOut;
@@ -260,26 +255,41 @@ static bool VerifyDigitalSignature(uint8_t *buf, size_t len, uint8_t *sig,
 	/* Signature in little-endian format */
 	vector<BYTE> reversedSig;
 
-	if (!CryptStringToBinaryA((LPCSTR)obs_pub, obs_pub_len,
-				  CRYPT_STRING_BASE64HEADER, binaryKey,
-				  &binaryKeyLen, nullptr, nullptr))
+	if (!CryptStringToBinaryA((LPCSTR)obs_pub,
+	                          obs_pub_len,
+	                          CRYPT_STRING_BASE64HEADER,
+	                          binaryKey,
+	                          &binaryKeyLen,
+	                          nullptr,
+	                          nullptr))
 		return false;
 
-	if (!CryptDecodeObjectEx(X509_ASN_ENCODING, X509_PUBLIC_KEY_INFO,
-				 binaryKey, binaryKeyLen,
-				 CRYPT_ENCODE_ALLOC_FLAG, nullptr, &publicPBLOB,
-				 &iPBLOBSize))
+	if (!CryptDecodeObjectEx(X509_ASN_ENCODING,
+	                         X509_PUBLIC_KEY_INFO,
+	                         binaryKey,
+	                         binaryKeyLen,
+	                         CRYPT_ENCODE_ALLOC_FLAG,
+	                         nullptr,
+	                         &publicPBLOB,
+	                         &iPBLOBSize))
 		return false;
 
-	if (!CryptDecodeObjectEx(X509_ASN_ENCODING, RSA_CSP_PUBLICKEYBLOB,
-				 publicPBLOB->PublicKey.pbData,
-				 publicPBLOB->PublicKey.cbData,
-				 CRYPT_ENCODE_ALLOC_FLAG, nullptr,
-				 &rsaPublicBLOB, &rsaPublicBLOBSize))
+	if (!CryptDecodeObjectEx(X509_ASN_ENCODING,
+	                         RSA_CSP_PUBLICKEYBLOB,
+	                         publicPBLOB->PublicKey.pbData,
+	                         publicPBLOB->PublicKey.cbData,
+	                         CRYPT_ENCODE_ALLOC_FLAG,
+	                         nullptr,
+	                         &rsaPublicBLOB,
+	                         &rsaPublicBLOBSize))
 		return false;
 
-	if (!CryptImportKey(provider, (const BYTE *)rsaPublicBLOB.get(),
-			    rsaPublicBLOBSize, 0, 0, &keyOut))
+	if (!CryptImportKey(provider,
+	                    (const BYTE *)rsaPublicBLOB.get(),
+	                    rsaPublicBLOBSize,
+	                    0,
+	                    0,
+	                    &keyOut))
 		return false;
 
 	if (!CryptCreateHash(provider, CALG_SHA_512, 0, 0, &hash))
@@ -294,15 +304,18 @@ static bool VerifyDigitalSignature(uint8_t *buf, size_t len, uint8_t *sig,
 	for (size_t i = 0; i < sigLen; i++)
 		reversedSig[i] = sig[sigLen - i - 1];
 
-	if (!CryptVerifySignature(hash, reversedSig.data(), (DWORD)sigLen,
-				  keyOut, nullptr, 0))
+	if (!CryptVerifySignature(hash,
+	                          reversedSig.data(),
+	                          (DWORD)sigLen,
+	                          keyOut,
+	                          nullptr,
+	                          0))
 		return false;
 
 	return true;
 }
 
-static inline void HexToByteArray(const char *hexStr, size_t hexLen,
-				  vector<uint8_t> &out)
+static inline void HexToByteArray(const char *hexStr, size_t hexLen, vector<uint8_t> &out)
 {
 	char ptr[3];
 
@@ -315,8 +328,7 @@ static inline void HexToByteArray(const char *hexStr, size_t hexLen,
 	}
 }
 
-static bool CheckDataSignature(const string &data, const char *name,
-			       const char *hexSig, size_t sigLen)
+static bool CheckDataSignature(const string &data, const char *name, const char *hexSig, size_t sigLen)
 try {
 	if (sigLen == 0 || sigLen > 0xFFFF || (sigLen & 1) != 0)
 		throw strprintf("Missing or invalid signature for %s", name);
@@ -326,102 +338,196 @@ try {
 	signature.reserve(sigLen);
 	HexToByteArray(hexSig, sigLen, signature);
 
-	if (!VerifyDigitalSignature((uint8_t *)data.data(), data.size(),
-				    signature.data(), signature.size()))
+	if (!VerifyDigitalSignature((uint8_t*)data.data(),
+	                            data.size(),
+	                            signature.data(),
+	                            signature.size()))
 		throw strprintf("Signature check failed for %s", name);
 
 	return true;
 
-} catch (string &text) {
+} catch (string text) {
 	blog(LOG_WARNING, "%s: %s", __FUNCTION__, text.c_str());
 	return false;
 }
 
 /* ------------------------------------------------------------------------ */
 
-static bool FetchUpdaterModule(const char *url)
+static bool FetchItemModule(const char *inUrl, const char *inPath, const char * inETag)
 try {
-	long responseCode;
-	uint8_t updateFileHash[BLAKE2_HASH_LENGTH];
+	long     responseCode;
 	vector<string> extraHeaders;
+	BPtr<char> saveFilePath = GetConfigPathPtr(inPath);
 
-	BPtr<char> updateFilePath =
-		GetConfigPathPtr("obs-smart\\updates\\updater.exe");
-
-	if (CalculateFileHash(updateFilePath, updateFileHash)) {
+	// 通过 Nginx 服务器生成的 ETag 来判断文件是否发生变化...
+	const char *pETagItem = config_get_string(GetGlobalConfig(), "General", inETag);
+	if (pETagItem != NULL) {
+		string header = "If-None-Match: ";
+		header += pETagItem;
+		extraHeaders.push_back(move(header));
+	}
+	// 这里是通过计算MD5的方式判断文件是否发生变化...
+	// 由于Nginx的ETag不是通过MD5计算的，放弃这种方式...
+	//uint8_t updateFileHash[BLAKE2_HASH_LENGTH];
+	/*if (CalculateFileHash(saveFilePath, updateFileHash)) {
 		char hashString[BLAKE2_HASH_STR_LENGTH];
 		HashToString(updateFileHash, hashString);
 
 		string header = "If-None-Match: ";
 		header += hashString;
 		extraHeaders.push_back(move(header));
-	}
+	}*/
 
-	string signature;
-	string error;
-	string data;
-
-	bool success = GetRemoteFile(url, data, error, &responseCode, nullptr,
-				     nullptr, extraHeaders, &signature);
+	string signature, error, data;
+	string version = App()->GetVersionString();
+	bool success = GetRemoteFile(inUrl, data, error, version, &responseCode,
+			nullptr, nullptr, extraHeaders, &signature);
 
 	if (!success || (responseCode != 200 && responseCode != 304)) {
-		if (responseCode == 404)
-			return false;
-
-		throw strprintf("Could not fetch '%s': %s", url, error.c_str());
+		if (responseCode == 404) {
+			error = "404 not find.";
+		}
+		throw strprintf("Could not fetch '%s': %s", inUrl, error.c_str());
 	}
-
 	/* A new file must be digitally signed */
 	if (responseCode == 200) {
-		bool valid = CheckDataSignature(data, url, signature.data(),
-						signature.size());
-		if (!valid)
-			throw string("Invalid updater module signature");
-
-		if (!QuickWriteFile(updateFilePath, data.data(), data.size()))
+		//2018.12.04 - by jackey => disabled for simple...
+		//bool valid = CheckDataSignature(data, url, signature.data(), signature.size());
+		//if (!valid) throw string("Invalid updater module signature");
+		// 保存指定的ETag内容...
+		if (signature.size() > 0) {
+			config_set_string(GetGlobalConfig(), "General", inETag, signature.c_str());
+		}
+		if (!QuickWriteFile(saveFilePath, data.data(), data.size()))
 			return false;
 	}
-
 	return true;
-
-} catch (string &text) {
+} catch (string text) {
 	blog(LOG_WARNING, "%s: %s", __FUNCTION__, text.c_str());
 	return false;
+}
+
+static string FetchMainFestJson(const char *inUrl, const char *inPath, const char * inETag)
+{
+	// 获取讲师端本地升级脚本存放的完整路径地址...
+	long  responseCode;
+	vector<string> extraHeaders;
+	BPtr<char> manifestPath = GetConfigPathPtr(inPath);
+
+	// avoid downloading manifest again...
+	// 通过 Nginx 服务器生成的 ETag 来判断文件是否发生变化 => 更新时间发生变化也会重新下载...
+	const char *pETagManifest = config_get_string(GetGlobalConfig(), "General", inETag);
+	if (pETagManifest != NULL) {
+		string header = "If-None-Match: ";
+		header += pETagManifest;
+		extraHeaders.push_back(move(header));
+	}
+	// 注意：这里是通过计算MD5的方式判断文件是否发生变化...
+	// 注意：由于Nginx的ETag不是通过MD5计算的，放弃这种方式...
+	//BYTE manifestHash[BLAKE2_HASH_LENGTH];
+	/*if (CalculateFileHash(manifestPath, manifestHash)) {
+		char hashString[BLAKE2_HASH_STR_LENGTH];
+		HashToString(manifestHash, hashString);
+
+		string header = "If-None-Match: ";
+		header += hashString;
+		extraHeaders.push_back(move(header));
+	}*/
+
+	/* ----------------------------------- *
+	 * get current install GUID            */
+
+	/* NOTE: this is an arbitrary random number that we use to count the
+	 * number of unique OBS installations and is not associated with any
+	 * kind of identifiable information */
+	/*const char *pguid = config_get_string(GetGlobalConfig(), "General", "InstallGUID");
+	string guid;
+	if (pguid) guid = pguid;
+	if (guid.empty()) {
+		GenerateGUID(guid);
+		if (!guid.empty()) {
+			config_set_string(GetGlobalConfig(), "General", "InstallGUID", guid.c_str());
+		}
+	}
+	if (!guid.empty()) {
+		string header = "X-OBS2-GUID: ";
+		header += guid;
+		extraHeaders.push_back(move(header));
+	}*/
+	string text, error, signature;
+	string version = App()->GetVersionString();
+	// 注意：text返回的是升级脚本的具体内容...
+	// 从服务器获取升级脚本文件，Nginx服务器返回ETag标记...
+	bool success = GetRemoteFile(inUrl, text, error, version, &responseCode,
+								 nullptr, nullptr, extraHeaders, &signature);
+	// 从服务器获取升级脚本失败，抛出异常，打印信息...
+	if (!success || (responseCode != 200 && responseCode != 304)) {
+		if (responseCode == 404) {
+			error = "404 not find.";
+		}
+		throw strprintf("Failed to fetch manifest file: %s", error.c_str());
+	}
+	// verify file signature...
+	// 如果是完整请求，并且包含ETag字段，存放到全局配置当中...
+	if (responseCode == 200 && signature.size() > 0) {
+		config_set_string(GetGlobalConfig(), "General", inETag, signature.c_str());
+	}
+
+	//2018.12.04 - by jackey => disabled for simple...
+	/* a new file must be digitally signed */
+	/*if (responseCode == 200) {
+	success = CheckDataSignature(text, "manifest", signature.data(), signature.size());
+	if (!success) throw string("Invalid manifest signature");
+	}*/
+
+	// write or load manifest...
+	if (responseCode == 200) {
+		// 如果从服务器读取成功，写入文件...
+		if (!QuickWriteFile(manifestPath, text.data(), text.size())) {
+			throw strprintf("Could not write file '%s'", manifestPath.Get());
+		}
+	}
+	else {
+		// 如果没有从服务器获取，从本地读取脚本...
+		if (!QuickReadFile(manifestPath, text)) {
+			throw strprintf("Could not read file '%s'", manifestPath.Get());
+		}
+	}
+	// 返回json数据...
+	return text;
 }
 
 /* ------------------------------------------------------------------------ */
 
 static bool ParseUpdateManifest(const char *manifest, bool *updatesAvailable,
-				string &notes_str, int &updateVer)
+		string &notes_str, int &updateVer)
 try {
 
 	json_error_t error;
 	OBSJson root(json_loads(manifest, 0, &error));
-	if (!root)
-		throw strprintf("Failed reading json string (%d): %s",
-				error.line, error.text);
-
-	if (!json_is_object(root.get()))
+	if (!root) {
+		throw strprintf("Failed reading json string (%d): %s", error.line, error.text);
+	}
+	if (!json_is_object(root.get())) {
 		throw string("Root of manifest is not an object");
-
+	}
 	int major = root.GetInt("version_major");
 	int minor = root.GetInt("version_minor");
 	int patch = root.GetInt("version_patch");
 
-	if (major == 0)
-		throw strprintf("Invalid version number: %d.%d.%d", major,
-				minor, patch);
-
+	if (major == 0) {
+		throw strprintf("Invalid version number: %d.%d.%d", major, minor, patch);
+	}
 	json_t *notes = json_object_get(root, "notes");
-	if (!json_is_string(notes))
+	if (!json_is_string(notes)) {
 		throw string("'notes' value invalid");
-
+	}
 	notes_str = json_string_value(notes);
 
 	json_t *packages = json_object_get(root, "packages");
-	if (!json_is_array(packages))
+	if (!json_is_array(packages)) {
 		throw string("'packages' value invalid");
-
+	}
 	int cur_ver = LIBOBS_API_VER;
 	int new_ver = MAKE_SEMANTIC_VERSION(major, minor, patch);
 
@@ -430,7 +536,7 @@ try {
 
 	return true;
 
-} catch (string &text) {
+} catch (string text) {
 	blog(LOG_WARNING, "%s: %s", __FUNCTION__, text.c_str());
 	return false;
 }
@@ -448,46 +554,26 @@ void GenerateGUID(string &guid)
 	HashToString(junk, &guid[0]);
 }
 
-string GetProgramGUID()
-{
-	static mutex m;
-	lock_guard<mutex> lock(m);
-
-	/* NOTE: this is an arbitrary random number that we use to count the
-	 * number of unique OBS installations and is not associated with any
-	 * kind of identifiable information */
-	const char *pguid =
-		config_get_string(GetGlobalConfig(), "General", "InstallGUID");
-	string guid;
-	if (pguid)
-		guid = pguid;
-
-	if (guid.empty()) {
-		GenerateGUID(guid);
-
-		if (!guid.empty())
-			config_set_string(GetGlobalConfig(), "General",
-					  "InstallGUID", guid.c_str());
-	}
-
-	return guid;
-}
-
 void AutoUpdateThread::infoMsg(const QString &title, const QString &text)
 {
-	OBSMessageBox::information(App()->GetMainWindow(), title, text);
+	QWidget * parent = App()->GetMainWindow();
+	parent = (parent ? parent : App()->GetLoginMini());
+	OBSMessageBox::information(parent, title, text);
 }
 
 void AutoUpdateThread::info(const QString &title, const QString &text)
 {
-	QMetaObject::invokeMethod(this, "infoMsg", Qt::BlockingQueuedConnection,
-				  Q_ARG(QString, title), Q_ARG(QString, text));
+	QMetaObject::invokeMethod(this, "infoMsg",
+			Qt::BlockingQueuedConnection,
+			Q_ARG(QString, title),
+			Q_ARG(QString, text));
 }
 
-int AutoUpdateThread::queryUpdateSlot(bool localManualUpdate,
-				      const QString &text)
+int AutoUpdateThread::queryUpdateSlot(bool localManualUpdate, const QString &text)
 {
-	OBSUpdate updateDlg(App()->GetMainWindow(), localManualUpdate, text);
+	QWidget * parent = App()->GetMainWindow();
+	parent = (parent ? parent : App()->GetLoginMini());
+	OBSUpdate updateDlg(parent, localManualUpdate, text);
 	return updateDlg.exec();
 }
 
@@ -496,17 +582,16 @@ int AutoUpdateThread::queryUpdate(bool localManualUpdate, const char *text_utf8)
 	int ret = OBSUpdate::No;
 	QString text = text_utf8;
 	QMetaObject::invokeMethod(this, "queryUpdateSlot",
-				  Qt::BlockingQueuedConnection,
-				  Q_RETURN_ARG(int, ret),
-				  Q_ARG(bool, localManualUpdate),
-				  Q_ARG(QString, text));
+			Qt::BlockingQueuedConnection,
+			Q_RETURN_ARG(int, ret),
+			Q_ARG(bool, localManualUpdate),
+			Q_ARG(QString, text));
 	return ret;
 }
 
 static bool IsFileInUse(const wstring &file)
 {
-	WinHandle f = CreateFile(file.c_str(), GENERIC_WRITE, 0, nullptr,
-				 OPEN_EXISTING, 0, nullptr);
+	WinHandle f = CreateFile(file.c_str(), GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
 	if (!f.Valid()) {
 		int err = GetLastError();
 		if (err == ERROR_SHARING_VIOLATION ||
@@ -525,29 +610,18 @@ static bool IsGameCaptureInUse()
 
 void AutoUpdateThread::run()
 try {
-	long responseCode;
-	vector<string> extraHeaders;
-	string text;
-	string error;
-	string signature;
-	CryptProvider localProvider;
-	BYTE manifestHash[BLAKE2_HASH_LENGTH];
-	bool updatesAvailable = false;
-	bool success;
 
 	struct FinishedTrigger {
-		inline ~FinishedTrigger()
-		{
-			QMetaObject::invokeMethod(App()->GetMainWindow(),
-						  "updateCheckFinished");
+		inline ~FinishedTrigger() {
+			QWidget * parent = App()->GetMainWindow();
+			parent = (parent ? parent : App()->GetLoginMini());
+			QMetaObject::invokeMethod(parent, "updateCheckFinished");
 		}
 	} finishedTrigger;
 
-	BPtr<char> manifestPath =
-		GetConfigPathPtr("obs-smart\\updates\\manifest.json");
-
-	auto ActiveOrGameCaptureLocked = [this]() {
-		if (obs_video_active()) {
+	auto ActiveOrGameCaptureLocked = [this] ()
+	{
+		if (video_output_active(obs_get_video())) {
 			if (manualUpdate)
 				info(QTStr("Updater.Running.Title"),
 				     QTStr("Updater.Running.Text"));
@@ -572,96 +646,43 @@ try {
 	/* ----------------------------------- *
 	 * create signature provider           */
 
-	if (!CryptAcquireContext(&localProvider, nullptr, MS_ENH_RSA_AES_PROV,
-				 PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
-		throw strprintf("CryptAcquireContext failed: %lu",
-				GetLastError());
-
+	CryptProvider  localProvider;
+	if (!CryptAcquireContext(&localProvider, nullptr, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+		throw strprintf("CryptAcquireContext failed: %lu", GetLastError());
+	}
 	provider = localProvider;
 
-	/* ----------------------------------- *
-	 * avoid downloading manifest again    */
+	// 先把D3D升级模块 dxwebsetup.exe 下载下来...
+	if (!FetchItemModule(WIN_DXSETUP_URL, APP_DXSETUP_PATH, "ETagDXSetup"))
+		return;
 
-	if (CalculateFileHash(manifestPath, manifestHash)) {
-		char hashString[BLAKE2_HASH_STR_LENGTH];
-		HashToString(manifestHash, hashString);
-
-		string header = "If-None-Match: ";
-		header += hashString;
-		extraHeaders.push_back(move(header));
-	}
-
-	/* ----------------------------------- *
-	 * get current install GUID            */
-
-	string guid = GetProgramGUID();
-	if (!guid.empty()) {
-		string header = "X-OBS2-GUID: ";
-		header += guid;
-		extraHeaders.push_back(move(header));
-	}
-
-	/* ----------------------------------- *
-	 * get manifest from server            */
-
-	success = GetRemoteFile(WIN_MANIFEST_URL, text, error, &responseCode,
-				nullptr, nullptr, extraHeaders, &signature);
-
-	if (!success || (responseCode != 200 && responseCode != 304)) {
-		if (responseCode == 404)
-			return;
-
-		throw strprintf("Failed to fetch manifest file: %s",
-				error.c_str());
-	}
-
-	/* ----------------------------------- *
-	 * verify file signature               */
-
-	/* a new file must be digitally signed */
-	if (responseCode == 200) {
-		success = CheckDataSignature(text, "manifest", signature.data(),
-					     signature.size());
-		if (!success)
-			throw string("Invalid manifest signature");
-	}
-
-	/* ----------------------------------- *
-	 * write or load manifest              */
-
-	if (responseCode == 200) {
-		if (!QuickWriteFile(manifestPath, text.data(), text.size()))
-			throw strprintf("Could not write file '%s'",
-					manifestPath.Get());
-	} else {
-		if (!QuickReadFile(manifestPath, text))
-			throw strprintf("Could not read file '%s'",
-					manifestPath.Get());
-	}
-
-	/* ----------------------------------- *
-	 * check manifest for update           */
+	// 再读取 mainfest.json 升级脚本文件...
+	string text = FetchMainFestJson(WIN_MANIFEST_URL, APP_MANIFEST_PATH, "ETagManifest");
 
 	string notes;
 	int updateVer = 0;
+	bool updatesAvailable = false;
 
-	success = ParseUpdateManifest(text.c_str(), &updatesAvailable, notes,
-				      updateVer);
-	if (!success)
-		throw string("Failed to parse manifest");
+	// 解析获取到的manifest.json，脚本版本 > 当前版本才能升级...
+	bool success = ParseUpdateManifest(text.c_str(), &updatesAvailable, notes, updateVer);
+	if (!success) throw string("Failed to parse manifest.json");
 
+	// 如果不能升级，并且是手动模式，弹出提示框...
 	if (!updatesAvailable) {
-		if (manualUpdate)
+		if (manualUpdate) {
 			info(QTStr("Updater.NoUpdatesAvailable.Title"),
-			     QTStr("Updater.NoUpdatesAvailable.Text"));
+				 QTStr("Updater.NoUpdatesAvailable.Text"));
+		}
+		// 记录不能升级的版本信息，方便可能的问题跟踪...
+		blog(LOG_INFO, "[Check] Manual(%d),Update(0x%X),Local(0x%X)", manualUpdate, updateVer, LIBOBS_API_VER);
 		return;
 	}
 
 	/* ----------------------------------- *
 	 * skip this version if set to skip    */
 
-	int skipUpdateVer = config_get_int(GetGlobalConfig(), "General",
-					   "SkipUpdateVersion");
+	// 获取系统配置当中已经忽略过的版本，如果与脚本里的版本一致，跳过这个版本...
+	int skipUpdateVer = config_get_int(GetGlobalConfig(), "General", "SkipUpdateVersion");
 	if (!manualUpdate && updateVer == skipUpdateVer)
 		return;
 
@@ -674,53 +695,51 @@ try {
 	/* ----------------------------------- *
 	 * fetch updater module                */
 
-	if (!FetchUpdaterModule(WIN_UPDATER_URL))
+	if (!FetchItemModule(WIN_UPDATER_URL, APP_UPDATER_PATH, "ETagUpdater"))
 		return;
 
 	/* ----------------------------------- *
 	 * query user for update               */
 
 	int queryResult = queryUpdate(manualUpdate, notes.c_str());
-
+	// No   => 稍后提醒 => 4天之后再次提醒...
+	// Yes  => 立即更新 => 需要更新这个版本...
+	// Skip => 跳过版本 => 忽略这个版本等待下次更新...
 	if (queryResult == OBSUpdate::No) {
 		if (!manualUpdate) {
 			long long t = (long long)time(nullptr);
-			config_set_int(GetGlobalConfig(), "General",
-				       "LastUpdateCheck", t);
+			config_set_int(GetGlobalConfig(), "General", "LastUpdateCheck", t);
 		}
 		return;
-
 	} else if (queryResult == OBSUpdate::Skip) {
-		config_set_int(GetGlobalConfig(), "General",
-			       "SkipUpdateVersion", updateVer);
+		config_set_int(GetGlobalConfig(), "General", "SkipUpdateVersion", updateVer);
 		return;
 	}
 
 	/* ----------------------------------- *
 	 * get working dir                     */
 
-	wchar_t cwd[MAX_PATH];
-	GetModuleFileNameW(nullptr, cwd, _countof(cwd) - 1);
+	wchar_t cwd[MAX_PATH] = { 0 };
+	GetModuleFileName(nullptr, cwd, _countof(cwd) - 1);
 	wchar_t *p = wcsrchr(cwd, '\\');
-	if (p)
-		*p = 0;
+	if (p) *p = 0;
 
 	/* ----------------------------------- *
 	 * execute updater                     */
 
-	BPtr<char> updateFilePath =
-		GetConfigPathPtr("obs-smart\\updates\\updater.exe");
+	BPtr<char> updateFilePath = GetConfigPathPtr(APP_UPDATER_PATH);
 	BPtr<wchar_t> wUpdateFilePath;
 
 	size_t size = os_utf8_to_wcs_ptr(updateFilePath, 0, &wUpdateFilePath);
-	if (!size)
-		throw string("Could not convert updateFilePath to wide");
+	if (!size) throw string("Could not convert updateFilePath to wide");
 
 	/* note, can't use CreateProcess to launch as admin. */
 	SHELLEXECUTEINFO execInfo = {};
 
 	execInfo.cbSize = sizeof(execInfo);
 	execInfo.lpFile = wUpdateFilePath;
+
+/*
 #ifndef UPDATE_CHANNEL
 #define UPDATE_ARG_SUFFIX L""
 #else
@@ -730,33 +749,38 @@ try {
 		execInfo.lpParameters = UPDATE_ARG_SUFFIX L" Portable";
 	else
 		execInfo.lpParameters = UPDATE_ARG_SUFFIX;
+*/
 
-	execInfo.lpDirectory = cwd;
-	execInfo.nShow = SW_SHOWNORMAL;
+	execInfo.lpParameters = APP_NAME;
+	execInfo.lpDirectory  = cwd;
+	execInfo.nShow        = SW_SHOWNORMAL;
 
 	if (!ShellExecuteEx(&execInfo)) {
 		QString msg = QTStr("Updater.FailedToLaunch");
 		info(msg, msg);
-		throw strprintf("Can't launch updater '%s': %d",
-				updateFilePath.Get(), GetLastError());
+		throw strprintf("Can't launch updater '%s': %d", updateFilePath.Get(), GetLastError());
 	}
 
 	/* force OBS to perform another update check immediately after updating
 	 * in case of issues with the new version */
 	config_set_int(GetGlobalConfig(), "General", "LastUpdateCheck", 0);
 	config_set_int(GetGlobalConfig(), "General", "SkipUpdateVersion", 0);
-	config_set_string(GetGlobalConfig(), "General", "InstallGUID",
-			  guid.c_str());
+	//config_set_string(GetGlobalConfig(), "General", "InstallGUID", guid.c_str());
 
-	QMetaObject::invokeMethod(App()->GetMainWindow(), "close");
+	// 升级后的新版本，可能会修改服务器地址，会造成版本升级后服务器无法访问的问题...
+	config_remove_value(GetGlobalConfig(), "General", "WebCenter");
+	config_remove_value(GetGlobalConfig(), "General", "WebClass");
 
-} catch (string &text) {
+	// 这里需要告诉主窗口不要弹出询问框，直接退出主进程就可以了...
+	doCloseMainWindow();
+
+} catch (string text) {
 	blog(LOG_WARNING, "%s: %s", __FUNCTION__, text.c_str());
 }
 
 void AutoUpdateThread::doLaunchDXWebSetup()
 {
-	/*do {
+	do {
 		// 获取执行程序的完整路径...
 		BPtr<wchar_t> wSetupFilePath;
 		BPtr<char> dxSetupFilePath = GetConfigPathPtr(APP_DXSETUP_PATH);
@@ -775,5 +799,5 @@ void AutoUpdateThread::doLaunchDXWebSetup()
 		}
 	} while (false);
 	// 任何情况都要退出...
-	doCloseMainWindow();*/
+	doCloseMainWindow();
 }

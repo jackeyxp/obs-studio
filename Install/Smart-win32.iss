@@ -30,7 +30,7 @@ Root: HKLM; Subkey: "Software\HaoYiSmart"; ValueType: string; ValueName: "Defaul
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}";
 
 [Files]
-Source: "..\vsbuild\rundir\Release\*.*"; Excludes: "obs32.exe"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+Source: "..\vsbuild\rundir\Release\*.*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 
 [Icons]
 Name: "{userdesktop}\Ë«Ê¦ÖÕ¶Ë"; Filename: "{app}\bin\32bit\Smart.exe"; Tasks: desktopicon

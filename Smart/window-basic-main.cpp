@@ -42,20 +42,21 @@
 #include "window-basic-settings.hpp"
 #include "window-basic-setting.hpp"
 #include "window-namedialog.hpp"
-//#include "window-basic-auto-config.hpp"
 #include "window-basic-source-select.hpp"
 #include "window-basic-main.hpp"
 #include "window-basic-stats.hpp"
 #include "window-basic-main-outputs.hpp"
-//#include "window-log-reply.hpp"
 #include "window-projector.hpp"
-//#include "window-remux.hpp"
-#include "qt-wrappers.hpp"
 #include "display-helpers.hpp"
 #include "volume-control.hpp"
-#include "remote-text.hpp"
+#include "qt-wrappers.hpp"
 #include <fstream>
 #include <sstream>
+
+//#include "window-basic-auto-config.hpp"
+//#include "window-log-reply.hpp"
+//#include "window-remux.hpp"
+//#include "remote-text.hpp"
 
 #ifdef _WIN32
 #include "win-update/win-update.hpp"
@@ -3277,34 +3278,6 @@ void init_sparkle_updater(bool update_to_undeployed);
 void trigger_sparkle_update();
 #endif
 
-void OBSBasic::TimedCheckForUpdates()
-{
-	// 检测是否开启自动更新开关，默认是处于开启状态 => OBSApp::InitGlobalConfigDefaults()...
-	if (!config_get_bool(App()->GlobalConfig(), "General", "EnableAutoUpdates"))
-		return;
-
-#ifdef UPDATE_SPARKLE
-	init_sparkle_updater(config_get_bool(App()->GlobalConfig(), "General",
-					     "UpdateToUndeployed"));
-#elif _WIN32
-
-	// 从global.ini中读取上次检查时间和上次升级版本号...
-	long long lastUpdate = config_get_int(App()->GlobalConfig(), "General", "LastUpdateCheck");
-	uint32_t lastVersion = config_get_int(App()->GlobalConfig(), "General", "LastVersion");
-	// 如果上次升级版本比当前exe存放版本还要小，立即升级...
-	if (lastVersion < LIBOBS_API_VER) {
-		lastUpdate = 0;
-		config_set_int(App()->GlobalConfig(), "General", "LastUpdateCheck", 0);
-	}
-	// 计算当前时间与上次升级之间的时间差...
-	long long t = (long long)time(nullptr);
-	long long secs = t - lastUpdate;
-	// 时间差超过4天，开始检查并执行升级...
-	if (secs > UPDATE_CHECK_INTERVAL)
-		CheckForUpdates(false);
-#endif
-}
-
 void OBSBasic::CheckForUpdates(bool manualUpdate)
 {
 #ifdef UPDATE_SPARKLE
@@ -4026,19 +3999,22 @@ void OBSBasic::closeEvent(QCloseEvent *event)
 		event->ignore();
 		return;
 	}
-
-	if (isVisible())
-		config_set_string(App()->GlobalConfig(), "BasicWindow",
-				  "geometry",
-				  saveGeometry().toBase64().constData());
-
-	if (outputHandler && outputHandler->Active()) {
-		SetShowing(true);
-
+	// 如果窗口可见，需要保持坐标...
+	if (isVisible()) {
+		config_set_string(App()->GlobalConfig(),
+			"BasicWindow", "geometry",
+			saveGeometry().toBase64().constData());
+	}
+	// 保存各个Docker的状态信息...
+	config_set_string(App()->GlobalConfig(),
+		"BasicWindow", "DockState",
+		saveState().toBase64().constData());
+	// 如果不是沉默退出，并且正在推流，需要弹出停止推流询问框...
+	if (this->m_bIsSlientClose && outputHandler && outputHandler->Active()) {
+		this->SetShowing(true);
 		QMessageBox::StandardButton button = OBSMessageBox::question(
 			this, QTStr("ConfirmExit.Title"),
 			QTStr("ConfirmExit.Text"));
-
 		if (button == QMessageBox::No) {
 			event->ignore();
 			return;
@@ -4069,9 +4045,6 @@ void OBSBasic::closeEvent(QCloseEvent *event)
 	//auth.reset();
 
 	delete extraBrowsers;
-
-	config_set_string(App()->GlobalConfig(), "BasicWindow", "DockState",
-			  saveState().toBase64().constData());
 
 #ifdef BROWSER_AVAILABLE
 	SaveExtraBrowserDocks();
