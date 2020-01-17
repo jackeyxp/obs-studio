@@ -914,9 +914,9 @@ void CSmartSendThread::doProcMaxConSeq(bool bIsAudio, uint32_t inMaxConSeq)
 	circlebuf_pop_front(&cur_circle, NULL, nPopSize);
 	// 注意：环形队列当中的数据块大小是连续的，是一样大的...
 	// 打印环形队列删除结果，计算环形队列剩余的数据包个数...
-	uint32_t nRemainCount = cur_circle.size / nPerPackSize;
-	blog(LOG_INFO, "%s Detect Erase Success => %s, MaxConSeq: %lu, MinSeq: %lu, CurSendSeq: %lu, CurPackSeq: %lu, Circle: %lu", 
-	     m_strInnerName.c_str(), bIsAudio ? "Audio" : "Video", inMaxConSeq, lpFrontHeader->seq, nCurSendSeq, nCurPackSeq, nRemainCount );
+	//uint32_t nRemainCount = cur_circle.size / nPerPackSize;
+	//blog(LOG_INFO, "%s Detect Erase Success => %s, MaxConSeq: %lu, MinSeq: %lu, CurSendSeq: %lu, CurPackSeq: %lu, Circle: %lu", 
+	//     m_strInnerName.c_str(), bIsAudio ? "Audio" : "Video", inMaxConSeq, lpFrontHeader->seq, nCurSendSeq, nCurPackSeq, nRemainCount );
 }
 
 void CSmartSendThread::doTagDetectProcess(char * lpBuffer, int inRecvLen)
@@ -961,7 +961,7 @@ void CSmartSendThread::doTagDetectProcess(char * lpBuffer, int inRecvLen)
 		if (m_server_rtt_var_ms < 0) { m_server_rtt_var_ms = abs(m_server_rtt_ms - keep_rtt); }
 		else { m_server_rtt_var_ms = (m_server_rtt_var_ms * 3 + abs(m_server_rtt_ms - keep_rtt)) / 4; }
 		// 打印探测结果 => 探测序号 | 网络延时(毫秒)...
-		blog(LOG_INFO, "%s Recv Detect => Dir: %d, dtNum: %d, rtt: %d ms, rtt_var: %d ms", m_strInnerName.c_str(), rtpDetect.dtDir, rtpDetect.dtNum, m_server_rtt_ms, m_server_rtt_var_ms);
+		//blog(LOG_INFO, "%s Recv Detect => Dir: %d, dtNum: %d, rtt: %d ms, rtt_var: %d ms", m_strInnerName.c_str(), rtpDetect.dtDir, rtpDetect.dtNum, m_server_rtt_ms, m_server_rtt_var_ms);
 	}
 }
 ///////////////////////////////////////////////////////

@@ -251,10 +251,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{C458DD4B-D764-3D72-A949-3DA4A4063721}</Project>
       <Name>obs-qsv11</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\deps\obs-scripting\obs-scripting.vcxproj">
-      <Project>{398D6E82-B093-3D63-BFD4-48A079B4145C}</Project>
-      <Name>obs-scripting</Name>
-    </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\plugins\obs-text\obs-text.vcxproj">
       <Project>{8F4516B8-07CC-3311-98F9-B230172E747C}</Project>
       <Name>obs-text</Name>

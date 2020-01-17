@@ -128,7 +128,8 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>			</Message>
+      <Message>
+      </Message>
       <Command>setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/UI/frontend-plugins/frontend-tools/Debug/frontend-tools.dll F:/obs-studio/vsbuild/rundir/Debug/obs-plugins/32bit/frontend-tools.dll
 if %errorlevel% neq 0 goto :cmEnd
@@ -229,7 +230,8 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>			</Message>
+      <Message>
+      </Message>
       <Command>setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/UI/frontend-plugins/frontend-tools/Release/frontend-tools.dll F:/obs-studio/vsbuild/rundir/Release/obs-plugins/32bit/frontend-tools.dll
 if %errorlevel% neq 0 goto :cmEnd
@@ -330,7 +332,8 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>			</Message>
+      <Message>
+      </Message>
       <Command>setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/UI/frontend-plugins/frontend-tools/MinSizeRel/frontend-tools.dll F:/obs-studio/vsbuild/rundir/MinSizeRel/obs-plugins/32bit/frontend-tools.dll
 if %errorlevel% neq 0 goto :cmEnd
@@ -430,7 +433,8 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>			</Message>
+      <Message>
+      </Message>
       <Command>setlocal
 E:\cmake-3.11.1-win32-x86\bin\cmake.exe -E copy F:/obs-studio/vsbuild/UI/frontend-plugins/frontend-tools/RelWithDebInfo/frontend-tools.dll F:/obs-studio/vsbuild/rundir/RelWithDebInfo/obs-plugins/32bit/frontend-tools.dll
 if %errorlevel% neq 0 goto :cmEnd
@@ -755,10 +759,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ProjectReference Include="F:\obs-studio\vsbuild\UI\obs-frontend-api\obs-frontend-api.vcxproj">
       <Project>{6521DB39-5638-3268-9A5F-7C06C32D357C}</Project>
       <Name>obs-frontend-api</Name>
-    </ProjectReference>
-    <ProjectReference Include="F:\obs-studio\vsbuild\deps\obs-scripting\obs-scripting.vcxproj">
-      <Project>{398D6E82-B093-3D63-BFD4-48A079B4145C}</Project>
-      <Name>obs-scripting</Name>
     </ProjectReference>
     <ProjectReference Include="F:\obs-studio\vsbuild\deps\w32-pthreads\w32-pthreads.vcxproj">
       <Project>{89C66847-426C-33C8-89FA-3FFDC8E23830}</Project>
